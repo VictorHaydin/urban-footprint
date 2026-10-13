@@ -318,7 +318,8 @@ def export_index(cls: Classification) -> None:
         s = json.loads(p.read_text(encoding="utf-8"))
         cities.append({"id": c.id, "name": c.name, "name_local": c.name_local, "country": c.country,
                        "area_km2": s["area"]["boundary_km2"], "osm_timestamp": s["osm_timestamp"],
-                       "center": s["map"]["center"], "bounds": s["map"]["bounds"]})
+                       "center": s["map"]["center"], "bounds": s["map"]["bounds"],
+                       "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk})
     index = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

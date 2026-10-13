@@ -50,6 +50,7 @@ class City:
     source: str = "geofabrik:europe/ukraine"
     clip_to_land: bool = False
     notes: str = ""
+    notes_uk: str = ""
 
     @property
     def source_region(self) -> str:

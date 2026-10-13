@@ -278,3 +278,9 @@ details.panel > summary h3 { font-size: 14px; }
   font-size: 12px; color: var(--muted); margin: -6px 0 14px; padding: 6px 10px;
   border-left: 3px solid var(--border); background: var(--panel); border-radius: 0 6px 6px 0; max-width: 820px;
 }
+.about table { margin: 8px 0 4px; }
+.about td, .about th { vertical-align: top; }
+.about td:nth-child(2) { text-align: right; white-space: nowrap; }
+.about .callout { background: var(--panel); border-left: 3px solid var(--accent); padding: 8px 12px; border-radius: 0 6px 6px 0; }
+.about .cities-table tr.has-note td { border-bottom: none; padding-bottom: 0; }
+.about .cities-table tr.note-row td { color: var(--muted); font-size: 12px; padding-top: 2px; text-align: left; white-space: normal; }

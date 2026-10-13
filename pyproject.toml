@@ -1,11 +1,12 @@
 [build-system]
-requires = ["setuptools>=68"]
+requires = ["setuptools>=77"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "urbanfp"
 version = "0.1.0"
 description = "Urban land-use / land-cover footprint analysis of cities from OpenStreetMap data"
+license = "MIT"
 requires-python = ">=3.11"
 dependencies = [
     "osmium>=4.0",

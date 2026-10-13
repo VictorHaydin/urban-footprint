@@ -14,7 +14,7 @@
 #                       -- only needed if the admin boundary extends into the sea
 #   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
 #                       (default from `defaults`). Cities sharing a source are extracted in one pass.
-#   notes               free text, shown in reports
+#   notes / notes_uk    free text (English / Ukrainian), shown in reports and on the Method & data page
 
 defaults:
   source: "geofabrik:europe/ukraine"
@@ -26,6 +26,7 @@ cities:
     country: UA
     boundary_relation: 421866
     notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
+    notes_uk: Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.
 
   - id: lviv
     name: Lviv
@@ -33,6 +34,7 @@ cities:
     country: UA
     boundary_relation: 2032280
     notes: City proper (not the whole Lviv urban hromada).
+    notes_uk: Власне місто (без решти Львівської міської громади).
 
   - id: odesa
     name: Odesa
@@ -40,6 +42,7 @@ cities:
     country: UA
     boundary_relation: 1413934
     notes: City proper (not the whole Odesa urban hromada).
+    notes_uk: Власне місто (без решти Одеської міської громади).
 
   - id: kharkiv
     name: Kharkiv
@@ -47,6 +50,7 @@ cities:
     country: UA
     boundary_relation: 3154746
     notes: City proper (not the whole Kharkiv urban hromada).
+    notes_uk: Власне місто (без решти Харківської міської громади).
 
   - id: dnipro
     name: Dnipro
@@ -54,6 +58,7 @@ cities:
     country: UA
     boundary_relation: 1017311
     notes: City proper (not the whole Dnipro urban hromada).
+    notes_uk: Власне місто (без решти Дніпровської міської громади).
 
   - id: zaporizhzhia
     name: Zaporizhzhia
@@ -61,6 +66,7 @@ cities:
     country: UA
     boundary_relation: 1418311
     notes: City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².
+    notes_uk: Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).
 
   - id: donetsk
     name: Donetsk
@@ -68,3 +74,4 @@ cities:
     country: UA
     boundary_relation: 1413957
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
+    notes_uk: Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).

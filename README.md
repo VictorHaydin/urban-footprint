@@ -1,30 +1,53 @@
-# Urban Footprint — city land-use analysis from OpenStreetMap
+[English](README.en.md) · **Українська**
 
-Ukrainian product name: **Структура міст** (the web app opens in Ukrainian by default).
+# Структура міст (Urban Footprint)
 
-How much of a city's administrative territory is physically occupied by buildings, roads, railways,
-parks, water, industrial land and so on? This project computes that **reproducibly** from
-OpenStreetMap (OSM) data and shows it in a static web app.
+Яку частку адміністративної території міста фізично займають будівлі, дороги, залізниці, парки, вода, житлові
+та промислові території? Цей проєкт **відтворювано** обчислює це з даних OpenStreetMap (OSM) і показує результати
+у статичному вебзастосунку (українською за замовчуванням, також англійською).
 
-Current cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv** (add more in [`config/cities.yaml`](config/cities.yaml)).
+**Вебзастосунок:** <https://victorhaydin.github.io/urban-footprint/>
 
-It has two parts:
+Міста: **Київ, Харків, Одеса, Дніпро, Донецьк, Запоріжжя, Львів**. Нові міста додаються в
+[`config/cities.yaml`](config/cities.yaml).
 
-| Part | Where | What |
+| Частина | Де | Що робить |
 |---|---|---|
-| Local processing pipeline | [`urbanfp/`](urbanfp), [`config/`](config) | Downloads OSM data, classifies features, builds a mutually exclusive area partition, validates it, and exports datasets |
-| Static web app | [`web/`](web) | Map with toggleable categories and per-city statistics, plus a split-screen mode for two cities at the same ground scale. Comparison of selected cities (multi-select filter) as stacked bars: click a category on a bar or in the legend to line up and rank that category across cities. Reads only precomputed files in `web/data/` and runs on GitHub Pages |
+| Локальний конвеєр обробки | [`urbanfp/`](urbanfp), [`config/`](config) | Завантажує дані OSM, класифікує об’єкти, будує взаємовиключний розподіл площі, перевіряє його та експортує набори даних |
+| Статичний вебзастосунок | [`web/`](web) | Використовує лише підготовлені файли з `web/data/`; працює на GitHub Pages без сервера |
 
-Documentation:
-* [docs/METHODOLOGY.md](docs/METHODOLOGY.md): classification, footprint estimation, overlap resolution, assumptions, limitations
-* [docs/DATA_MODEL.md](docs/DATA_MODEL.md): every output file and its schema, plus how to use the feature-level data for animation
+Детальна документація (англійською):
+* [docs/METHODOLOGY.md](docs/METHODOLOGY.md) — класифікація, оцінка контурів, усунення перекриттів, припущення, обмеження
+* [docs/DATA_MODEL.md](docs/DATA_MODEL.md) — усі вихідні файли та їхні схеми, а також використання даних окремих об’єктів для анімації
+
+## Можливості
+
+**Методика**
+* 13 взаємовиключних категорій (будівлі за типами, дороги, залізниці, паркування, зелені зони, вода, житлові
+  території, промислові території, спорт, кладовища, сільгоспземлі, інші землі, некласифіковано), які разом
+  становлять рівно 100% площі.
+* Реальні контури будівель; категорії землекористування не включають будівлі, дороги, парковки тощо всередині них.
+* Дороги й залізниці, нанесені лініями, розширюються до оціночної фізичної ширини.
+* Перевірка якості для кожного міста: збіг площ, перекриття, частка некласифікованого, будівлі невідомого типу,
+  типові ширини, теги без правил, підозрілі об’єкти (імовірні помилки тегування в OSM).
+
+**Вебзастосунок**
+* **Мапа:** вмикання й вимикання категорій, % / км², підкатегорії у % від своєї категорії або від міста, інформація
+  про кожен урахований фрагмент із посиланням на об’єкт в OSM.
+* **Два міста поруч:** мапи на розділеному екрані в однаковому масштабі на місцевості (з поправкою на широту), що
+  наближаються разом і переміщуються незалежно. Бічна панель порівнює міста за кожною категорією.
+* **Порівняння міст:** стовпчикові діаграми (% або км²) для обраних міст (фільтр із множинним вибором). Клацніть
+  категорію, щоб сфокусуватися на ній і впорядкувати міста. Розбивка за підкатегоріями; згортувана таблиця даних.
+* **Мови:** українська (за замовчуванням) та англійська; вибір запам’ятовується в cookie.
+* **Мобільні пристрої:** тайлові растри й векторні тайли; Київу в масштабі міста потрібно ~14 МБ відеопам’яті.
+* Посилання можна поширювати: місто, друге місто, вкладка й обрані міста зберігаються в URL.
 
 ---
 
-## 1. Local setup
+## 1. Встановлення
 
-Requirements: Python ≥ 3.11 (tested with 3.13 on Windows 11), about 4 GB RAM free, and about 3 GB of disk.
-All dependencies, including `osmium` (pyosmium), have binary wheels for Windows, Linux and macOS.
+Потрібно: Python ≥ 3.11 (перевірено на 3.13, Windows 11), ~4 ГБ вільної пам’яті та ~3 ГБ на диску.
+Усі залежності, зокрема `osmium` (pyosmium), мають готові пакети для Windows, Linux і macOS.
 
 ```bash
 python -m venv .venv
@@ -32,107 +55,96 @@ python -m venv .venv
 pip install -e .
 ```
 
-## 2. Processing commands
+## 2. Обробка даних
 
 ```bash
-python -m urbanfp list                 # configured cities + which stages are done
-python -m urbanfp run --all            # full pipeline for all cities (incremental)
-python -m urbanfp run lviv             # one city
-python -m urbanfp run --all --refresh  # re-download the latest OSM extract first
-python -m urbanfp run kyiv --force     # ignore caches, recompute everything
-python -m urbanfp run --all --from overlay   # restart from a given stage
+python -m urbanfp list                 # налаштовані міста та виконані етапи
+python -m urbanfp run --all            # повний конвеєр для всіх міст (інкрементно)
+python -m urbanfp run lviv             # одне місто
+python -m urbanfp run --all --refresh  # спершу завантажити свіже вивантаження OSM
+python -m urbanfp run kyiv --force     # ігнорувати кеш і перерахувати все
+python -m urbanfp run --all --from overlay   # почати з певного етапу
+python -m urbanfp serve                # переглянути вебзастосунок на http://localhost:8000
 ```
 
-Each stage can also be run on its own: `download`, `extract`, `classify`, `overlay`, `stats`, `export`.
+Кожен етап можна запустити окремо: `download`, `extract`, `classify`, `overlay`, `stats`, `export`.
 
-| Stage | Input → Output | Typical time (Kyiv) |
+| Етап | Вхід → вихід | Тривалість |
 |---|---|---|
-| `download` | Geofabrik `europe/ukraine-latest.osm.pbf` (~0.9 GB) → `data/sources/` | 5 min |
-| `extract` | PBF → `data/interim/<city>/boundary.geojson`, `osm_features.parquet`. One pass handles all cities that share a source file | 15–25 min for all cities |
-| `classify` | → `classified.parquet` (one physical footprint per OSM feature) | 1 min |
-| `overlay` | → `data/processed/<city>/exclusive.parquet` (mutually exclusive pieces) | a few min (parallel) |
-| `stats` | → `stats.json`, `validation.json`, `validation.md` | < 1 min |
-| `export` | → `web/data/<city>/…`, `web/data/index.json`, `city_features.parquet` | a few min |
+| `download` | Geofabrik `europe/ukraine-latest.osm.pbf` (~0,9 ГБ) → `data/sources/` | ~5 хв |
+| `extract` | PBF → `data/interim/<місто>/boundary.geojson`, `osm_features.parquet`. Один прохід охоплює всі міста з одним джерелом | ~12 хв для будь-якої кількості міст |
+| `classify` | → `classified.parquet` (один фізичний контур на об’єкт OSM) | секунди |
+| `overlay` | → `data/processed/<місто>/exclusive.parquet` (взаємовиключні фрагменти; тайлами, паралельно) | 1–4 хв на місто |
+| `stats` | → `stats.json`, `validation.json`, `validation.md` | < 1 хв |
+| `export` | → `web/data/<місто>/…` (статистика, межа, растрові та векторні тайли), `web/data/index.json`, `city_features.parquet` | ~1–2 хв на місто |
 
-**Incremental processing:** a stage is skipped when its outputs are newer than its inputs and the
-classification config hash is unchanged. If you edit rules, priorities or widths in
-`config/classification.yaml`, `run` recomputes `classify` and the stages after it. If you only edit labels
-or colours, it re-runs just `export`. The expensive `extract` stage re-runs only when the source extract
-or the set of required OSM keys changes.
+**Інкрементна обробка:** етап пропускається, якщо його результати новіші за вхідні дані, а хеш конфігурації не
+змінився. Зміна правил, пріоритетів чи ширин у `config/classification.yaml` перезапускає `classify` і наступні
+етапи; зміна лише назв чи кольорів — тільки `export`. `extract` перезапускається лише при зміні вихідного файлу або
+набору потрібних ключів OSM.
 
-**Validation:** read `data/processed/<city>/validation.md` after every run. It checks that the area
-sums close, that exported pieces don't overlap, the unclassified share, unknown building types,
-how much area relies on default road widths, unmatched OSM tags, and invalid geometries. The
-web app shows a summary of these checks.
+**Перевірка якості:** після кожного запуску перегляньте `data/processed/<місто>/validation.md`; підсумок є й у
+вебзастосунку. Перевірка `suspicious_features` показує неправдоподібно великі полігони доріг, залізниць чи парковок
+з їхніми ідентифікаторами OSM. Приклад: Дніпровське водосховище в OSM позначене як `highway=residential`. Такі
+помилки найкраще виправляти в самому OSM.
 
-### Adding a city
+### Як додати місто
 
-1. Find the OSM relation of its administrative boundary. Search the city on openstreetmap.org, or
-   use Nominatim: `https://nominatim.openstreetmap.org/search?q=Kharkiv&format=json` and read
-   `osm_id` where `osm_type` is `relation`.
-2. Add an entry to `config/cities.yaml`. For a city outside Ukraine, set `source` to the matching
-   Geofabrik region, e.g. `geofabrik:europe/poland`.
-3. `python -m urbanfp run <id>`. The web app picks it up automatically from `web/data/index.json`.
+1. Знайдіть відношення (relation) адміністративної межі міста на openstreetmap.org або через Nominatim:
+   `https://nominatim.openstreetmap.org/search?q=Полтава&format=json`. Потрібен `osm_id` з `osm_type` = `relation`;
+   краще саме місто, а не всю громаду.
+2. Додайте запис у [`config/cities.yaml`](config/cities.yaml): `name`, `name_local`, `boundary_relation` і за потреби
+   `notes` / `notes_uk`, які показуються на сторінці «Методика та дані». Для міста за межами України вкажіть
+   `source` з регіоном Geofabrik, напр. `geofabrik:europe/poland`.
+3. Виконайте `python -m urbanfp run <id>`. Порівняйте площу межі в журналі з офіційною площею міста й перегляньте
+   `validation.md`. Вебзастосунок автоматично підхопить місто з `web/data/index.json`.
 
-### Changing categories or rules
+### Зміна категорій і правил
 
-Everything lives in [`config/classification.yaml`](config/classification.yaml): categories and colours,
-tag rules, painting priority, and road, rail and waterway width assumptions. New categories appear
-in the web app automatically.
+Усе налаштовується в [`config/classification.yaml`](config/classification.yaml): категорії з назвами англійською
+й українською та кольорами, правила тегів, порядок пріоритетів, припущення щодо ширини доріг, залізниць і водотоків.
+Нові категорії автоматично з’являються у вебзастосунку.
 
-## 3. Web app
+## 3. Вебзастосунок
 
-Preview locally. You need an HTTP server **with Range-request support** for the PMTiles files.
-Python's built-in `http.server` doesn't support it, so use the bundled one:
+Локальний перегляд: `python -m urbanfp serve`. Для файлів PMTiles потрібен HTTP-сервер із підтримкою Range-запитів;
+вбудований у Python `http.server` її не має.
 
-```bash
-python -m urbanfp serve
-```
+### Мови
 
-Then open <http://localhost:8000>.
+* тексти інтерфейсу — [`web/i18n.js`](web/i18n.js) (`STRINGS.uk` / `STRINGS.en`, а також українські шаблони повідомлень перевірок)
+* назви категорій — `label` / `label_uk` у `config/classification.yaml`
+* назви міст і примітки — `name` / `name_local`, `notes` / `notes_uk` у `config/cities.yaml`
+* сторінка «Методика та дані» — [`web/about.uk.html`](web/about.uk.html) і [`web/about.html`](web/about.html); таблиця міст на ній генерується з даних
 
-### Languages
+### Публікація на GitHub Pages
 
-The interface is in **Ukrainian by default**, with English available. Users switch with the УКР / ENG button
-in the top bar, and the choice is saved in a `lang` cookie for one year.
+1. Запустіть конвеєр локально й закомітьте `web/` разом із `web/data/`. Вихідні та проміжні дані в `data/` не
+   потрапляють у git.
+2. У налаштуваннях репозиторію оберіть **Pages → Build and deployment → Source: GitHub Actions** (один раз).
+3. Надішліть зміни в `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) опублікує теку `web/`.
 
-* UI strings: `web/i18n.js` (`STRINGS.uk` / `STRINGS.en`, plus Ukrainian templates for validation messages)
-* category names: `label` / `label_uk` in `config/classification.yaml`, exported to `web/data/index.json`
-* methodology page: `web/about.html` (EN) and `web/about.uk.html` (UA)
-* city names: `name` (EN) / `name_local` (UA) in `config/cities.yaml`
+Примітки:
+* `features.pmtiles` (векторні тайли, z14) і `overview/*.pmtiles` (растрові піраміди для кожної категорії, z6–13,
+  WebP без втрат) читаються HTTP Range-запитами, які підтримує GitHub Pages. Завантажуються й декодуються лише видимі тайли.
+* GitHub не приймає файли понад 100 МБ. Найбільший файл — `features.pmtiles` Києва (~18 МБ); усі вебдані для
+  7 міст — ~110 МБ. Сайти GitHub Pages обмежені 1 ГБ, тож для кількох десятків міст варто розглянути Git LFS або
+  окремий хостинг даних.
+* Базова мапа використовує растрові тайли openstreetmap.org, що підходить для невеликого навантаження. Для
+  великого трафіку вкажіть власного постачальника тайлів у `web/app.js`.
 
-Changing labels or colours only re-runs the `export` stage. The cached computations use a methodology-only
-config hash.
-
-### Deploying to GitHub Pages
-
-1. Run the pipeline locally and commit `web/` (including `web/data/`). Raw and intermediate data in
-   `data/` are git-ignored.
-2. In the GitHub repository, go to **Settings → Pages → Build and deployment → Source** and choose
-   **GitHub Actions**.
-3. Push to `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the
-   `web/` folder.
-
-Notes:
-* `features.pmtiles` and `overview/*.pmtiles` files are read with HTTP range requests, which GitHub Pages
-  supports. Overview rasters are tiled pyramids so phones only decode the tiles on screen (Kyiv needs ~14 MB
-  of GPU memory at city scale instead of ~870 MB with full-size images).
-* GitHub rejects files over 100 MB. The largest file is a city's `features.pmtiles`; check its size
-  in the export log. If a future city goes over the limit, lower `VT_MAXZOOM` in
-  `urbanfp/export_web.py` or track `*.pmtiles` with Git LFS. The workflow checks out LFS files.
-* The base map uses openstreetmap.org raster tiles, which is fine for light use. For heavy traffic,
-  switch to a tile provider of your own in `web/app.js`.
-
-## 4. Repository layout
+## 4. Структура репозиторію
 
 ```
 config/            cities.yaml, classification.yaml
-urbanfp/           pipeline package (cli, sources, extract, classify, overlay, stats, export_web)
-web/               static app (index.html, app.js, style.css, about.html) + data/ (generated)
-docs/              methodology and data model
-data/              (git-ignored) sources/, interim/, processed/
+urbanfp/           конвеєр (cli, sources, extract, classify, overlay, stats, export_web, serve)
+web/               статичний застосунок (index.html, app.js, i18n.js, style.css, about*.html, favicon) + data/ (генерується)
+docs/              методика та модель даних (англійською)
+scripts/           make_favicon.py
+tests/             модульні тести (python -m pytest tests)
+data/              (поза git) sources/, interim/, processed/, logs/
 ```
 
-## Licence
+## Ліцензія
 
-Code: MIT. Data: © OpenStreetMap contributors, ODbL. Derived datasets in `web/data` and `data/` are ODbL.
+Код — MIT (див. [LICENSE](LICENSE)). Дані — © учасники OpenStreetMap, ODbL. Похідні набори даних у `web/data` і `data/` поширюються за ODbL.

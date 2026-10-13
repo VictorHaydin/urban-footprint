@@ -1,15 +1,21 @@
 <h1>Method &amp; data</h1>
 <p>
   This site shows how much of each city's <strong>administrative territory</strong> is physically occupied by
-  buildings, roads, railways, green space, water and other features. All numbers are computed reproducibly from
-  <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> data by a local
-  processing pipeline; this page only displays precomputed results.
+  buildings, roads, railways, green space, water, residential and industrial land and other features. All numbers are
+  computed reproducibly from <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+  data by a local processing pipeline; the site only displays precomputed results.
 </p>
+
+<h2>Cities</h2>
+<p>
+  Each city is the area inside its OSM administrative boundary: the city itself, not the wider urban
+  hromada. All cities use the same OSM snapshot.
+</p>
+<div id="aboutCities"></div>
 
 <h2>How the area breakdown is computed</h2>
 <ol>
-  <li><strong>Source.</strong> A country extract from Geofabrik (daily OSM snapshot). The city is the area inside its
-    OSM administrative boundary relation. The OSM data date is shown for every city.</li>
+  <li><strong>Source.</strong> The Geofabrik extract for Ukraine (a daily OpenStreetMap snapshot), processed locally.</li>
   <li><strong>Classification.</strong> Every OSM way or multipolygon is assigned to at most one category /
     sub-category by tag rules (e.g. <code>building=apartments</code> → Buildings › Apartment buildings,
     <code>landuse=forest</code> → Green › Forests).</li>
@@ -17,48 +23,85 @@
     mapped as centre-lines, so they are widened ("buffered") to an estimated width: the <code>width</code> tag
     if present, otherwise <code>lanes</code> × lane width, otherwise a default per road type
     (e.g. residential street 6&nbsp;m, footway 2&nbsp;m, railway track 4.5&nbsp;m). The share of area based on
-    default widths is reported in the data-quality panel.</li>
+    default widths is reported in the data-quality panel. Mapped road surfaces are used as is, but a
+    <code>highway=*</code> polygon only counts when it is explicitly marked <code>area=yes</code>.
+    This guards against tagging errors such as the Dnipro Reservoir, which is tagged as a residential street in OSM.</li>
   <li><strong>No double counting.</strong> Categories are "painted" onto the map in priority order. Each one only
     receives the area not already taken by a higher-priority one:
     buildings → railway tracks → roads → parking → water → sports → green space → cemeteries →
-    agriculture → industrial land → railway land → residential land → other land use. A building inside an industrial zone is
-    therefore counted only as a building; the industrial category is the remaining (non-built, non-road…) land.</li>
+    agriculture → industrial land → railway land → residential land → other land use.</li>
   <li><strong>Unclassified.</strong> Anything not covered by a classified OSM feature is reported as
     "Unclassified (no OSM data)". All categories together equal exactly 100% of the administrative area.</li>
 </ol>
 
-<h2>Reading the numbers</h2>
+<h2>Categories</h2>
 <ul>
-  <li><strong>Buildings</strong> are actual building footprints (roof outlines), not residential districts.
+  <li><strong>Buildings</strong>: actual building footprints (roof outlines), not residential districts. They are
+    typed by <code>building=*</code> (houses, apartment buildings, commercial, industrial, public, other).
     Buildings tagged only <code>building=yes</code> are kept as <em>Unknown type</em>; they are typed only when the
     same OSM object carries an explicit hint such as <code>amenity=school</code> or <code>shop=*</code>.</li>
-  <li><strong>Bridges</strong> count as roads/railways (top-down view); <strong>tunnels</strong> and underground
-    metro lines are excluded.</li>
-  <li><strong>"Residential land"</strong> is the part of residential areas (<code>landuse=residential</code>) not
-    covered by buildings, streets, parking, mapped lawns, playgrounds etc. — mostly courtyards, yards and unmapped
-    open space between houses.</li>
-  <li><strong>"Other mapped land"</strong> is land inside commercial, institutional or military
-    land-use polygons (and airports, construction sites, garage cooperatives…) not covered by any more specific feature.</li>
-  <li>Results depend on how completely OSM mappers have covered each city; differences between cities can partly
-    reflect mapping completeness rather than reality.</li>
+  <li><strong>Roads &amp; streets</strong> and <strong>Railways</strong>: carriageways, pedestrian and cycle paths,
+    tracks, tram lines and platforms. Bridges count (top-down view); tunnels and underground metro lines don't.</li>
+  <li><strong>Parking</strong>, <strong>Water</strong>, <strong>Parks, forests &amp; green space</strong>,
+    <strong>Sports &amp; recreation</strong>, <strong>Cemeteries</strong>, <strong>Agricultural land</strong>:
+    mapped land cover and land use.</li>
+  <li><strong>Residential land</strong> and <strong>Industrial land</strong>: only the <em>land</em> of these
+    areas. The buildings standing on it are counted under Buildings, and roads, parking, lawns and
+    playgrounds inside go to their own categories. What remains is mostly courtyards, yards and
+    unmapped open space.</li>
+  <li><strong>Other mapped land</strong>: commercial, institutional and military areas, airports, construction
+    sites and garage cooperatives not covered by any more specific feature.</li>
+  <li><strong>Unclassified</strong>: no OSM data. A large share usually means incomplete mapping.</li>
 </ul>
 
-<h2>Map</h2>
+<h2>Using the site</h2>
+<h3>Map</h3>
+<ul>
+  <li>At city scale the map shows anti-aliased coverage rasters (tiled, down to about 6&nbsp;m resolution). When you
+    zoom in, it switches to vector tiles with each individual counted piece. Click a piece to see its category, the
+    OSM tag it was classified by, its exclusive area and a link to the OSM object.</li>
+  <li>The sidebar lists every category with its share or area (switch between % and km²). Click a colour swatch to
+    hide or show a category; expand a category to see its sub-categories. With <em>Sub-categories as % of category</em>
+    (on by default), building types and other sub-categories add up to 100% of their category; switch it
+    off to see them as a share of the whole city.</li>
+  <li><strong>Two cities side by side:</strong> choose a city under "Compare with". Both maps always use the
+    <strong>same ground scale</strong> (corrected for latitude, as Web Mercator enlarges places further north) and
+    zoom together, so their sizes compare directly; each map can be panned on its own to look at different
+    parts of the cities. The sidebar then shows both cities category by category. Choose "— No city —" to return
+    to a single map.</li>
+</ul>
+<h3>Compare cities</h3>
+<ul>
+  <li>Each bar shows a city's whole territory: either as 100% (shares) or to scale in km², so
+    larger cities get longer bars. "Breakdown" switches to the sub-categories of one category, such as building types.</li>
+  <li>Click a category on a bar or in the legend to <strong>focus</strong> on it. Only that category is shown,
+    cities are ranked by it, and the largest value spans the full width, so even small differences are visible.
+    Click it again or ✕ to return.</li>
+  <li>Use the <strong>Cities</strong> filter to choose which cities to compare. The selection is kept in the page link.
+    The data table below the chart is collapsed by default.</li>
+</ul>
+
+<h2>Data quality</h2>
 <p>
-  At city scale the map shows anti-aliased coverage rasters (tiled, down to about 6&nbsp;m resolution). When you zoom in, it switches to vector
-  tiles that contain each individual counted piece. Click a piece to see its category, the OSM tag it was
-  classified by, its exclusive area and a link to the OSM object.
+  The map page shows a data-quality panel for every city. It runs these checks:
 </p>
-<p>
-  Choose a second city under "Compare with" to see two cities side by side. Both maps always use the
-  <strong>same ground scale</strong> (corrected for latitude, as Web Mercator enlarges places further north) and
-  zoom together, so their sizes compare directly; each map can be panned independently to compare different
-  parts of the cities. The sidebar then shows both cities category by category.
+<ul>
+  <li>whether the categories add up to the boundary area, and whether counted pieces overlap;</li>
+  <li>the share of unclassified land and of buildings with unknown type;</li>
+  <li>how much road and rail area relies on default widths;</li>
+  <li>OSM features that matched no rule;</li>
+  <li><strong>suspicious features</strong>: implausibly large road, rail or parking polygons, which are usually OSM tagging errors.</li>
+</ul>
+<p class="callout">
+  Results depend on how completely OpenStreetMap volunteers have mapped each city. Differences between cities can
+  partly reflect mapping completeness rather than reality. Check the unclassified share and the
+  data-quality panel before drawing conclusions.
 </p>
 
 <h2>Licence</h2>
 <p>
   Map data © OpenStreetMap contributors, available under the
   <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License</a>.
-  Derived datasets on this site are therefore also ODbL.
+  Derived datasets on this site are therefore also ODbL. Source code and documentation:
+  <a href="https://github.com/VictorHaydin/urban-footprint" target="_blank" rel="noopener">github.com/VictorHaydin/urban-footprint</a>.
 </p>

@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-13T12:23:02+00:00",
+ "generated_at": "2026-10-13T12:26:21+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -425,7 +425,10 @@
     50.213242,
     30.826359,
     50.590814
-   ]
+   ],
+   "osm_relation": 421866,
+   "notes": "City with special status (admin_level=4). Boundary includes large forest and floodplain areas.",
+   "notes_uk": "Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра."
   },
   {
    "id": "lviv",
@@ -443,7 +446,10 @@
     49.768175,
     24.133414,
     49.903712
-   ]
+   ],
+   "osm_relation": 2032280,
+   "notes": "City proper (not the whole Lviv urban hromada).",
+   "notes_uk": "Власне місто (без решти Львівської міської громади)."
   },
   {
    "id": "odesa",
@@ -461,7 +467,10 @@
     46.342666,
     30.831375,
     46.629119
-   ]
+   ],
+   "osm_relation": 1413934,
+   "notes": "City proper (not the whole Odesa urban hromada).",
+   "notes_uk": "Власне місто (без решти Одеської міської громади)."
   },
   {
    "id": "kharkiv",
@@ -479,7 +488,10 @@
     49.878482,
     36.455486,
     50.104753
-   ]
+   ],
+   "osm_relation": 3154746,
+   "notes": "City proper (not the whole Kharkiv urban hromada).",
+   "notes_uk": "Власне місто (без решти Харківської міської громади)."
   },
   {
    "id": "dnipro",
@@ -497,7 +509,10 @@
     48.355855,
     35.242195,
     48.57639
-   ]
+   ],
+   "osm_relation": 1017311,
+   "notes": "City proper (not the whole Dnipro urban hromada).",
+   "notes_uk": "Власне місто (без решти Дніпровської міської громади)."
   },
   {
    "id": "zaporizhzhia",
@@ -515,7 +530,10 @@
     47.75262,
     35.369035,
     47.954467
-   ]
+   ],
+   "osm_relation": 1418311,
+   "notes": "City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².",
+   "notes_uk": "Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²)."
   },
   {
    "id": "donetsk",
@@ -533,7 +551,10 @@
     47.875716,
     37.998791,
     48.089501
-   ]
+   ],
+   "osm_relation": 1413957,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).",
+   "notes_uk": "Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²)."
   }
  ],
  "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL)."

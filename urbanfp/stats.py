@@ -123,7 +123,7 @@ def compute_stats(city: City, cls: Classification) -> dict:
     stats = {
         "schema_version": 1,
         "city": {"id": city.id, "name": city.name, "name_local": city.name_local, "country": city.country,
-                 "osm_relation": city.boundary_relation, "notes": city.notes},
+                 "osm_relation": city.boundary_relation, "notes": city.notes, "notes_uk": city.notes_uk},
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "osm_timestamp": extract_meta.get("source_osm_timestamp"),
         "source": city.source,

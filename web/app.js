@@ -818,7 +818,33 @@ async function renderAbout() {
     if (!r.ok) throw new Error(String(r.status));
     a.innerHTML = await r.text();
     a.dataset.loaded = lang;
+    fillAboutCities();
   } catch { a.textContent = t('about.error'); }
+}
+
+/** City table on the Method & data page, generated from index.json so it never goes stale. */
+function fillAboutCities() {
+  const box = $('#aboutCities');
+  if (!box) return;
+  const uk = getLang() === 'uk';
+  // notes go on their own full-width line under each city, so the table also fits phone screens
+  const rows = [...state.index.cities].sort((a, b) => b.area_km2 - a.area_km2).flatMap((c) => {
+    const note = (uk ? c.notes_uk : c.notes) || c.notes || '';
+    return [
+      el('tr', { class: note ? 'has-note' : '' },
+        el('td', {}, el('strong', {}, cityName(c))),
+        el('td', {}, `${num(c.area_km2, 0)} ${t('units.km2')}`),
+        el('td', {}, c.osm_relation
+          ? el('a', { href: `https://www.openstreetmap.org/relation/${c.osm_relation}`, target: '_blank', rel: 'noopener' }, `r${c.osm_relation}`)
+          : '—'),
+        el('td', {}, c.osm_timestamp ? new Date(c.osm_timestamp).toLocaleDateString(locale()) : '—')),
+      note ? el('tr', { class: 'note-row' }, el('td', { colspan: '4' }, note)) : null,
+    ].filter(Boolean);
+  });
+  box.innerHTML = '';
+  box.append(el('div', { class: 'table-wrap' }, el('table', { class: 'cities-table' },
+    el('thead', {}, el('tr', {}, ['about.city', 'about.area', 'about.relation', 'about.osmDate'].map((k) => el('th', {}, t(k))))),
+    el('tbody', {}, rows))));
 }
 
 // ------------------------------------------------------------------ views
