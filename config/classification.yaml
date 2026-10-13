@@ -1,0 +1,374 @@
+# Classification methodology (see docs/METHODOLOGY.md for the reasoning).
+#
+# 1. Every OSM feature is matched against `rules` (first match wins) and gets ONE class
+#    `<category>/<subcategory>`, or is ignored when nothing matches.
+# 2. Line features (roads, railways, waterways) are turned into polygons by buffering
+#    with an estimated width (`line_widths`).
+# 3. Classes are "painted" onto the administrative area in `priority` order: a class only
+#    receives the area not already taken by a higher-priority class. This makes the
+#    breakdown mutually exclusive, and its sum equals the administrative area.
+#    Whatever is left at the end becomes `unclassified/no_data`.
+#
+# Changing rules / priority / widths changes the methodology hash, so `urbanfp run` reprocesses
+# affected cities. Changing only labels (`label`, `label_uk`) or colours re-runs just the web export.
+
+version: 1
+
+# ---------------------------------------------------------------- categories
+# Order here = display order (stacked bars, legend). Colors are used by the web app
+# and the overview rasters. `label` = English, `label_uk` = Ukrainian (web app default language).
+categories:
+  - id: buildings
+    label: Buildings
+    label_uk: "Будівлі"
+    color: "#d0473a"
+    subcategories:
+      - {id: detached_house, label: "Detached / single-family houses", label_uk: "Окремі / садибні будинки", color: "#f08a6c"}
+      - {id: apartments,     label: "Apartment buildings", label_uk: "Багатоквартирні будинки",             color: "#c0392b"}
+      - {id: residential,    label: "Residential (type not specified)", label_uk: "Житлові (тип не вказано)", color: "#e35d4f"}
+      - {id: commercial,     label: "Commercial / office / retail", label_uk: "Комерційні / офісні / торговельні",    color: "#8e44ad"}
+      - {id: industrial,     label: "Industrial / warehouses", label_uk: "Промислові / склади",         color: "#6d4c41"}
+      - {id: public,         label: "Public / institutional", label_uk: "Громадські будівлі та установи",          color: "#2c5aa0"}
+      - {id: other,          label: "Other (garages, sheds, roofs...)", label_uk: "Інші (гаражі, сараї, навіси…)", color: "#9e7b6b"}
+      - {id: unknown,        label: "Unknown type (building=yes)", label_uk: "Невідомий тип (building=yes)",     color: "#e8a09a"}
+  - id: roads
+    label: Roads & streets
+    label_uk: "Дороги та вулиці"
+    color: "#5c5c66"
+    subcategories:
+      - {id: major,          label: "Major roads (motorway–tertiary)", label_uk: "Магістральні дороги (motorway–tertiary)", color: "#3d3d45"}
+      - {id: minor,          label: "Minor & residential streets", label_uk: "Другорядні та житлові вулиці",     color: "#5c5c66"}
+      - {id: service,        label: "Service roads & tracks", label_uk: "Службові проїзди та ґрунтові дороги",          color: "#7a7a85"}
+      - {id: pedestrian,     label: "Pedestrian, footways, cycleways", label_uk: "Пішохідні шляхи, тротуари, велодоріжки", color: "#a3a3ad"}
+      - {id: road_area,      label: "Mapped road surfaces (areas)", label_uk: "Нанесені площі дорожнього покриття",    color: "#4b4b55"}
+      - {id: airfield,       label: "Runways, taxiways, aprons", label_uk: "Злітні смуги, руліжні доріжки, перони",       color: "#2f2f36"}
+  - id: railways
+    label: Railways
+    label_uk: "Залізниці"
+    color: "#b07d12"
+    subcategories:
+      - {id: track,          label: "Railway tracks", label_uk: "Залізничні колії",                  color: "#8a5f00"}
+      - {id: tram,           label: "Tram tracks", label_uk: "Трамвайні колії",                     color: "#c9951d"}
+      - {id: metro_surface,  label: "Metro (surface sections)", label_uk: "Метро (наземні ділянки)",        color: "#a8740c"}
+      - {id: platform,       label: "Platforms", label_uk: "Платформи",                       color: "#d9b05a"}
+      - {id: railway_land,   label: "Railway land (yards, embankments)", label_uk: "Залізнична смуга відведення (станції, насипи)", color: "#e6c98a"}
+  - id: parking
+    label: Parking
+    label_uk: "Паркування"
+    color: "#8f8fbf"
+    subcategories:
+      - {id: surface,        label: "Surface parking", label_uk: "Наземні парковки",                 color: "#8f8fbf"}
+  - id: green
+    label: Parks, forests & green space
+    label_uk: "Парки, ліси та зелені зони"
+    color: "#3f9b4a"
+    subcategories:
+      - {id: forest,         label: "Forests & woodland", label_uk: "Ліси та деревні насадження",              color: "#1f6b2d"}
+      - {id: park,           label: "Parks & gardens", label_uk: "Парки та сквери",                 color: "#4caf50"}
+      - {id: grass,          label: "Grass, meadows & scrub", label_uk: "Трава, луки та чагарники",          color: "#8bc34a"}
+      - {id: wetland,        label: "Wetlands", label_uk: "Водно-болотні угіддя",                        color: "#5f9e8f"}
+      - {id: allotments,     label: "Allotments / dacha gardens", label_uk: "Садові ділянки / дачі",      color: "#a5c860"}
+  - id: water
+    label: Water
+    label_uk: "Вода"
+    color: "#3a86c8"
+    subcategories:
+      - {id: river,          label: "Rivers, streams & canals", label_uk: "Річки, струмки та канали",        color: "#2a6fb0"}
+      - {id: lake,           label: "Lakes, ponds & reservoirs", label_uk: "Озера, ставки та водосховища",       color: "#4a96d8"}
+      - {id: other,          label: "Other water (basins, pools...)", label_uk: "Інші водойми (басейни, фонтани…)",  color: "#7ab3e3"}
+  - id: residential
+    label: Residential land
+    label_uk: "Житлові території"
+    color: "#e8c9bd"
+    subcategories:
+      - {id: yards, label: "Yards, courtyards & open space in residential areas", label_uk: "Двори, прибудинкові території та відкриті простори", color: "#e8c9bd"}
+  - id: industrial
+    label: Industrial land
+    label_uk: "Промислові території"
+    color: "#a07890"
+    subcategories:
+      - {id: industrial,     label: "Industrial land", label_uk: "Промислові території",                 color: "#a07890"}
+      - {id: port,           label: "Ports", label_uk: "Порти",                           color: "#8a6078"}
+      - {id: quarry_landfill, label: "Quarries & landfills", label_uk: "Кар’єри та звалища",           color: "#b89aac"}
+      - {id: utilities,      label: "Utilities (power, water treatment)", label_uk: "Інженерна інфраструктура (енергетика, водоочищення)", color: "#7e5a70"}
+  - id: sports
+    label: Sports & recreation
+    label_uk: "Спорт і відпочинок"
+    color: "#e0a800"
+    subcategories:
+      - {id: sports,         label: "Pitches, stadiums, sports centres", label_uk: "Спортмайданчики, стадіони, спортцентри", color: "#e0a800"}
+      - {id: playground,     label: "Playgrounds", label_uk: "Дитячі майданчики",                     color: "#f2c94c"}
+      - {id: other,          label: "Other recreation", label_uk: "Інші місця відпочинку",                color: "#eedd88"}
+  - id: cemeteries
+    label: Cemeteries
+    label_uk: "Кладовища"
+    color: "#6f8f72"
+    subcategories:
+      - {id: cemetery,       label: "Cemeteries", label_uk: "Кладовища",                      color: "#6f8f72"}
+  - id: agriculture
+    label: Agricultural land
+    label_uk: "Сільськогосподарські землі"
+    color: "#d8c27a"
+    subcategories:
+      - {id: farmland,       label: "Farmland", label_uk: "Рілля",                        color: "#e2d08f"}
+      - {id: orchard,        label: "Orchards & vineyards", label_uk: "Сади та виноградники",            color: "#b9b04f"}
+      - {id: other,          label: "Farmyards, greenhouses, nurseries", label_uk: "Ферми, теплиці, розсадники", color: "#c9a95c"}
+  - id: other
+    label: Other mapped land
+    label_uk: "Інші позначені землі"
+    color: "#c9bfae"
+    subcategories:
+      - {id: commercial_land,  label: "Commercial / retail land", label_uk: "Комерційні / торговельні території",       color: "#d9c7d8"}
+      - {id: institutional,    label: "Institutional grounds (schools, hospitals...)", label_uk: "Території закладів (школи, лікарні…)", color: "#c6d0e0"}
+      - {id: military,         label: "Military", label_uk: "Військові території",                       color: "#b5a68f"}
+      - {id: construction,     label: "Construction & brownfield", label_uk: "Будмайданчики та занедбані ділянки",      color: "#cdb48a"}
+      - {id: airport,          label: "Airport grounds", label_uk: "Територія аеропорту",                color: "#bdbdc9"}
+      - {id: garages_land,     label: "Garage cooperatives (land)", label_uk: "Гаражні кооперативи (територія)",     color: "#c4b4a8"}
+      - {id: bare,             label: "Sand, beaches, bare ground", label_uk: "Пісок, пляжі, відкритий ґрунт",     color: "#efe2b0"}
+      - {id: structures,       label: "Piers, breakwaters, other structures", label_uk: "Причали, хвилерізи, інші споруди", color: "#a9a094"}
+      - {id: other_landuse,    label: "Other land use", label_uk: "Інше землекористування",                 color: "#d6d0c4"}
+  - id: unclassified
+    label: Unclassified (no OSM data)
+    label_uk: "Некласифіковано (немає даних OSM)"
+    color: "#eeeeee"
+    subcategories:
+      - {id: no_data,          label: "Not covered by any classified OSM feature", label_uk: "Не покрито жодним класифікованим об’єктом OSM", color: "#eeeeee"}
+
+# ---------------------------------------------------------------- priority
+# Painting order, highest priority first. Entries are `category/subcategory` or
+# `category/*` (all subcategories of the category, in the order listed above).
+# Principle: physical, precisely-mapped surfaces (buildings, tracks, roads) first;
+# then land COVER (water, sports surfaces, vegetation); then land USE polygons last,
+# so that e.g. buildings inside an industrial zone count as buildings only.
+priority:
+  - buildings/*
+  - railways/track
+  - railways/metro_surface
+  - railways/tram
+  - railways/platform
+  - roads/*
+  - parking/*
+  - other/structures
+  - water/*
+  - sports/*
+  - green/*
+  - cemeteries/*
+  - agriculture/*
+  - industrial/*
+  - railways/railway_land
+  - residential/*
+  - other/*
+  - unclassified/*
+
+# ---------------------------------------------------------------- global exclusions
+# Features matching any of these are dropped before classification
+# (they are not visible on the ground surface or do not exist physically).
+exclude:
+  - {tunnel: [yes, culvert, flooded]}
+  - {location: [underground, underwater]}
+  - {parking: [underground]}
+  - {layer: ["-1", "-2", "-3", "-4", "-5"], building: "*"}   # underground structures
+  - {"building:part": "*"}
+
+# ---------------------------------------------------------------- rules
+# First match wins. `match` keys must all match:
+#   value list  -> tag value must be one of them
+#   "*"         -> tag present (and not "no")
+#   `not`       -> none of these may match
+#   `geom`      -> area | line (default: any). Closed ways are areas or lines per
+#                  standard OSM area semantics (see osm_geometry.py).
+# `footprint`: polygon (default for areas) | buffer (lines; width from line_widths.<width_group>)
+# `basis` documents what the classification is based on (recorded per feature).
+rules:
+  # ---------- buildings (by building=* value)
+  - {class: buildings/detached_house, match: {building: [house, detached, semidetached_house, bungalow, cabin, terrace, farm, villa, dacha, hut]}, geom: area}
+  - {class: buildings/apartments,     match: {building: [apartments, dormitory]}, geom: area}
+  - {class: buildings/residential,    match: {building: [residential]}, geom: area}
+  - {class: buildings/commercial,     match: {building: [commercial, office, retail, supermarket, kiosk, hotel, shop, mall, bank]}, geom: area}
+  - {class: buildings/industrial,     match: {building: [industrial, warehouse, factory, manufacture, storage, hangar, depot, works, digester, silo]}, geom: area}
+  - {class: buildings/public,         match: {building: [public, civic, government, school, university, college, kindergarten, hospital, clinic, church, cathedral, chapel, mosque, synagogue, temple, religious, monastery, train_station, transportation, fire_station, police, sports_hall, sports_centre, stadium, grandstand, museum, library, theatre, military, barracks, office_government]}, geom: area}
+  - {class: buildings/other,          match: {building: [garage, garages, shed, roof, greenhouse, farm_auxiliary, barn, stable, cowshed, service, construction, ruins, carport, parking, bunker, transformer_tower, container, toilets, gatehouse, boathouse, kiosk_service, utility, pavilion, tent, water_tower, tower, bridge, outbuilding, allotment_house]}, geom: area}
+  # building=yes (or other unspecific value): only explicit tags on the SAME object are used,
+  # no guessing from surroundings. Controlled by `building_secondary_tags` below.
+  - {class: buildings/unknown,        match: {building: "*"}, geom: area, basis: building_unknown}
+
+  # ---------- railways (lines buffered; see line_widths.railway)
+  - {class: railways/metro_surface, match: {railway: [subway]}, geom: line, footprint: buffer, width_group: railway}
+  - {class: railways/tram,          match: {railway: [tram]}, geom: line, footprint: buffer, width_group: railway}
+  - {class: railways/track,         match: {railway: [rail, light_rail, narrow_gauge, monorail, funicular, disused, preserved, miniature]}, geom: line, footprint: buffer, width_group: railway}
+  - {class: railways/platform,      match: {railway: [platform]}, geom: area}
+  - {class: railways/platform,      match: {public_transport: [platform], railway: "*"}, geom: area}
+  - {class: railways/platform,      match: {railway: [platform]}, geom: line, footprint: buffer, width_group: railway}
+  - {class: railways/railway_land,  match: {landuse: [railway]}, geom: area}
+
+  # ---------- roads
+  - {class: roads/airfield,   match: {aeroway: [runway, taxiway, apron, helipad]}, geom: area}
+  - {class: roads/airfield,   match: {aeroway: [runway, taxiway, taxilane]}, geom: line, footprint: buffer, width_group: aeroway}
+  - {class: roads/road_area,  match: {"area:highway": "*"}, geom: area}
+  - {class: roads/road_area,  match: {man_made: [bridge]}, geom: area}      # bridge deck outlines
+  - {class: roads/pedestrian, match: {highway: [pedestrian, footway, path, cycleway, steps, bridleway, platform, corridor, track]}, geom: area}
+  - {class: roads/minor,      match: {highway: "*"}, geom: area, not: {highway: [construction, proposed, abandoned, razed, services, rest_area]}}
+  - {class: roads/major,      match: {highway: [motorway, trunk, primary, secondary, tertiary, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link]}, geom: line, footprint: buffer, width_group: highway}
+  - {class: roads/minor,      match: {highway: [residential, unclassified, living_street, road, busway, bus_guideway]}, geom: line, footprint: buffer, width_group: highway}
+  - {class: roads/service,    match: {highway: [service, track]}, geom: line, footprint: buffer, width_group: highway}
+  - {class: roads/pedestrian, match: {highway: [pedestrian, footway, path, cycleway, steps, bridleway, platform]}, geom: line, footprint: buffer, width_group: highway}
+
+  # ---------- parking
+  - {class: parking/surface, match: {amenity: [parking]}, geom: area, not: {parking: [multi-storey, rooftop]}}
+  - {class: parking/surface, match: {amenity: [parking_space]}, geom: area}
+
+  # ---------- structures over water
+  - {class: other/structures, match: {man_made: [pier, breakwater, groyne, quay, dyke]}, geom: area}
+
+  # ---------- water
+  - {class: water/river, match: {water: [river, canal, stream, oxbow, ditch, drain, moat]}, geom: area}
+  - {class: water/river, match: {waterway: [riverbank, river, canal, stream, dock]}, geom: area}
+  - {class: water/lake,  match: {water: [lake, pond, reservoir, lagoon, basin, lock]}, geom: area}
+  - {class: water/lake,  match: {landuse: [reservoir]}, geom: area}
+  - {class: water/other, match: {natural: [water]}, geom: area}
+  - {class: water/other, match: {landuse: [basin]}, geom: area}
+  - {class: water/other, match: {amenity: [fountain]}, geom: area}
+  - {class: water/other, match: {water: "*"}, geom: area}
+  - {class: water/river, match: {waterway: [river, canal, stream, ditch, drain]}, geom: line, footprint: buffer, width_group: waterway}
+
+  # ---------- sports & recreation
+  - {class: sports/playground, match: {leisure: [playground]}, geom: area}
+  - {class: sports/sports,     match: {leisure: [pitch, stadium, sports_centre, track, golf_course, ice_rink, swimming_pool, water_park, fitness_station, horse_riding, miniature_golf, sports_hall, racetrack, shooting_ground, skatepark]}, geom: area}
+  - {class: sports/sports,     match: {landuse: [winter_sports]}, geom: area}
+  - {class: sports/other,      match: {leisure: [amusement_arcade, beach_resort, summer_camp, marina, dog_park, resort, bandstand]}, geom: area}
+  - {class: sports/other,      match: {tourism: [theme_park, zoo, camp_site]}, geom: area}
+
+  # ---------- green space (land cover first, then park-type land use)
+  - {class: green/forest,     match: {landuse: [forest]}, geom: area}
+  - {class: green/forest,     match: {natural: [wood]}, geom: area}
+  - {class: green/wetland,    match: {natural: [wetland]}, geom: area}
+  - {class: green/grass,      match: {natural: [grassland, scrub, heath, fell, tundra]}, geom: area}
+  - {class: green/grass,      match: {landuse: [grass, meadow, village_green, flowerbed, recreation_ground]}, geom: area}
+  - {class: green/park,       match: {leisure: [park, garden, common, nature_reserve_park]}, geom: area}
+  - {class: green/allotments, match: {landuse: [allotments]}, geom: area}
+
+  # ---------- cemeteries
+  - {class: cemeteries/cemetery, match: {landuse: [cemetery]}, geom: area}
+  - {class: cemeteries/cemetery, match: {amenity: [grave_yard]}, geom: area}
+
+  # ---------- agriculture
+  - {class: agriculture/farmland, match: {landuse: [farmland]}, geom: area}
+  - {class: agriculture/orchard,  match: {landuse: [orchard, vineyard]}, geom: area}
+  - {class: agriculture/other,    match: {landuse: [farmyard, greenhouse_horticulture, plant_nursery, animal_keeping, aquaculture]}, geom: area}
+
+  # ---------- industrial land
+  - {class: industrial/port,            match: {landuse: [port]}, geom: area}
+  - {class: industrial/quarry_landfill, match: {landuse: [quarry, landfill]}, geom: area}
+  - {class: industrial/utilities,       match: {power: [plant, substation, generator]}, geom: area}
+  - {class: industrial/utilities,       match: {man_made: [wastewater_plant, water_works, works, reservoir_covered, storage_tank, gasometer, silo]}, geom: area}
+  - {class: industrial/industrial,      match: {landuse: [industrial, depot]}, geom: area}
+
+  # ---------- other mapped land
+  - {class: other/airport,          match: {aeroway: [aerodrome]}, geom: area}
+  - {class: other/military,         match: {landuse: [military]}, geom: area}
+  - {class: other/military,         match: {military: "*"}, geom: area}
+  - {class: other/construction,     match: {landuse: [construction, brownfield, greenfield]}, geom: area}
+  - {class: other/garages_land,     match: {landuse: [garages]}, geom: area}
+  - {class: other/bare,             match: {natural: [sand, beach, bare_rock, scree, shingle, mud]}, geom: area}
+  - {class: other/institutional,    match: {amenity: [school, university, college, kindergarten, hospital, clinic, prison, place_of_worship, fire_station, police, townhall, social_facility, research_institute, community_centre]}, geom: area}
+  - {class: other/commercial_land,  match: {amenity: [fuel, marketplace, car_wash]}, geom: area}
+  - {class: other/institutional,    match: {landuse: [education, institutional, religious]}, geom: area}
+  - {class: other/commercial_land,  match: {landuse: [commercial, retail]}, geom: area}
+  - {class: residential/yards,      match: {landuse: [residential]}, geom: area}
+  - {class: other/other_landuse,    match: {landuse: "*"}, geom: area, not: {landuse: [proposed, planned, no]}}
+
+# For buildings with an unspecific `building` value (yes / unrecognized), use these
+# tags ON THE SAME OSM OBJECT to determine the subcategory. Set `enabled: false`
+# to classify strictly by `building=*` only. Buildings classified this way are
+# counted separately in the validation report (basis = secondary_tag).
+building_secondary_tags:
+  enabled: true
+  rules:
+    - {class: buildings/apartments, match: {"building:use": [apartments, residential]}}
+    - {class: buildings/commercial, match: {"building:use": [commercial, retail, office]}}
+    - {class: buildings/industrial, match: {"building:use": [industrial, warehouse]}}
+    - {class: buildings/public,     match: {amenity: [school, university, college, kindergarten, hospital, clinic, place_of_worship, townhall, library, theatre, fire_station, police, community_centre, courthouse]}}
+    - {class: buildings/commercial, match: {shop: "*"}}
+    - {class: buildings/commercial, match: {office: "*"}}
+    - {class: buildings/commercial, match: {tourism: [hotel, hostel, motel]}}
+    - {class: buildings/industrial, match: {industrial: "*"}}
+    - {class: buildings/industrial, match: {man_made: [works]}}
+
+# ---------------------------------------------------------------- line widths
+# Total physical width in metres used to buffer line features (buffer radius = width/2).
+# Resolution order for each line: explicit `width` tag -> `est_width` tag ->
+# lanes * lane_width (highways) -> default by type. Each feature records `width_source`
+# (tag | lanes | default) so estimated areas can be quantified.
+line_widths:
+  highway:
+    # [two-way default, oneway default] carriageway width in metres
+    defaults:
+      motorway: [15.0, 8.0]
+      trunk: [14.0, 7.5]
+      primary: [12.0, 7.0]
+      secondary: [10.0, 6.5]
+      tertiary: [8.0, 5.5]
+      motorway_link: [7.0, 5.0]
+      trunk_link: [7.0, 5.0]
+      primary_link: [7.0, 5.0]
+      secondary_link: [6.5, 5.0]
+      tertiary_link: [6.0, 4.5]
+      unclassified: [6.0, 4.0]
+      residential: [6.0, 4.0]
+      living_street: [5.0, 4.0]
+      road: [6.0, 4.0]
+      busway: [7.0, 4.0]
+      bus_guideway: [7.0, 4.0]
+      service: [4.5, 3.5]
+      track: [3.0, 3.0]
+      pedestrian: [5.0, 5.0]
+      footway: [2.0, 2.0]
+      path: [1.5, 1.5]
+      cycleway: [2.0, 2.0]
+      steps: [2.0, 2.0]
+      bridleway: [2.0, 2.0]
+      platform: [3.0, 3.0]
+    service_overrides:      # by service=* value
+      parking_aisle: 5.5
+      driveway: 3.0
+      alley: 3.5
+      drive-through: 3.5
+    lane_width:             # metres per lane when `lanes` is tagged
+      motorway: 3.75
+      trunk: 3.75
+      primary: 3.5
+      secondary: 3.25
+      tertiary: 3.25
+      default: 3.0
+    # Sidewalks are only added when explicitly tagged on the road (sidewalk=both|left|right).
+    # Sidewalks mapped as separate footways are handled by the footway rule.
+    sidewalk_width: 2.0
+    max_width: 60.0         # cap for absurd width tags
+  railway:
+    defaults:
+      rail: 4.5             # single track incl. sleepers + ballast shoulder
+      light_rail: 4.0
+      narrow_gauge: 3.5
+      monorail: 3.0
+      funicular: 3.0
+      disused: 4.0
+      preserved: 4.5
+      miniature: 1.5
+      subway: 4.5
+      tram: 3.0
+      platform: 5.0
+    max_width: 30.0
+  waterway:
+    defaults:
+      river: 10.0
+      canal: 8.0
+      stream: 2.0
+      ditch: 1.5
+      drain: 1.5
+    max_width: 300.0
+  aeroway:
+    defaults:
+      runway: 45.0
+      taxiway: 23.0
+      taxilane: 15.0
+    max_width: 100.0

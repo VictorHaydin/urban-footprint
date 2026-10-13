@@ -1,0 +1,63 @@
+<h1>Method &amp; data</h1>
+<p>
+  This site shows how much of each city's <strong>administrative territory</strong> is physically occupied by
+  buildings, roads, railways, green space, water and other features. All numbers are computed reproducibly from
+  <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> data by a local
+  processing pipeline; this page only displays precomputed results.
+</p>
+
+<h2>How the area breakdown is computed</h2>
+<ol>
+  <li><strong>Source.</strong> A country extract from Geofabrik (daily OSM snapshot). The city is the area inside its
+    OSM administrative boundary relation. The OSM data date is shown for every city.</li>
+  <li><strong>Classification.</strong> Every OSM way or multipolygon is assigned to at most one category /
+    sub-category by tag rules (e.g. <code>building=apartments</code> → Buildings › Apartment buildings,
+    <code>landuse=forest</code> → Green › Forests).</li>
+  <li><strong>Physical footprints.</strong> Polygons are used as mapped. Roads, railways, streams and runways are
+    mapped as centre-lines, so they are widened ("buffered") to an estimated width: the <code>width</code> tag
+    if present, otherwise <code>lanes</code> × lane width, otherwise a default per road type
+    (e.g. residential street 6&nbsp;m, footway 2&nbsp;m, railway track 4.5&nbsp;m). The share of area based on
+    default widths is reported in the data-quality panel.</li>
+  <li><strong>No double counting.</strong> Categories are "painted" onto the map in priority order. Each one only
+    receives the area not already taken by a higher-priority one:
+    buildings → railway tracks → roads → parking → water → sports → green space → cemeteries →
+    agriculture → industrial land → railway land → residential land → other land use. A building inside an industrial zone is
+    therefore counted only as a building; the industrial category is the remaining (non-built, non-road…) land.</li>
+  <li><strong>Unclassified.</strong> Anything not covered by a classified OSM feature is reported as
+    "Unclassified (no OSM data)". All categories together equal exactly 100% of the administrative area.</li>
+</ol>
+
+<h2>Reading the numbers</h2>
+<ul>
+  <li><strong>Buildings</strong> are actual building footprints (roof outlines), not residential districts.
+    Buildings tagged only <code>building=yes</code> are kept as <em>Unknown type</em>; they are typed only when the
+    same OSM object carries an explicit hint such as <code>amenity=school</code> or <code>shop=*</code>.</li>
+  <li><strong>Bridges</strong> count as roads/railways (top-down view); <strong>tunnels</strong> and underground
+    metro lines are excluded.</li>
+  <li><strong>"Residential land"</strong> is the part of residential areas (<code>landuse=residential</code>) not
+    covered by buildings, streets, parking, mapped lawns, playgrounds etc. — mostly courtyards, yards and unmapped
+    open space between houses.</li>
+  <li><strong>"Other mapped land"</strong> is land inside commercial, institutional or military
+    land-use polygons (and airports, construction sites, garage cooperatives…) not covered by any more specific feature.</li>
+  <li>Results depend on how completely OSM mappers have covered each city; differences between cities can partly
+    reflect mapping completeness rather than reality.</li>
+</ul>
+
+<h2>Map</h2>
+<p>
+  At city scale the map shows anti-aliased coverage rasters (about 8&nbsp;m resolution). When you zoom in, it switches to vector
+  tiles that contain each individual counted piece. Click a piece to see its category, the OSM tag it was
+  classified by, its exclusive area and a link to the OSM object.
+</p>
+<p>
+  Choose a second city under "Compare with" to see two cities side by side. Both maps always use the
+  <strong>same ground scale</strong> (corrected for latitude, as Web Mercator enlarges places further north) and
+  pan together, so their sizes compare directly. The sidebar then shows both cities category by category.
+</p>
+
+<h2>Licence</h2>
+<p>
+  Map data © OpenStreetMap contributors, available under the
+  <a href="https://opendatacommons.org/licenses/odbl/" target="_blank" rel="noopener">Open Database License</a>.
+  Derived datasets on this site are therefore also ODbL.
+</p>

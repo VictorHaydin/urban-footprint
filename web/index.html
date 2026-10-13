@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Структура міст</title>
+  <meta name="description" content="How much of each city's territory is occupied by buildings, roads, railways, parks, water and other features — computed from OpenStreetMap.">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+  <script src="https://unpkg.com/pmtiles@3.2.1/dist/pmtiles.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand" data-i18n="app.title">Структура міст</div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
+      <button class="tab" data-view="compare" role="tab" data-i18n="tab.compare">Порівняння міст</button>
+      <button class="tab" data-view="about" role="tab" data-i18n="tab.about">Методика та дані</button>
+    </nav>
+    <div class="spacer"></div>
+    <div class="lang-switch" role="group" data-i18n-aria="lang.switch">
+      <button data-lang="uk" lang="uk" title="Українська">УКР</button>
+      <button data-lang="en" lang="en" title="English">ENG</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- MAP VIEW -->
+    <section id="view-map" class="view active">
+      <aside class="sidebar" id="sidebar">
+        <label class="city-select"><span data-i18n="city">Місто</span>
+          <select id="citySelect"></select>
+        </label>
+        <label class="city-select second"><span data-i18n="city2">Порівняти з</span>
+          <select id="citySelect2"></select>
+        </label>
+        <div id="cityHeader"></div>
+        <div class="map-controls">
+          <label><input type="checkbox" id="basemapToggle" checked> <span data-i18n="map.basemap">Базова мапа</span></label>
+          <label><input type="checkbox" id="boundaryToggle" checked> <span data-i18n="map.boundary">Межа</span></label>
+          <label><span data-i18n="map.opacity">Прозорість</span> <input type="range" id="opacityRange" min="0.2" max="1" step="0.05" value="0.85"></label>
+        </div>
+        <div class="unit-toggle" id="unitToggleMap"></div>
+        <div id="legend"></div>
+        <div id="buildingPanel"></div>
+        <div id="validationPanel"></div>
+      </aside>
+      <div class="map-wrap">
+        <div class="map-panes" id="mapPanes">
+          <div class="map-pane" id="pane0"><div class="map" id="map"></div><div class="pane-label" id="paneLabel0" hidden></div></div>
+          <div class="map-pane" id="pane1" hidden><div class="map" id="map2"></div><div class="pane-label" id="paneLabel1"></div></div>
+        </div>
+        <div class="zoom-hint" id="zoomHint" data-i18n="map.zoomHint">Наблизьте мапу, щоб переглянути окремі об’єкти</div>
+      </div>
+    </section>
+
+    <!-- COMPARE VIEW -->
+    <section id="view-compare" class="view">
+      <div class="compare">
+        <div class="compare-head">
+          <h2 data-i18n="cmp.title">Структура території міст</h2>
+          <div class="unit-toggle" id="unitToggleCompare"></div>
+          <label><span data-i18n="cmp.breakdown">Розбивка</span>
+            <select id="compareBreakdown"></select>
+          </label>
+          <div class="city-filter" id="cityFilter">
+            <button type="button" class="cf-button" id="cityFilterBtn" aria-haspopup="true" aria-expanded="false"></button>
+            <div class="cf-panel" id="cityFilterPanel" hidden>
+              <input type="search" id="cityFilterSearch" data-i18n-placeholder="cf.search" autocomplete="off">
+              <div class="cf-actions">
+                <button type="button" id="cityFilterAll" data-i18n="cf.all">Усі</button>
+                <button type="button" id="cityFilterNone" data-i18n="cf.none">Жодного</button>
+              </div>
+              <div class="cf-list" id="cityFilterList"></div>
+            </div>
+          </div>
+        </div>
+        <p class="hint" id="compareHint"></p>
+        <div id="compareFocus" class="focus-bar"></div>
+        <div id="compareChart" class="chart"></div>
+        <div id="compareLegend" class="chart-legend"></div>
+        <details id="compareTableDetails" class="table-details">
+          <summary data-i18n="cmp.table">Таблиця даних</summary>
+          <div id="compareTable" class="table-wrap"></div>
+        </details>
+      </div>
+    </section>
+
+    <!-- ABOUT VIEW -->
+    <section id="view-about" class="view">
+      <article class="about" id="aboutContent"></article>
+    </section>
+  </main>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+  <script type="module" src="app.js"></script>
+</body>
+</html>

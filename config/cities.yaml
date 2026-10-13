@@ -1,0 +1,42 @@
+# City definitions.
+#
+# To add a city: append an entry with a unique `id` (used in file paths and URLs)
+# and the OSM relation id of its administrative boundary
+# (find it on https://www.openstreetmap.org or via Nominatim), then run
+#   python -m urbanfp run <id>
+#
+# Fields:
+#   id                  short slug, [a-z0-9_-]
+#   name / name_local   display names
+#   country             ISO 3166-1 alpha-2
+#   boundary_relation   OSM relation id of the administrative boundary
+#   clip_to_land        (optional, default false) subtract sea area using OSM coastline
+#                       -- only needed if the admin boundary extends into the sea
+#   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
+#                       (default from `defaults`). Cities sharing a source are extracted in one pass.
+#   notes               free text, shown in reports
+
+defaults:
+  source: "geofabrik:europe/ukraine"
+
+cities:
+  - id: kyiv
+    name: Kyiv
+    name_local: Київ
+    country: UA
+    boundary_relation: 421866
+    notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
+
+  - id: lviv
+    name: Lviv
+    name_local: Львів
+    country: UA
+    boundary_relation: 2032280
+    notes: City proper (not the whole Lviv urban hromada).
+
+  - id: odesa
+    name: Odesa
+    name_local: Одеса
+    country: UA
+    boundary_relation: 1413934
+    notes: City proper (not the whole Odesa urban hromada).

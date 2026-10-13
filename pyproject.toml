@@ -1,0 +1,31 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "urbanfp"
+version = "0.1.0"
+description = "Urban land-use / land-cover footprint analysis of cities from OpenStreetMap data"
+requires-python = ">=3.11"
+dependencies = [
+    "osmium>=4.0",
+    "shapely>=2.0",
+    "geopandas>=1.0",
+    "pyproj>=3.6",
+    "pyogrio>=0.9",
+    "pyarrow>=15",
+    "numpy>=1.26",
+    "pandas>=2.1",
+    "rasterio>=1.3",
+    "mapbox-vector-tile>=2.1",
+    "pmtiles>=3.4",
+    "pyyaml>=6",
+    "requests>=2.31",
+    "Pillow>=10",
+]
+
+[project.scripts]
+urbanfp = "urbanfp.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["urbanfp*"]

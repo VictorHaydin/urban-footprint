@@ -1,0 +1,468 @@
+{
+ "schema_version": 1,
+ "generated_at": "2026-10-13T10:03:53+00:00",
+ "config_hash": "550d137cbf2f322d",
+ "categories": [
+  {
+   "id": "buildings",
+   "label": "Buildings",
+   "label_uk": "Будівлі",
+   "color": "#d0473a",
+   "subcategories": [
+    {
+     "id": "detached_house",
+     "label": "Detached / single-family houses",
+     "label_uk": "Окремі / садибні будинки",
+     "color": "#f08a6c"
+    },
+    {
+     "id": "apartments",
+     "label": "Apartment buildings",
+     "label_uk": "Багатоквартирні будинки",
+     "color": "#c0392b"
+    },
+    {
+     "id": "residential",
+     "label": "Residential (type not specified)",
+     "label_uk": "Житлові (тип не вказано)",
+     "color": "#e35d4f"
+    },
+    {
+     "id": "commercial",
+     "label": "Commercial / office / retail",
+     "label_uk": "Комерційні / офісні / торговельні",
+     "color": "#8e44ad"
+    },
+    {
+     "id": "industrial",
+     "label": "Industrial / warehouses",
+     "label_uk": "Промислові / склади",
+     "color": "#6d4c41"
+    },
+    {
+     "id": "public",
+     "label": "Public / institutional",
+     "label_uk": "Громадські будівлі та установи",
+     "color": "#2c5aa0"
+    },
+    {
+     "id": "other",
+     "label": "Other (garages, sheds, roofs...)",
+     "label_uk": "Інші (гаражі, сараї, навіси…)",
+     "color": "#9e7b6b"
+    },
+    {
+     "id": "unknown",
+     "label": "Unknown type (building=yes)",
+     "label_uk": "Невідомий тип (building=yes)",
+     "color": "#e8a09a"
+    }
+   ]
+  },
+  {
+   "id": "roads",
+   "label": "Roads & streets",
+   "label_uk": "Дороги та вулиці",
+   "color": "#5c5c66",
+   "subcategories": [
+    {
+     "id": "major",
+     "label": "Major roads (motorway–tertiary)",
+     "label_uk": "Магістральні дороги (motorway–tertiary)",
+     "color": "#3d3d45"
+    },
+    {
+     "id": "minor",
+     "label": "Minor & residential streets",
+     "label_uk": "Другорядні та житлові вулиці",
+     "color": "#5c5c66"
+    },
+    {
+     "id": "service",
+     "label": "Service roads & tracks",
+     "label_uk": "Службові проїзди та ґрунтові дороги",
+     "color": "#7a7a85"
+    },
+    {
+     "id": "pedestrian",
+     "label": "Pedestrian, footways, cycleways",
+     "label_uk": "Пішохідні шляхи, тротуари, велодоріжки",
+     "color": "#a3a3ad"
+    },
+    {
+     "id": "road_area",
+     "label": "Mapped road surfaces (areas)",
+     "label_uk": "Нанесені площі дорожнього покриття",
+     "color": "#4b4b55"
+    },
+    {
+     "id": "airfield",
+     "label": "Runways, taxiways, aprons",
+     "label_uk": "Злітні смуги, руліжні доріжки, перони",
+     "color": "#2f2f36"
+    }
+   ]
+  },
+  {
+   "id": "railways",
+   "label": "Railways",
+   "label_uk": "Залізниці",
+   "color": "#b07d12",
+   "subcategories": [
+    {
+     "id": "track",
+     "label": "Railway tracks",
+     "label_uk": "Залізничні колії",
+     "color": "#8a5f00"
+    },
+    {
+     "id": "tram",
+     "label": "Tram tracks",
+     "label_uk": "Трамвайні колії",
+     "color": "#c9951d"
+    },
+    {
+     "id": "metro_surface",
+     "label": "Metro (surface sections)",
+     "label_uk": "Метро (наземні ділянки)",
+     "color": "#a8740c"
+    },
+    {
+     "id": "platform",
+     "label": "Platforms",
+     "label_uk": "Платформи",
+     "color": "#d9b05a"
+    },
+    {
+     "id": "railway_land",
+     "label": "Railway land (yards, embankments)",
+     "label_uk": "Залізнична смуга відведення (станції, насипи)",
+     "color": "#e6c98a"
+    }
+   ]
+  },
+  {
+   "id": "parking",
+   "label": "Parking",
+   "label_uk": "Паркування",
+   "color": "#8f8fbf",
+   "subcategories": [
+    {
+     "id": "surface",
+     "label": "Surface parking",
+     "label_uk": "Наземні парковки",
+     "color": "#8f8fbf"
+    }
+   ]
+  },
+  {
+   "id": "green",
+   "label": "Parks, forests & green space",
+   "label_uk": "Парки, ліси та зелені зони",
+   "color": "#3f9b4a",
+   "subcategories": [
+    {
+     "id": "forest",
+     "label": "Forests & woodland",
+     "label_uk": "Ліси та деревні насадження",
+     "color": "#1f6b2d"
+    },
+    {
+     "id": "park",
+     "label": "Parks & gardens",
+     "label_uk": "Парки та сквери",
+     "color": "#4caf50"
+    },
+    {
+     "id": "grass",
+     "label": "Grass, meadows & scrub",
+     "label_uk": "Трава, луки та чагарники",
+     "color": "#8bc34a"
+    },
+    {
+     "id": "wetland",
+     "label": "Wetlands",
+     "label_uk": "Водно-болотні угіддя",
+     "color": "#5f9e8f"
+    },
+    {
+     "id": "allotments",
+     "label": "Allotments / dacha gardens",
+     "label_uk": "Садові ділянки / дачі",
+     "color": "#a5c860"
+    }
+   ]
+  },
+  {
+   "id": "water",
+   "label": "Water",
+   "label_uk": "Вода",
+   "color": "#3a86c8",
+   "subcategories": [
+    {
+     "id": "river",
+     "label": "Rivers, streams & canals",
+     "label_uk": "Річки, струмки та канали",
+     "color": "#2a6fb0"
+    },
+    {
+     "id": "lake",
+     "label": "Lakes, ponds & reservoirs",
+     "label_uk": "Озера, ставки та водосховища",
+     "color": "#4a96d8"
+    },
+    {
+     "id": "other",
+     "label": "Other water (basins, pools...)",
+     "label_uk": "Інші водойми (басейни, фонтани…)",
+     "color": "#7ab3e3"
+    }
+   ]
+  },
+  {
+   "id": "residential",
+   "label": "Residential land",
+   "label_uk": "Житлові території",
+   "color": "#e8c9bd",
+   "subcategories": [
+    {
+     "id": "yards",
+     "label": "Yards, courtyards & open space in residential areas",
+     "label_uk": "Двори, прибудинкові території та відкриті простори",
+     "color": "#e8c9bd"
+    }
+   ]
+  },
+  {
+   "id": "industrial",
+   "label": "Industrial land",
+   "label_uk": "Промислові території",
+   "color": "#a07890",
+   "subcategories": [
+    {
+     "id": "industrial",
+     "label": "Industrial land",
+     "label_uk": "Промислові території",
+     "color": "#a07890"
+    },
+    {
+     "id": "port",
+     "label": "Ports",
+     "label_uk": "Порти",
+     "color": "#8a6078"
+    },
+    {
+     "id": "quarry_landfill",
+     "label": "Quarries & landfills",
+     "label_uk": "Кар’єри та звалища",
+     "color": "#b89aac"
+    },
+    {
+     "id": "utilities",
+     "label": "Utilities (power, water treatment)",
+     "label_uk": "Інженерна інфраструктура (енергетика, водоочищення)",
+     "color": "#7e5a70"
+    }
+   ]
+  },
+  {
+   "id": "sports",
+   "label": "Sports & recreation",
+   "label_uk": "Спорт і відпочинок",
+   "color": "#e0a800",
+   "subcategories": [
+    {
+     "id": "sports",
+     "label": "Pitches, stadiums, sports centres",
+     "label_uk": "Спортмайданчики, стадіони, спортцентри",
+     "color": "#e0a800"
+    },
+    {
+     "id": "playground",
+     "label": "Playgrounds",
+     "label_uk": "Дитячі майданчики",
+     "color": "#f2c94c"
+    },
+    {
+     "id": "other",
+     "label": "Other recreation",
+     "label_uk": "Інші місця відпочинку",
+     "color": "#eedd88"
+    }
+   ]
+  },
+  {
+   "id": "cemeteries",
+   "label": "Cemeteries",
+   "label_uk": "Кладовища",
+   "color": "#6f8f72",
+   "subcategories": [
+    {
+     "id": "cemetery",
+     "label": "Cemeteries",
+     "label_uk": "Кладовища",
+     "color": "#6f8f72"
+    }
+   ]
+  },
+  {
+   "id": "agriculture",
+   "label": "Agricultural land",
+   "label_uk": "Сільськогосподарські землі",
+   "color": "#d8c27a",
+   "subcategories": [
+    {
+     "id": "farmland",
+     "label": "Farmland",
+     "label_uk": "Рілля",
+     "color": "#e2d08f"
+    },
+    {
+     "id": "orchard",
+     "label": "Orchards & vineyards",
+     "label_uk": "Сади та виноградники",
+     "color": "#b9b04f"
+    },
+    {
+     "id": "other",
+     "label": "Farmyards, greenhouses, nurseries",
+     "label_uk": "Ферми, теплиці, розсадники",
+     "color": "#c9a95c"
+    }
+   ]
+  },
+  {
+   "id": "other",
+   "label": "Other mapped land",
+   "label_uk": "Інші позначені землі",
+   "color": "#c9bfae",
+   "subcategories": [
+    {
+     "id": "commercial_land",
+     "label": "Commercial / retail land",
+     "label_uk": "Комерційні / торговельні території",
+     "color": "#d9c7d8"
+    },
+    {
+     "id": "institutional",
+     "label": "Institutional grounds (schools, hospitals...)",
+     "label_uk": "Території закладів (школи, лікарні…)",
+     "color": "#c6d0e0"
+    },
+    {
+     "id": "military",
+     "label": "Military",
+     "label_uk": "Військові території",
+     "color": "#b5a68f"
+    },
+    {
+     "id": "construction",
+     "label": "Construction & brownfield",
+     "label_uk": "Будмайданчики та занедбані ділянки",
+     "color": "#cdb48a"
+    },
+    {
+     "id": "airport",
+     "label": "Airport grounds",
+     "label_uk": "Територія аеропорту",
+     "color": "#bdbdc9"
+    },
+    {
+     "id": "garages_land",
+     "label": "Garage cooperatives (land)",
+     "label_uk": "Гаражні кооперативи (територія)",
+     "color": "#c4b4a8"
+    },
+    {
+     "id": "bare",
+     "label": "Sand, beaches, bare ground",
+     "label_uk": "Пісок, пляжі, відкритий ґрунт",
+     "color": "#efe2b0"
+    },
+    {
+     "id": "structures",
+     "label": "Piers, breakwaters, other structures",
+     "label_uk": "Причали, хвилерізи, інші споруди",
+     "color": "#a9a094"
+    },
+    {
+     "id": "other_landuse",
+     "label": "Other land use",
+     "label_uk": "Інше землекористування",
+     "color": "#d6d0c4"
+    }
+   ]
+  },
+  {
+   "id": "unclassified",
+   "label": "Unclassified (no OSM data)",
+   "label_uk": "Некласифіковано (немає даних OSM)",
+   "color": "#eeeeee",
+   "subcategories": [
+    {
+     "id": "no_data",
+     "label": "Not covered by any classified OSM feature",
+     "label_uk": "Не покрито жодним класифікованим об’єктом OSM",
+     "color": "#eeeeee"
+    }
+   ]
+  }
+ ],
+ "cities": [
+  {
+   "id": "kyiv",
+   "name": "Kyiv",
+   "name_local": "Київ",
+   "country": "UA",
+   "area_km2": 826.153,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.546964,
+    50.448644
+   ],
+   "bounds": [
+    30.236145,
+    50.213242,
+    30.826359,
+    50.590814
+   ]
+  },
+  {
+   "id": "lviv",
+   "name": "Lviv",
+   "name_local": "Львів",
+   "country": "UA",
+   "area_km2": 148.301,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    24.013455,
+    49.840173
+   ],
+   "bounds": [
+    23.898055,
+    49.768175,
+    24.133414,
+    49.903712
+   ]
+  },
+  {
+   "id": "odesa",
+   "name": "Odesa",
+   "name_local": "Одеса",
+   "country": "UA",
+   "area_km2": 163.151,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.715016,
+    46.47757
+   ],
+   "bounds": [
+    30.611401,
+    46.342666,
+    30.831375,
+    46.629119
+   ]
+  }
+ ],
+ "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL)."
+}

@@ -1,0 +1,12 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+
+# Large / regenerable pipeline data. Only web/data (the published dataset) is committed.
+data/sources/
+data/interim/
+data/processed/
+data/logs/
+
+.claude/
