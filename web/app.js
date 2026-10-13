@@ -24,7 +24,7 @@ const state = {
 
 /**
  * Map panes. Pane 0 always exists; pane 1 is created when a second city is selected.
- * pane = { idx, map, cityId, layers: [], sources: [], popup, controls: [], anchor: [lon, lat] }
+ * pane = { idx, map, cityId, layers: [], sources: [], popup, controls: [], ready: Promise }
  */
 const panes = [];
 let syncing = false;
@@ -142,14 +142,14 @@ function createPane(idx, containerId) {
     pitchWithRotate: false,
   });
   map.touchZoomRotate.disableRotation();
-  const pane = { idx, map, cityId: null, layers: [], sources: [], popup: null, controls: [], anchor: null };
+  const pane = { idx, map, cityId: null, layers: [], sources: [], popup: null, controls: [] };
   // resolves once the base style is loaded (isStyleLoaded() can be false later while tiles load)
   pane.ready = new Promise((res) => map.once('load', res));
   panes[idx] = pane;
   addMapControls(pane);
   map.on('click', (e) => onMapClick(pane, e));
   map.on('mousemove', (e) => { map.getCanvas().style.cursor = queryFeature(pane, e.point) ? 'pointer' : ''; });
-  map.on('move', () => onPaneMove(pane));
+  map.on('move', () => syncScale(pane));
   if (idx === 0) map.on('zoom', updateZoomHint);
   return pane;
 }
@@ -237,8 +237,6 @@ async function loadCityIntoPane(pane, cityId) {
   clearCityLayers(pane);
   if (pane.popup) pane.popup.remove();
   pane.cityId = cityId;
-  const b = s.map.bounds;
-  pane.anchor = [(b[0] + b[2]) / 2, (b[1] + b[3]) / 2];
 
   const vt = s.map.vector_tiles;
   const add = (id, spec) => { map.addSource(id, spec); pane.sources.push(id); };
@@ -278,26 +276,24 @@ async function loadCityIntoPane(pane, cityId) {
   applyVisibility();
 }
 
-// ---- synchronised scale + relative panning between panes
-const M_PER_DEG_LAT = 110540;
-const M_PER_DEG_LON = 111320;
+// ---- synchronised scale between panes (panning stays independent)
 const cosd = (deg) => Math.cos((deg * Math.PI) / 180);
 
 /** Zoom at which `lat` has the same metres-per-pixel as `zoom` at `refLat` (Web Mercator). */
 const equalScaleZoom = (zoom, refLat, lat) => zoom + Math.log2(cosd(lat) / cosd(refLat));
 
-function onPaneMove(src) {
+/**
+ * Give the other pane the same metres-per-pixel as `src`, keeping its own centre. Runs on every move
+ * (not only zoom), because panning north/south also changes the Mercator scale at a fixed zoom.
+ */
+function syncScale(src) {
   if (syncing || !isDual()) return;
   const dst = panes[1 - src.idx];
-  if (!dst?.map || !src.anchor || !dst.anchor) return;
-  const c = src.map.getCenter();
-  // ground offset of the view centre from the source city's centre, applied to the other city
-  const dx = (c.lng - src.anchor[0]) * M_PER_DEG_LON * cosd(src.anchor[1]);
-  const dy = (c.lat - src.anchor[1]) * M_PER_DEG_LAT;
-  const lat = dst.anchor[1] + dy / M_PER_DEG_LAT;
-  const lng = dst.anchor[0] + dx / (M_PER_DEG_LON * cosd(dst.anchor[1]));
+  if (!dst?.map) return;
+  const zoom = equalScaleZoom(src.map.getZoom(), src.map.getCenter().lat, dst.map.getCenter().lat);
+  if (Math.abs(zoom - dst.map.getZoom()) < 1e-6) return;
   syncing = true;
-  dst.map.jumpTo({ center: [lng, lat], zoom: equalScaleZoom(src.map.getZoom(), c.lat, lat) });
+  dst.map.jumpTo({ zoom });
   syncing = false;
 }
 
