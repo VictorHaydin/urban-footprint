@@ -20,6 +20,7 @@ const state = {
   focus: null,            // focused category / sub-category id on the compare screen
   compareCities: null,    // selected city ids for comparison (null = all)
   opacity: 0.85,
+  subPctOfCat: true,      // map sidebar: sub-category % relative to its category (true) or to the city (false)
 };
 
 /**
@@ -438,6 +439,8 @@ function renderSidebar() {
     el('div', { class: 'city-meta' }, t('dual.scaleNote'), el('br'), t('city.osmDate', { date: osmDateText(s) })));
   }
   renderUnitToggle($('#unitToggleMap'), [['pct', t('unit.pctArea')], ['km2', t('unit.km2')]]);
+  $('#subPctToggle').hidden = state.unit === 'km2'; // only meaningful for percentages
+  $('#subPctCheckbox').checked = state.subPctOfCat;
 
   // ---- legend
   const legend = $('#legend');
@@ -475,8 +478,11 @@ function renderSidebar() {
     legend.append(row);
     if (open && subIds.length > 1) {
       const sub = el('div', { class: 'subrows' });
+      // value shown for a sub-category of city i: km², % of its category, or % of the city
+      const subPct = (x, i) => (state.subPctOfCat ? (100 * x.area_m2) / Math.max(cs[i].area_m2, 1) : x.pct);
+      const subMetric = (x, i) => (state.unit === 'km2' ? x.area_m2 : subPct(x, i));
       // sub-category bars are scaled within their category, so small types stay visible
-      const subMax = Math.max(...subIds.flatMap((sid) => cs.map((cc) => metricOf(cc.subcategories.find((z) => z.id === sid)))), 1e-9);
+      const subMax = Math.max(...subIds.flatMap((sid) => cs.map((cc, i) => subMetric(cc.subcategories.find((z) => z.id === sid), i))), 1e-9);
       for (const sid of subIds) {
         const key = `${c.id}/${sid}`;
         const sd = subDef(c.id, sid);
@@ -487,8 +493,8 @@ function renderSidebar() {
             class: 'swatch' + (soff ? ' off' : ''), style: `background:${sd.color}`, title: t('legend.subToggle'),
             onclick: () => { soff ? state.hiddenSub.delete(key) : state.hiddenSub.add(key); applyVisibility(); renderSidebar(); },
           }),
-          el('div', { class: 'label' }, el('div', { class: 'name' }, label(sd)), s2 ? bars(xs.map(metricOf), sd.color, subMax) : null),
-          ...xs.map((x) => el('div', { class: 'value' }, valueText(x.area_m2, x.pct))));
+          el('div', { class: 'label' }, el('div', { class: 'name' }, label(sd)), s2 ? bars(xs.map(subMetric), sd.color, subMax) : null),
+          ...xs.map((x, i) => el('div', { class: 'value' }, valueText(x.area_m2, subPct(x, i)))));
         sr.addEventListener('mousemove', (ev) => showTip(ev, `<b>${label(sd)}</b>` + xs.map((x, i) =>
           `<br>${s2 ? cityName(list[i].city) + ': ' : ''}${fmtKm2(x.area_m2)} · ${fmtPct(x.pct)} ${t('tip.ofCity')} · ` +
           `${num((100 * x.area_m2) / Math.max(cs[i].area_m2, 1), 1)}% ${t('tip.ofCat', { cat: label(def).toLowerCase() })}`).join('')));
@@ -744,6 +750,11 @@ async function renderCompare() {
       el('div', { class: 'total' }, totalText)));
   }
 
+  // residential / industrial land exclude the buildings on them (priority painting)
+  $('#compareNote').textContent = t('cmp.landNote', {
+    res: label(catDef('residential')), ind: label(catDef('industrial')), bld: label(catDef('buildings')),
+  });
+
   // legend (click = focus)
   const lg = $('#compareLegend');
   lg.innerHTML = '';
@@ -906,10 +917,18 @@ async function main() {
     }
   });
   $('#opacityRange').addEventListener('input', (e) => { state.opacity = +e.target.value; applyOpacity(); });
+  try { state.subPctOfCat = localStorage.getItem('subPctOfCat') !== 'false'; } catch { /* storage unavailable */ }
+  $('#subPctCheckbox').addEventListener('change', (e) => {
+    state.subPctOfCat = e.target.checked;
+    try { localStorage.setItem('subPctOfCat', String(state.subPctOfCat)); } catch { /* storage unavailable */ }
+    renderSidebar();
+  });
   window.addEventListener('resize', () => { for (const p of activePanes()) p.map.resize(); });
 
-  await selectCities(state.city, city2);
+  // open the requested view right away; the map keeps loading in the background
+  const mapReady = selectCities(state.city, city2);
   if (h.view && h.view !== 'map') switchView(h.view);
+  await mapReady;
 }
 
 main();

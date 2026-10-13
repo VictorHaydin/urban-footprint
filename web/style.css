@@ -271,3 +271,10 @@ details.panel > summary h3 { font-size: 14px; }
   .map-pane + .map-pane { border-left: none; border-top: 2px solid var(--text); }
 }
 .dual .zoom-hint { display: none; }
+
+.sub-pct-toggle { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); margin: -4px 0 8px; cursor: pointer; }
+.sub-pct-toggle[hidden] { display: none; }
+.compare-note {
+  font-size: 12px; color: var(--muted); margin: -6px 0 14px; padding: 6px 10px;
+  border-left: 3px solid var(--border); background: var(--panel); border-radius: 0 6px 6px 0; max-width: 820px;
+}

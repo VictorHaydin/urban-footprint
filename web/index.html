@@ -45,6 +45,10 @@
           <label><span data-i18n="map.opacity">Прозорість</span> <input type="range" id="opacityRange" min="0.2" max="1" step="0.05" value="0.85"></label>
         </div>
         <div class="unit-toggle" id="unitToggleMap"></div>
+        <label class="sub-pct-toggle" id="subPctToggle">
+          <input type="checkbox" id="subPctCheckbox" checked>
+          <span data-i18n="legend.subPctOfCat">Підкатегорії — у % від категорії</span>
+        </label>
         <div id="legend"></div>
         <div id="buildingPanel"></div>
         <div id="validationPanel"></div>
@@ -83,6 +87,7 @@
         <div id="compareFocus" class="focus-bar"></div>
         <div id="compareChart" class="chart"></div>
         <div id="compareLegend" class="chart-legend"></div>
+        <p class="compare-note" id="compareNote"></p>
         <details id="compareTableDetails" class="table-details">
           <summary data-i18n="cmp.table">Таблиця даних</summary>
           <div id="compareTable" class="table-wrap"></div>
