@@ -40,3 +40,31 @@ cities:
     country: UA
     boundary_relation: 1413934
     notes: City proper (not the whole Odesa urban hromada).
+
+  - id: kharkiv
+    name: Kharkiv
+    name_local: Харків
+    country: UA
+    boundary_relation: 3154746
+    notes: City proper (not the whole Kharkiv urban hromada).
+
+  - id: dnipro
+    name: Dnipro
+    name_local: Дніпро
+    country: UA
+    boundary_relation: 1017311
+    notes: City proper (not the whole Dnipro urban hromada).
+
+  - id: zaporizhzhia
+    name: Zaporizhzhia
+    name_local: Запоріжжя
+    country: UA
+    boundary_relation: 1418311
+    notes: City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².
+
+  - id: donetsk
+    name: Donetsk
+    name_local: Донецьк
+    country: UA
+    boundary_relation: 1413957
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).

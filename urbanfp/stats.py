@@ -23,6 +23,8 @@ from urbanfp.config import City, Classification, Paths
 log = logging.getLogger(__name__)
 
 KM2 = 1e6
+# polygons larger than this in these categories are flagged as probable OSM tagging errors
+SUSPICIOUS_LIMITS_M2 = {"roads": 500_000, "railways": 2_000_000, "parking": 300_000}
 
 
 def _r(x: float, nd: int = 1) -> float:
@@ -135,7 +137,16 @@ def compute_stats(city: City, cls: Classification) -> dict:
     }
     proc.joinpath("stats.json").write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    validation = _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_sum, excl, classify_rep, extract_meta)
+    # implausibly large polygons in categories that are normally narrow/small (likely OSM tagging errors)
+    big = feats[(feats["kind"] == "area") & feats["category"].isin(SUSPICIOUS_LIMITS_M2)
+                & (feats["subcategory"] != "airfield")]
+    big = big[big["footprint_area_m2"] > big["category"].map(SUSPICIOUS_LIMITS_M2)]
+    suspicious = [{"fid": r.fid, "cls": r.cls, "rule_tag": r.rule_tag, "name": r.name,
+                   "footprint_km2": round(r.footprint_area_m2 / KM2, 3)}
+                  for r in big.sort_values("footprint_area_m2", ascending=False).itertuples()]
+
+    validation = _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_sum, excl, classify_rep,
+                           extract_meta, suspicious)
     proc.joinpath("validation.json").write_text(json.dumps(validation, indent=2, ensure_ascii=False), encoding="utf-8")
     proc.joinpath("validation.md").write_text(_validation_md(stats, validation), encoding="utf-8")
     log.info("[%s] stats: %.1f km², unclassified %.1f%%, unknown buildings %.1f%% of building area",
@@ -149,7 +160,7 @@ def _check(checks, id_, ok, warn, message, value):
     checks.append({"id": id_, "status": status, "message": message, "value": value})
 
 
-def _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_sum, excl, crep, emeta):
+def _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_sum, excl, crep, emeta, suspicious):
     checks: list[dict] = []
     cat = {c["id"]: c for c in stats["categories"]}
     tot_cat = sum(c["area_m2"] for c in stats["categories"])
@@ -205,6 +216,12 @@ def _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_su
     _check(checks, "geometry_failures", nf < 100, True,
            f"{nf} geometries could not be built in the source extract (all cities in that pass)", nf)
 
+    n_sus = len(suspicious)
+    _check(checks, "suspicious_features", n_sus == 0, True,
+           f"{n_sus} implausibly large road/rail/parking polygons (possible OSM tagging errors)"
+           + (": " + ", ".join(f"{s['fid']} {s['rule_tag']} {s['footprint_km2']} km²" for s in suspicious[:5]) if n_sus else ""),
+           n_sus)
+
     metrics = {
         "boundary_km2": boundary_area / KM2,
         "unclassified_pct": uncl,
@@ -220,6 +237,7 @@ def _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_su
         "unmatched_top": crep.get("unmatched_top", {}),
         "unmatched_examples": crep.get("unmatched_examples", {}),
         "excluded": crep.get("excluded", {}),
+        "suspicious_features": suspicious,
     }
 
 
@@ -258,6 +276,10 @@ def _validation_md(stats: dict, v: dict) -> str:
           "", "## Unmatched OSM features (top)", "", "| kind:tag | count | example |", "|---|---:|---|"]
     for k, n in list(v["unmatched_top"].items())[:30]:
         L.append(f"| `{k}` | {n} | {v['unmatched_examples'].get(k, '')} |")
+    if v.get("suspicious_features"):
+        L += ["", "## Suspicious features (check in OSM)", "", "| feature | class | tag | name | footprint km² |", "|---|---|---|---|---:|"]
+        for s in v["suspicious_features"][:30]:
+            L.append(f"| {s['fid']} | {s['cls']} | `{s['rule_tag']}` | {s['name']} | {s['footprint_km2']} |")
     L += ["", "## Excluded features", "", "| tag | count |", "|---|---:|"]
     for k, n in list(v["excluded"].items())[:20]:
         L.append(f"| `{k}` | {n} |")

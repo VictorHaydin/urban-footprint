@@ -207,7 +207,9 @@ rules:
   - {class: roads/road_area,  match: {"area:highway": "*"}, geom: area}
   - {class: roads/road_area,  match: {man_made: [bridge]}, geom: area}      # bridge deck outlines
   - {class: roads/pedestrian, match: {highway: [pedestrian, footway, path, cycleway, steps, bridleway, platform, corridor, track]}, geom: area}
-  - {class: roads/minor,      match: {highway: "*"}, geom: area, not: {highway: [construction, proposed, abandoned, razed, services, rest_area]}}
+  # other highway polygons only with explicit area=yes (OSM convention). Guards against mis-tagged
+  # polygons, e.g. relation 21217234 (Dnipro reservoir) tagged highway=residential.
+  - {class: roads/minor,      match: {highway: "*", area: [yes]}, geom: area, not: {highway: [construction, proposed, abandoned, razed, services, rest_area]}}
   - {class: roads/major,      match: {highway: [motorway, trunk, primary, secondary, tertiary, motorway_link, trunk_link, primary_link, secondary_link, tertiary_link]}, geom: line, footprint: buffer, width_group: highway}
   - {class: roads/minor,      match: {highway: [residential, unclassified, living_street, road, busway, bus_guideway]}, geom: line, footprint: buffer, width_group: highway}
   - {class: roads/service,    match: {highway: [service, track]}, geom: line, footprint: buffer, width_group: highway}

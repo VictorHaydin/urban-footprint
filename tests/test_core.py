@@ -69,6 +69,10 @@ def test_classification_rules():
     assert CLS.classify({"building": "yes", "shop": "supermarket"}, "area")[0].cls == "buildings/commercial"
     assert CLS.classify({"highway": "pedestrian", "area": "yes"}, "area")[0].cls == "roads/pedestrian"
     assert CLS.classify({"highway": "residential"}, "line")[0].cls == "roads/minor"
+    # mis-tagged polygon without area=yes must not become road surface
+    m = CLS.classify({"highway": "residential", "name": "Дніпровське водосховище"}, "area")
+    assert m is None or not m[0].cls.startswith("roads/")
+    assert CLS.classify({"highway": "service", "area": "yes"}, "area")[0].cls == "roads/minor"
     assert CLS.classify({"landuse": "residential"}, "area")[0].cls == "residential/yards"
     assert CLS.is_excluded({"railway": "subway", "tunnel": "yes"})
     assert CLS.is_excluded({"building:part": "yes"})

@@ -40,6 +40,10 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kyiv | 421866 | City with special status. Includes large forests and Dnipro floodplains |
 | Lviv | 2032280 | City proper, not the larger urban hromada |
 | Odesa | 1413934 | City proper. Boundary follows the coastline (see validation) |
+| Kharkiv | 3154746 | City proper |
+| Dnipro | 1017311 | City proper |
+| Zaporizhzhia | 1418311 | City proper. OSM boundary ≈ 314 km² vs official ≈ 331 km² |
+| Donetsk | 1413957 | Temporarily occupied since 2014; OSM mapping may be less complete or current. OSM boundary ≈ 401 km² vs official ≈ 358 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
@@ -86,8 +90,12 @@ Plus:
   (`footway=sidewalk`) are buffered footways. Untagged sidewalks are **not** guessed.
 * Railways: 4.5 m per track (sleepers + ballast shoulder), `tracks=n` adds 4.1 m (track spacing) per extra
   track. Tram 3 m. Surface sections of the metro are included; tunnels are excluded.
-* Mapped surface polygons (`area:highway=*`, `highway=pedestrian` + `area=yes`, platforms, runway/apron
-  polygons) are used as is. Where they coincide with a buffered line, the union is counted once.
+* Mapped surface polygons (`area:highway=*`, pedestrian areas, other `highway=*` polygons only with
+  `area=yes`, platforms, runway/apron polygons) are used as is. Requiring `area=yes` guards against
+  mis-tagged polygons. Example: the Dnipro Reservoir relation (r21217234) is tagged `highway=residential`,
+  and without this guard it counted as 48 km² of streets in Dnipro. The validation check
+  `suspicious_features` flags any road polygon over 50 ha, rail polygon over 200 ha or parking polygon over
+  30 ha for review. Where they coincide with a buffered line, the union is counted once.
 
 Main defaults (m, two-way / one-way): motorway 15/8 · trunk 14/7.5 · primary 12/7 · secondary 10/6.5 ·
 tertiary 8/5.5 · residential & unclassified 6/4 · service 4.5/3.5 (parking aisle 5.5, driveway 3) ·

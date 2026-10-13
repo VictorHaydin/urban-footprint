@@ -6,7 +6,7 @@ How much of a city's administrative territory is physically occupied by building
 parks, water, industrial land and so on? This project computes that **reproducibly** from
 OpenStreetMap (OSM) data and shows it in a static web app.
 
-Current cities: **Kyiv, Lviv, Odesa** (add more in [`config/cities.yaml`](config/cities.yaml)).
+Current cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv** (add more in [`config/cities.yaml`](config/cities.yaml)).
 
 It has two parts:
 
