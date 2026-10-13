@@ -139,6 +139,9 @@ function createPane(idx, containerId) {
     zoom: 10,
     attributionControl: { compact: true },
     locale: { ...MAP_LOCALE[getLang()] },
+    // phones report devicePixelRatio 3; rendering at 2 looks the same and needs ~half the GPU memory
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+    maxTileCacheSize: 16, // per source (one raster source per category): bounds tile memory on phones
     dragRotate: false,       // keep both panes north-up so shapes stay comparable
     pitchWithRotate: false,
   });
@@ -243,11 +246,12 @@ async function loadCityIntoPane(pane, cityId) {
   const add = (id, spec) => { map.addSource(id, spec); pane.sources.push(id); };
   const layer = (spec) => { map.addLayer(spec); pane.layers.push(spec.id); };
 
-  // overview rasters (low zoom)
+  // overview rasters (low zoom): one tiled PMTiles pyramid per category, so only visible tiles are loaded
+  const ov = s.map.overview;
   for (const c of state.index.categories) {
-    const file = s.map.overview.files[c.id];
+    const file = ov.files[c.id];
     if (!file) continue;
-    add(`ov-${c.id}`, { type: 'image', url: base + file, coordinates: s.map.overview.coordinates });
+    add(`ov-${c.id}`, { type: 'raster', url: `pmtiles://${base}${file}`, tileSize: ov.tile_size || 512 });
     layer({
       id: `ov-${c.id}`, type: 'raster', source: `ov-${c.id}`, maxzoom: vt.minzoom + VT_FADE,
       paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' },

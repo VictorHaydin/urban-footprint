@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-13T10:03:53+00:00",
- "config_hash": "550d137cbf2f322d",
+ "generated_at": "2026-10-13T12:23:02+00:00",
+ "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
    "id": "buildings",
@@ -461,6 +461,78 @@
     46.342666,
     30.831375,
     46.629119
+   ]
+  },
+  {
+   "id": "kharkiv",
+   "name": "Kharkiv",
+   "name_local": "Харків",
+   "country": "UA",
+   "area_km2": 350.001,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    36.276779,
+    49.982809
+   ],
+   "bounds": [
+    36.105554,
+    49.878482,
+    36.455486,
+    50.104753
+   ]
+  },
+  {
+   "id": "dnipro",
+   "name": "Dnipro",
+   "name_local": "Дніпро",
+   "country": "UA",
+   "area_km2": 410.257,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.998297,
+    48.467769
+   ],
+   "bounds": [
+    34.748946,
+    48.355855,
+    35.242195,
+    48.57639
+   ]
+  },
+  {
+   "id": "zaporizhzhia",
+   "name": "Zaporizhzhia",
+   "name_local": "Запоріжжя",
+   "country": "UA",
+   "area_km2": 314.272,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    35.167013,
+    47.843439
+   ],
+   "bounds": [
+    34.98667,
+    47.75262,
+    35.369035,
+    47.954467
+   ]
+  },
+  {
+   "id": "donetsk",
+   "name": "Donetsk",
+   "name_local": "Донецьк",
+   "country": "UA",
+   "area_km2": 401.314,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.765561,
+    47.971753
+   ],
+   "bounds": [
+    37.525435,
+    47.875716,
+    37.998791,
+    48.089501
    ]
   }
  ],

@@ -31,7 +31,10 @@ web/data/
     index.json                cities + category definitions (label / label_uk, colours, order)
     <city>/stats.json         statistics + validation summary + map georeferencing
     <city>/boundary.geojson   simplified boundary
-    <city>/overview/<cat>.png coverage rasters (Web Mercator grid, alpha = share of pixel covered)
+    <city>/overview/<cat>.pmtiles  coverage raster pyramid per category (lossless WebP tiles, 512 px,
+                              z6–13 ≈ 6 m/px; alpha = share of the pixel covered by the category).
+                              Tiled so browsers only load visible tiles; full-size images exhausted
+                              mobile GPU memory
     <city>/features.pmtiles   vector tiles z14, layer "features"
 ```
 

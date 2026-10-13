@@ -114,7 +114,9 @@ config hash.
    `web/` folder.
 
 Notes:
-* `features.pmtiles` files are read with HTTP range requests, which GitHub Pages supports.
+* `features.pmtiles` and `overview/*.pmtiles` files are read with HTTP range requests, which GitHub Pages
+  supports. Overview rasters are tiled pyramids so phones only decode the tiles on screen (Kyiv needs ~14 MB
+  of GPU memory at city scale instead of ~870 MB with full-size images).
 * GitHub rejects files over 100 MB. The largest file is a city's `features.pmtiles`; check its size
   in the export log. If a future city goes over the limit, lower `VT_MAXZOOM` in
   `urbanfp/export_web.py` or track `*.pmtiles` with Git LFS. The workflow checks out LFS files.

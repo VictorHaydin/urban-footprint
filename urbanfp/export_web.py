@@ -3,7 +3,7 @@
 Per city (web/data/<city>/):
     stats.json            statistics (copy of processed stats + validation summary + overview georef)
     boundary.geojson      simplified administrative boundary (WGS84)
-    overview/<cat>.png    anti-aliased coverage raster per category (EPSG:3857 grid) for low zooms
+    overview/<cat>.pmtiles  per-category coverage raster pyramid (lossless WebP tiles, z6–13) for low zooms
     features.pmtiles      vector tiles (layer "features") with every exclusive feature piece
 
 Global:
@@ -16,6 +16,7 @@ Also writes data/processed/<city>/city_features.parquet: the full feature-level 
 from __future__ import annotations
 
 import gzip
+import io
 import json
 import logging
 import math
@@ -46,9 +47,11 @@ VT_MAXZOOM = 14
 VT_EXTENT = 4096
 VT_BUFFER = 16           # tile units of overlap to avoid seams
 VT_MIN_AREA = 4.0        # drop pieces smaller than this (tile units²) at the given zoom
-OVERVIEW_RES_M = 8.0     # target ground resolution of overview rasters
-OVERVIEW_MAX_PX = 4096
-OVERVIEW_SS = 3          # supersampling factor for anti-aliased coverage
+OVERVIEW_MINZOOM = 6     # overview raster pyramid: zoom range, tile size and supersampling
+OVERVIEW_MAXZOOM = 13    # z13 with 512 px tiles ≈ 6 m/px at Ukrainian latitudes
+OVERVIEW_TILE = 512
+OVERVIEW_SS = 4
+
 
 
 # --------------------------------------------------------------------------- feature dataset
@@ -69,48 +72,96 @@ def build_city_features(city: City) -> gpd.GeoDataFrame:
 
 
 # --------------------------------------------------------------------------- overview rasters
+#
+# Low-zoom view of the city: per-category coverage rasters (alpha = share of the pixel covered by
+# that category, so edges and small buildings are anti-aliased). Exported as one raster PMTiles
+# pyramid per category so browsers only load and decode the tiles on screen. A single full-size
+# image per category needed ~70 MB of GPU memory each and crashed mobile Safari.
 
-def _merc_res(lat: float, ground_m: float) -> float:
-    return ground_m / math.cos(math.radians(lat))
+def _overview_tile(args):
+    z, x, y, wkbs, codes, colors = args
+    minx, miny, maxx, maxy = _tile_bounds(z, x, y)
+    px = OVERVIEW_TILE * OVERVIEW_SS
+    transform = from_origin(minx, maxy, (maxx - minx) / px, (maxy - miny) / px)
+    geoms = shapely.from_wkb(wkbs)
+    grid = rio_features.rasterize(zip(geoms, codes.tolist()), out_shape=(px, px), transform=transform,
+                                  fill=0, dtype="uint8")
+    blocks = grid.reshape(OVERVIEW_TILE, OVERVIEW_SS, OVERVIEW_TILE, OVERVIEW_SS)
+    out = {}
+    for code in np.unique(grid):
+        if code == 0:
+            continue
+        alpha = np.round((blocks == code).sum(axis=(1, 3)) * (255.0 / OVERVIEW_SS ** 2)).astype(np.uint8)
+        if not alpha.any():
+            continue
+        img = np.empty((OVERVIEW_TILE, OVERVIEW_TILE, 4), dtype=np.uint8)
+        img[..., :3] = colors[code - 1]
+        img[..., 3] = alpha
+        buf = io.BytesIO()
+        # lossless WebP: same pixels as PNG at ~45% of the size; supported by all current browsers
+        Image.fromarray(img, "RGBA").save(buf, format="WEBP", lossless=True, method=4)
+        out[int(code)] = buf.getvalue()
+    return z, x, y, out
 
 
-def export_overview(gdf3857: gpd.GeoDataFrame, cls: Classification, out_dir, center_lat: float) -> dict:
-    minx, miny, maxx, maxy = gdf3857.total_bounds
-    res = _merc_res(center_lat, OVERVIEW_RES_M)
-    res = max(res, (maxx - minx) / OVERVIEW_MAX_PX, (maxy - miny) / OVERVIEW_MAX_PX)
-    w = int(math.ceil((maxx - minx) / res))
-    h = int(math.ceil((maxy - miny) / res))
-    maxx, miny = minx + w * res, maxy - h * res
-    ss = OVERVIEW_SS
-    transform = from_origin(minx, maxy, res / ss, res / ss)
-
+def export_overview(gdf3857: gpd.GeoDataFrame, cls: Classification, out_dir, bounds_ll, center) -> dict:
     cat_ids = [c["id"] for c in cls.categories]
-    code = gdf3857["category"].map({c: i + 1 for i, c in enumerate(cat_ids)}).astype("uint8").to_numpy()
-    shapes = ((g, int(v)) for g, v in zip(gdf3857.geometry.values, code))
-    grid = rio_features.rasterize(shapes, out_shape=(h * ss, w * ss), transform=transform, fill=0, dtype="uint8")
-    blocks = grid.reshape(h, ss, w, ss)
+    colors = np.array([[int(c["color"][k:k + 2], 16) for k in (1, 3, 5)] for c in cls.categories], dtype=np.uint8)
+    codes_all = gdf3857["category"].map({c: i + 1 for i, c in enumerate(cat_ids)}).astype("uint8").to_numpy()
+    geoms = np.asarray(gdf3857.geometry.values, dtype=object)
+    tree = shapely.STRtree(geoms)
+    minx, miny, maxx, maxy = gdf3857.total_bounds
+
+    def tasks():
+        for z in range(OVERVIEW_MINZOOM, OVERVIEW_MAXZOOM + 1):
+            size = 2 * WEB_MERC_HALF / (1 << z)
+            x0, x1 = int((minx + WEB_MERC_HALF) // size), int((maxx + WEB_MERC_HALF) // size)
+            y0, y1 = int((WEB_MERC_HALF - maxy) // size), int((WEB_MERC_HALF - miny) // size)
+            for x in range(x0, x1 + 1):
+                for y in range(y0, y1 + 1):
+                    b = _tile_bounds(z, x, y)
+                    idx = tree.query(shapely.box(*b))
+                    if len(idx) == 0:
+                        continue
+                    pad = size * 0.01
+                    clipped = shapely.clip_by_rect(geoms[idx], b[0] - pad, b[1] - pad, b[2] + pad, b[3] + pad)
+                    keep = ~shapely.is_empty(clipped)
+                    if not keep.any():
+                        continue
+                    yield z, x, y, shapely.to_wkb(clipped[keep]), codes_all[idx][keep], colors
+
+    per_cat: dict[int, dict[int, bytes]] = {}
+    t0 = time.time()
+    with ProcessPoolExecutor(max_workers=max(1, (os.cpu_count() or 2) - 1)) as ex:
+        for z, x, y, out in ex.map(_overview_tile, tasks(), chunksize=2):
+            tid = zxy_to_tileid(z, x, y)
+            for code, data in out.items():
+                per_cat.setdefault(code, {})[tid] = data
+    log.info("  overview tiles rendered in %.0fs", time.time() - t0)
 
     out_dir.mkdir(parents=True, exist_ok=True)
-    files = {}
-    for i, c in enumerate(cls.categories):
-        cov = (blocks == i + 1).sum(axis=(1, 3)).astype(np.float32) / (ss * ss)
-        if cov.max() == 0:
-            continue
-        rgb = tuple(int(c["color"][k:k + 2], 16) for k in (1, 3, 5))
-        img = np.zeros((h, w, 4), dtype=np.uint8)
-        img[..., 0], img[..., 1], img[..., 2] = rgb
-        img[..., 3] = np.round(cov * 255).astype(np.uint8)
-        fn = f"{c['id']}.png"
-        Image.fromarray(img, "RGBA").save(out_dir / fn, optimize=True)
-        files[c["id"]] = f"overview/{fn}"
-
-    def ll(x, y):
-        lon = x / WEB_MERC_HALF * 180
-        lat = math.degrees(math.atan(math.sinh(y / WEB_MERC_HALF * math.pi)))
-        return [round(lon, 7), round(lat, 7)]
-
-    return {"files": files, "width": w, "height": h, "pixel_size_m": round(res * math.cos(math.radians(center_lat)), 2),
-            "coordinates": [ll(minx, maxy), ll(maxx, maxy), ll(maxx, miny), ll(minx, miny)]}
+    files, total = {}, 0
+    for code, tiles in sorted(per_cat.items()):
+        cat = cat_ids[code - 1]
+        path = out_dir / f"{cat}.pmtiles"
+        with open(path, "wb") as f:
+            w = Writer(f)
+            for tid in sorted(tiles):
+                w.write_tile(tid, tiles[tid])
+            w.finalize({
+                "tile_type": TileType.WEBP, "tile_compression": Compression.NONE,
+                "min_zoom": OVERVIEW_MINZOOM, "max_zoom": OVERVIEW_MAXZOOM,
+                "min_lon_e7": int(bounds_ll[0] * 1e7), "min_lat_e7": int(bounds_ll[1] * 1e7),
+                "max_lon_e7": int(bounds_ll[2] * 1e7), "max_lat_e7": int(bounds_ll[3] * 1e7),
+                "center_zoom": OVERVIEW_MINZOOM + 3,
+                "center_lon_e7": int(center[0] * 1e7), "center_lat_e7": int(center[1] * 1e7),
+            }, {"name": cat, "attribution": "© OpenStreetMap contributors (ODbL)"})
+        files[cat] = f"overview/{cat}.pmtiles"
+        total += path.stat().st_size
+    res_m = 2 * WEB_MERC_HALF / (OVERVIEW_TILE * (1 << OVERVIEW_MAXZOOM)) * math.cos(math.radians(center[1]))
+    return {"format": "pmtiles", "files": files, "minzoom": OVERVIEW_MINZOOM, "maxzoom": OVERVIEW_MAXZOOM,
+            "tile_size": OVERVIEW_TILE, "pixel_size_m": round(res_m, 2), "total_bytes": total,
+            "tiles": sum(len(t) for t in per_cat.values())}
 
 
 # --------------------------------------------------------------------------- vector tiles
@@ -236,8 +287,9 @@ def export_city(city: City, cls: Classification) -> None:
 
     if (web / "overview").exists():
         shutil.rmtree(web / "overview")
-    overview = export_overview(g3857, cls, web / "overview", center[1])
-    log.info("[%s] overview rasters %dx%d px (%.1f m)", city.id, overview["width"], overview["height"], overview["pixel_size_m"])
+    overview = export_overview(g3857, cls, web / "overview", b.bounds, center)
+    log.info("[%s] overview pyramids: %d tiles, %.1f MB (%.1f m/px at z%d)", city.id, overview["tiles"],
+             overview["total_bytes"] / 1e6, overview["pixel_size_m"], OVERVIEW_MAXZOOM)
 
     tile_stats = export_pmtiles(g3857, web / "features.pmtiles", b.bounds, center)
     log.info("[%s] features.pmtiles %.1f MB, tile sizes %s", city.id,
