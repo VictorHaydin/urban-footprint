@@ -8,7 +8,7 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk**. More can be added in
+Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil**. More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |
@@ -91,7 +91,7 @@ example, the Dnipro Reservoir is tagged `highway=residential` in OSM. Such error
 1. Find the OSM relation of its administrative boundary on openstreetmap.org, or with Nominatim:
    `https://nominatim.openstreetmap.org/search?q=Poltava&format=json`. Use the `osm_id` where `osm_type` is
    `relation`, and prefer the city itself over the whole hromada.
-2. Add an entry to [`config/cities.yaml`](config/cities.yaml) with `name`, `name_local`, `boundary_relation` and,
+2. Add an entry to [`config/cities.yaml`](config/cities.yaml) with `name`, `name_local`, `boundary_relation`, `group` (`million` for the “largest cities” group; otherwise the city goes to “Other cities”) and,
    optionally, `notes` / `notes_uk`, which are shown on the Method & data page. For a city outside Ukraine,
    set `source` to the Geofabrik region, e.g. `geofabrik:europe/poland`.
 3. Run `python -m urbanfp run <id>`. Compare the boundary area in the log with the official city area, and check

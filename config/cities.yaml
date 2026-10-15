@@ -15,6 +15,12 @@
 #   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
 #                       (default from `defaults`). Cities sharing a source are extracted in one pass.
 #   notes / notes_uk    free text (English / Ukrainian), shown in reports and on the Method & data page
+#   group               id of a city group below (default: the last group). The web app lists cities
+#                       by group (in the order of `groups`), alphabetically by Ukrainian name within a group.
+
+groups:
+  - {id: million, label: "Largest cities", label_uk: "Міста-мільйонники"}
+  - {id: other,   label: "Other cities",   label_uk: "Інші міста"}
 
 defaults:
   source: "geofabrik:europe/ukraine"
@@ -25,6 +31,7 @@ cities:
     name_local: Київ
     country: UA
     boundary_relation: 421866
+    group: million
     notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
     notes_uk: Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.
 
@@ -33,6 +40,7 @@ cities:
     name_local: Львів
     country: UA
     boundary_relation: 2032280
+    group: million
     notes: City proper (not the whole Lviv urban hromada).
     notes_uk: Власне місто (без решти Львівської міської громади).
 
@@ -41,6 +49,7 @@ cities:
     name_local: Одеса
     country: UA
     boundary_relation: 1413934
+    group: million
     notes: City proper (not the whole Odesa urban hromada).
     notes_uk: Власне місто (без решти Одеської міської громади).
 
@@ -49,6 +58,7 @@ cities:
     name_local: Харків
     country: UA
     boundary_relation: 3154746
+    group: million
     notes: City proper (not the whole Kharkiv urban hromada).
     notes_uk: Власне місто (без решти Харківської міської громади).
 
@@ -57,6 +67,7 @@ cities:
     name_local: Дніпро
     country: UA
     boundary_relation: 1017311
+    group: million
     notes: City proper (not the whole Dnipro urban hromada).
     notes_uk: Власне місто (без решти Дніпровської міської громади).
 
@@ -65,6 +76,7 @@ cities:
     name_local: Запоріжжя
     country: UA
     boundary_relation: 1418311
+    group: million
     notes: City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².
     notes_uk: Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).
 
@@ -73,6 +85,7 @@ cities:
     name_local: Донецьк
     country: UA
     boundary_relation: 1413957
+    group: million
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
     notes_uk: Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).
 
@@ -91,3 +104,11 @@ cities:
     boundary_relation: 2362670
     notes: OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².
     notes_uk: Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².
+
+  - id: ternopil
+    name: Ternopil
+    name_local: Тернопіль
+    country: UA
+    boundary_relation: 3058686
+    notes: City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.
+    notes_uk: Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.

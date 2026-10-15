@@ -86,6 +86,9 @@ const STRINGS = {
     'cf.all': 'Усі',
     'cf.none': 'Жодного',
     'cf.noMatch': 'Нічого не знайдено',
+    'cf.groupAll': 'Обрати всю групу',
+    'cf.groupNone': 'Зняти вибір з групи',
+    'author': 'Про автора',
     'nodata': 'Даних не знайдено. Спершу виконайте {cmd}.',
   },
   en: {
@@ -169,6 +172,9 @@ const STRINGS = {
     'cf.all': 'All',
     'cf.none': 'None',
     'cf.noMatch': 'No matches',
+    'cf.groupAll': 'Select the whole group',
+    'cf.groupNone': 'Clear the group',
+    'author': 'About the author',
     'nodata': 'No data found. Run {cmd} first.',
   },
 };

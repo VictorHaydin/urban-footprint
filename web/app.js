@@ -61,6 +61,26 @@ const cityName = (c) => (getLang() === 'uk' ? c.name_local || c.name : c.name);
 const cityOtherName = (c) => (getLang() === 'uk' ? c.name : c.name_local);
 const cityById = (id) => state.index.cities.find((c) => c.id === id);
 
+/** City groups from index.json, in display order (e.g. "Міста-мільйонники", "Інші міста"). */
+const cityGroups = () => state.index.city_groups || [{ id: '', label: '', label_uk: '' }];
+
+/** Sort cities by group order, then alphabetically by Ukrainian name (in both UI languages). */
+function sortCities(cities) {
+  const order = new Map(cityGroups().map((g, i) => [g.id, i]));
+  const gi = (c) => order.get(c.group) ?? order.size;
+  return [...cities].sort((a, b) => gi(a) - gi(b) || (a.name_local || a.name).localeCompare(b.name_local || b.name, 'uk'));
+}
+
+/** [{group, cities}] for non-empty groups (cities in the given, already sorted, order). */
+function citiesByGroup(cities = state.index.cities) {
+  const groups = cityGroups();
+  const known = new Set(groups.map((g) => g.id));
+  const last = groups[groups.length - 1];
+  return groups
+    .map((g) => ({ group: g, cities: cities.filter((c) => (c.group || '') === g.id || (g === last && !known.has(c.group || ''))) }))
+    .filter((x) => x.cities.length);
+}
+
 async function getJSON(path) {
   const r = await fetch(path);
   if (!r.ok) throw new Error(`${path}: ${r.status}`);
@@ -603,7 +623,23 @@ function renderCityFilter() {
   list.innerHTML = '';
   const matches = state.index.cities.filter((c) =>
     !q || c.name.toLowerCase().includes(q) || (c.name_local || '').toLowerCase().includes(q));
-  for (const c of matches) {
+  const setSelection = (cur) => { state.compareCities = [...cur]; saveCompareCities(); renderCompare(); };
+  for (const { group, cities } of citiesByGroup(matches)) {
+    if (label(group)) {
+      // clicking a group header selects the whole group, or clears it if it is fully selected
+      const allOn = cities.every((c) => ids.includes(c.id));
+      list.append(el('button', {
+        type: 'button', class: 'cf-group', title: t(allOn ? 'cf.groupNone' : 'cf.groupAll'),
+        onclick: () => {
+          const cur = new Set(compareCityIds());
+          for (const c of cities) allOn ? cur.delete(c.id) : cur.add(c.id);
+          setSelection(cur);
+        },
+      }, label(group), el('span', { class: 'small' }, `${cities.filter((c) => ids.includes(c.id)).length}/${cities.length}`)));
+    }
+    for (const c of cities) appendCityItem(c);
+  }
+  function appendCityItem(c) {
     const box = el('input', { type: 'checkbox', value: c.id });
     box.checked = ids.includes(c.id);
     box.addEventListener('change', () => {
@@ -828,7 +864,7 @@ function fillAboutCities() {
   if (!box) return;
   const uk = getLang() === 'uk';
   // notes go on their own full-width line under each city, so the table also fits phone screens
-  const rows = [...state.index.cities].sort((a, b) => b.area_km2 - a.area_km2).flatMap((c) => {
+  const cityRows = (c) => {
     const note = (uk ? c.notes_uk : c.notes) || c.notes || '';
     return [
       el('tr', { class: note ? 'has-note' : '' },
@@ -840,7 +876,11 @@ function fillAboutCities() {
         el('td', {}, c.osm_timestamp ? new Date(c.osm_timestamp).toLocaleDateString(locale()) : '—')),
       note ? el('tr', { class: 'note-row' }, el('td', { colspan: '4' }, note)) : null,
     ].filter(Boolean);
-  });
+  };
+  const rows = citiesByGroup().flatMap(({ group, cities }) => [
+    label(group) ? el('tr', { class: 'group-row' }, el('th', { colspan: '4' }, label(group))) : null,
+    ...cities.flatMap(cityRows),
+  ].filter(Boolean));
   box.innerHTML = '';
   box.append(el('div', { class: 'table-wrap' }, el('table', { class: 'cities-table' },
     el('thead', {}, el('tr', {}, ['about.city', 'about.area', 'about.relation', 'about.osmDate'].map((k) => el('th', {}, t(k))))),
@@ -883,17 +923,19 @@ function renderAll() {
 
 // ------------------------------------------------------------------ language
 function fillCitySelects() {
+  // grouped (<optgroup>) and sorted like every other city list
+  const options = (skip) => citiesByGroup().flatMap(({ group, cities }) => {
+    const opts = cities.filter((c) => c.id !== skip).map((c) => el('option', { value: c.id }, `${cityName(c)} (${cityOtherName(c)})`));
+    if (!opts.length) return [];
+    return label(group) ? [el('optgroup', { label: label(group) }, opts)] : opts;
+  });
   const sel = $('#citySelect');
   sel.innerHTML = '';
-  for (const c of state.index.cities) sel.append(el('option', { value: c.id }, `${cityName(c)} (${cityOtherName(c)})`));
+  sel.append(...options(null));
   sel.value = state.city;
   const sel2 = $('#citySelect2');
   sel2.innerHTML = '';
-  sel2.append(el('option', { value: '' }, t('city2.none')));
-  for (const c of state.index.cities) {
-    if (c.id === state.city) continue;
-    sel2.append(el('option', { value: c.id }, `${cityName(c)} (${cityOtherName(c)})`));
-  }
+  sel2.append(el('option', { value: '' }, t('city2.none')), ...options(state.city));
   sel2.value = state.city2 || '';
 }
 
@@ -922,9 +964,11 @@ async function main() {
     $('main').innerHTML = `<p style="padding:24px">${t('nodata', { cmd: '<code>python -m urbanfp run --all</code>' })} (${e.message})</p>`;
     return;
   }
+  const defaultCity = state.index.cities[0].id; // first city in config/cities.yaml (Kyiv)
+  state.index.cities = sortCities(state.index.cities);
   const h = readHash();
   const known = (id) => state.index.cities.some((c) => c.id === id);
-  state.city = known(h.city) ? h.city : state.index.cities[0].id;
+  state.city = known(h.city) ? h.city : defaultCity;
   const city2 = known(h.city2) && h.city2 !== state.city ? h.city2 : null;
   loadCompareCities(h.cities);
   fillCitySelects();

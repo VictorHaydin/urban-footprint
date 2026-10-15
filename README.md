@@ -8,7 +8,7 @@
 
 **Вебзастосунок:** <https://victorhaydin.github.io/urban-footprint/>
 
-Міста: **Київ, Харків, Одеса, Дніпро, Донецьк, Запоріжжя, Львів, Кривий Ріг, Івано-Франківськ**. Нові міста додаються в
+Міста: **Київ, Харків, Одеса, Дніпро, Донецьк, Запоріжжя, Львів, Кривий Ріг, Івано-Франківськ, Тернопіль**. Нові міста додаються в
 [`config/cities.yaml`](config/cities.yaml).
 
 | Частина | Де | Що робить |
@@ -93,7 +93,7 @@ python -m urbanfp serve                # переглянути вебзасто
 1. Знайдіть відношення (relation) адміністративної межі міста на openstreetmap.org або через Nominatim:
    `https://nominatim.openstreetmap.org/search?q=Полтава&format=json`. Потрібен `osm_id` з `osm_type` = `relation`;
    краще саме місто, а не всю громаду.
-2. Додайте запис у [`config/cities.yaml`](config/cities.yaml): `name`, `name_local`, `boundary_relation` і за потреби
+2. Додайте запис у [`config/cities.yaml`](config/cities.yaml): `name`, `name_local`, `boundary_relation`, `group` (`million` — «Міста-мільйонники»; без нього місто потрапляє до «Інші міста») і за потреби
    `notes` / `notes_uk`, які показуються на сторінці «Методика та дані». Для міста за межами України вкажіть
    `source` з регіоном Geofabrik, напр. `geofabrik:europe/poland`.
 3. Виконайте `python -m urbanfp run <id>`. Порівняйте площу межі в журналі з офіційною площею міста й перегляньте

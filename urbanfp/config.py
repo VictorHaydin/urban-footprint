@@ -51,6 +51,7 @@ class City:
     clip_to_land: bool = False
     notes: str = ""
     notes_uk: str = ""
+    group: str = ""
 
     @property
     def source_region(self) -> str:
@@ -64,10 +65,21 @@ def load_cities(path: Path | None = None) -> list[City]:
     data = yaml.safe_load((path or CONFIG_DIR / "cities.yaml").read_text(encoding="utf-8"))
     defaults = data.get("defaults", {})
     cities = [City(**{**defaults, **c}) for c in data["cities"]]
+    groups = [g["id"] for g in data.get("groups") or []]
+    for c in cities:
+        if not c.group:
+            c.group = groups[-1] if groups else "other"
+        elif groups and c.group not in groups:
+            raise ValueError(f"City {c.id}: unknown group {c.group!r} (known: {groups})")
     ids = [c.id for c in cities]
     if len(ids) != len(set(ids)):
         raise ValueError("Duplicate city ids in cities.yaml")
     return cities
+
+
+def load_city_groups(path: Path | None = None) -> list[dict]:
+    data = yaml.safe_load((path or CONFIG_DIR / "cities.yaml").read_text(encoding="utf-8"))
+    return data.get("groups") or [{"id": "other", "label": "Cities", "label_uk": "Міста"}]
 
 
 def select_cities(names: list[str] | None, all_cities: bool) -> list[City]:

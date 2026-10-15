@@ -37,7 +37,7 @@ from pmtiles.writer import Writer
 from rasterio import features as rio_features
 from rasterio.transform import from_origin
 
-from urbanfp.config import City, Classification, Paths, load_cities
+from urbanfp.config import City, Classification, Paths, load_cities, load_city_groups
 
 log = logging.getLogger(__name__)
 
@@ -319,12 +319,14 @@ def export_index(cls: Classification) -> None:
         cities.append({"id": c.id, "name": c.name, "name_local": c.name_local, "country": c.country,
                        "area_km2": s["area"]["boundary_km2"], "osm_timestamp": s["osm_timestamp"],
                        "center": s["map"]["center"], "bounds": s["map"]["bounds"],
-                       "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk})
+                       "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk,
+                       "group": c.group})
     index = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "config_hash": cls.hash,
         "categories": cls.categories,
+        "city_groups": load_city_groups(),
         "cities": cities,
         "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL).",
     }
