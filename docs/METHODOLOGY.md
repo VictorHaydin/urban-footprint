@@ -44,6 +44,8 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Dnipro | 1017311 | City proper |
 | Zaporizhzhia | 1418311 | City proper. OSM boundary ≈ 314 km² vs official ≈ 331 km² |
 | Donetsk | 1413957 | Temporarily occupied since 2014; OSM mapping may be less complete or current. OSM boundary ≈ 401 km² vs official ≈ 358 km² |
+| Kryvyi Rih | 1821193 | City proper, ~60 km long along the iron-ore basin. OSM boundary ≈ 462 km² vs official ≈ 430 km² |
+| Ivano-Frankivsk | 2362670 | OSM settlement boundary (≈ 41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are separate settlements in OSM and are not included; official area ≈ 84 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.

@@ -8,7 +8,7 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv**. More can be added in
+Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk**. More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |

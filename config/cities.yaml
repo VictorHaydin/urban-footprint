@@ -75,3 +75,19 @@ cities:
     boundary_relation: 1413957
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
     notes_uk: Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).
+
+  - id: kryvyi_rih
+    name: Kryvyi Rih
+    name_local: Кривий Ріг
+    country: UA
+    boundary_relation: 1821193
+    notes: City proper; stretches ~60 km north–south along the iron-ore basin, with large mining and industrial areas. OSM boundary (~462 km²) is somewhat larger than the official ~430 km².
+    notes_uk: Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).
+
+  - id: ivano_frankivsk
+    name: Ivano-Frankivsk
+    name_local: Івано-Франківськ
+    country: UA
+    boundary_relation: 2362670
+    notes: OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².
+    notes_uk: Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².
