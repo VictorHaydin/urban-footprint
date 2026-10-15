@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-15T11:11:26+00:00",
+ "generated_at": "2026-10-15T14:00:13+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -639,6 +639,28 @@
    "osm_relation": 3058686,
    "notes": "City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.",
    "notes_uk": "Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.",
+   "group": "other"
+  },
+  {
+   "id": "chernivtsi",
+   "name": "Chernivtsi",
+   "name_local": "Чернівці",
+   "country": "UA",
+   "area_km2": 151.506,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    25.940947,
+    48.319043
+   ],
+   "bounds": [
+    25.806524,
+    48.245222,
+    26.034907,
+    48.397491
+   ],
+   "osm_relation": 1742393,
+   "notes": "City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.",
+   "notes_uk": "Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.",
    "group": "other"
   }
  ],

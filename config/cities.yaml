@@ -112,3 +112,11 @@ cities:
     boundary_relation: 3058686
     notes: City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.
     notes_uk: Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.
+
+  - id: chernivtsi
+    name: Chernivtsi
+    name_local: Чернівці
+    country: UA
+    boundary_relation: 1742393
+    notes: City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.
+    notes_uk: Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.
