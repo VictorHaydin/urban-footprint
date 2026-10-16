@@ -3,7 +3,9 @@
 Per city (web/data/<city>/):
     stats.json            statistics (copy of processed stats + validation summary + overview georef)
     boundary.geojson      simplified administrative boundary (WGS84)
-    overview/<cat>.pmtiles  per-category coverage raster pyramid (lossless WebP tiles, z6–13) for low zooms
+    overview/<unit>/<cat>.pmtiles  per-unit, per-category coverage raster pyramid (lossless WebP tiles, z6–13)
+    territories.geojson   outline of each territory mode (city / hromada / greater)
+    settlements.geojson   (territorial cities) evaluated Greater City settlements with drive times
     features.pmtiles      vector tiles (layer "features") with every exclusive feature piece
 
 Global:
@@ -208,7 +210,7 @@ def export_pmtiles(gdf3857: gpd.GeoDataFrame, path, bounds_ll, center) -> dict:
     geoms = np.asarray(gdf3857.geometry.values, dtype=object)
     props = []
     for r in gdf3857.itertuples(index=False):
-        p = {"c": r.category, "s": r.subcategory, "id": r.fid, "a": int(round(r.area_m2))}
+        p = {"c": r.category, "s": r.subcategory, "id": r.fid, "a": int(round(r.area_m2)), "u": r.unit}
         if isinstance(r.name, str) and r.name:
             p["n"] = r.name
         if isinstance(r.rule_tag, str) and r.rule_tag:
@@ -283,23 +285,56 @@ def export_city(city: City, cls: Classification) -> None:
     bsimple["geometry"] = shapely.set_precision(bsimple.geometry.simplify(0.00002), 1e-6)
     bsimple.to_file(web / "boundary.geojson", driver="GeoJSON", COORDINATE_PRECISION=6)
 
-    g3857 = gdf[["fid", "category", "subcategory", "area_m2", "name", "rule_tag", "width_m", "geometry"]].to_crs("EPSG:3857")
+    g3857 = gdf[["fid", "unit", "category", "subcategory", "area_m2", "name", "rule_tag", "width_m", "geometry"]].to_crs("EPSG:3857")
+
+    # ---- territory modes: outlines + bounds per mode, settlement table
+    terr = json.loads((interim / "territories.json").read_text(encoding="utf-8"))
+    units = gpd.read_parquet(interim / "units.parquet")
+    ugeom = dict(zip(units["unit"], units.geometry.values))
+    mode_rows, mode_bounds = [], {}
+    for m, spec in terr["modes"].items():
+        g = shapely.union_all([ugeom[u] for u in spec["units"] if u in ugeom], grid_size=0.01)
+        gw = gpd.GeoSeries([g], crs=units.crs).simplify(15).to_crs(4326).iloc[0]
+        mode_rows.append({"mode": m, "status": spec["status"], "geometry": gw})
+        mode_bounds[m] = [round(v, 6) for v in gw.bounds]
+    gpd.GeoDataFrame(mode_rows, geometry="geometry", crs=4326).to_file(
+        web / "territories.geojson", driver="GeoJSON", COORDINATE_PRECISION=5)
+    (web / "settlements.geojson").unlink(missing_ok=True)
+    if (interim / "settlements.geojson").exists():
+        shutil.copyfile(interim / "settlements.geojson", web / "settlements.geojson")
+    region_b = units.to_crs(4326).total_bounds
 
     if (web / "overview").exists():
         shutil.rmtree(web / "overview")
-    overview = export_overview(g3857, cls, web / "overview", b.bounds, center)
-    log.info("[%s] overview pyramids: %d tiles, %.1f MB (%.1f m/px at z%d)", city.id, overview["tiles"],
-             overview["total_bytes"] / 1e6, overview["pixel_size_m"], OVERVIEW_MAXZOOM)
+    overview = {"format": "pmtiles", "files": {}, "minzoom": OVERVIEW_MINZOOM, "maxzoom": OVERVIEW_MAXZOOM,
+                "tile_size": OVERVIEW_TILE, "tiles": 0, "total_bytes": 0}
+    for unit in units["unit"]:
+        part = g3857[g3857["unit"] == unit]
+        if not len(part):
+            continue
+        ov = export_overview(part, cls, web / "overview" / unit, region_b, center)
+        overview["files"][unit] = {k: f"overview/{unit}/{v.split('/', 1)[1]}" for k, v in ov["files"].items()}
+        overview["tiles"] += ov["tiles"]
+        overview["total_bytes"] += ov["total_bytes"]
+        overview["pixel_size_m"] = ov["pixel_size_m"]
+    log.info("[%s] overview pyramids (units %s): %d tiles, %.1f MB", city.id, list(overview["files"]),
+             overview["tiles"], overview["total_bytes"] / 1e6)
 
-    tile_stats = export_pmtiles(g3857, web / "features.pmtiles", b.bounds, center)
+    tile_stats = export_pmtiles(g3857, web / "features.pmtiles", region_b, center)
     log.info("[%s] features.pmtiles %.1f MB, tile sizes %s", city.id,
              (web / "features.pmtiles").stat().st_size / 1e6, tile_stats)
 
     stats = json.loads((proc / "stats.json").read_text(encoding="utf-8"))
     validation = json.loads((proc / "validation.json").read_text(encoding="utf-8"))
     stats["validation"] = {"status": validation["status"], "checks": validation["checks"]}
+    for m, v in (validation.get("modes") or {}).items():
+        if m in stats.get("modes", {}):
+            stats["modes"][m]["validation"] = v
     stats["map"] = {
         "bounds": [round(v, 6) for v in b.bounds],
+        "mode_bounds": mode_bounds,
+        "territories": "territories.geojson",
+        "settlements": "settlements.geojson" if (web / "settlements.geojson").exists() else None,
         "center": [round(center[0], 6), round(center[1], 6)],
         "overview": overview,
         "vector_tiles": {"file": "features.pmtiles", "minzoom": VT_MINZOOM, "maxzoom": VT_MAXZOOM,
@@ -320,7 +355,9 @@ def export_index(cls: Classification) -> None:
                        "area_km2": s["area"]["boundary_km2"], "osm_timestamp": s["osm_timestamp"],
                        "center": s["map"]["center"], "bounds": s["map"]["bounds"],
                        "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk,
-                       "group": c.group})
+                       "group": c.group, "occupied": c.occupied,
+                       "modes": {m: {"status": d.get("status"), "area_km2": d["area"]["boundary_km2"]}
+                                 for m, d in (s.get("modes") or {}).items()}})
     index = {
         "schema_version": 1,
         "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),

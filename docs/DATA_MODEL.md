@@ -14,6 +14,12 @@ remainder pieces have `fid = u<tile>`.
 data/sources/geofabrik/<region>-latest.osm.pbf   + .meta.json (URL, size, OSM timestamp)
 data/interim/<city>/
     boundary.geojson          administrative boundary, WGS84
+    region.geojson            area covered by the extraction (city + hromada + radius for territorial cities)
+    hromada.geojson           hromada boundary (if configured)
+    settlements.parquet       settlement outlines and place points in the region (territorial cities)
+    territories.json          territory modes -> units, status, Greater City parameters (territories stage)
+    units.parquet             disjoint territory units A–D (local CRS); see docs/SUBURBS.md
+    settlements.geojson       evaluated Greater City settlements: drive time, continuity, approx flag, included
     osm_features.parquet      raw features: osm_type, osm_id, kind (area|line), tags (JSON, ALL original tags),
                               geometry (original OSM geometry, WGS84; lines stay lines)
     extract.json              provenance: source, OSM timestamp, keys extracted, counts
@@ -35,6 +41,8 @@ web/data/
                               z6–13 ≈ 6 m/px; alpha = share of the pixel covered by the category).
                               Tiled so browsers only load visible tiles; full-size images exhausted
                               mobile GPU memory
+    <city>/territories.geojson  outline per territory mode (city / hromada / greater)
+    <city>/settlements.geojson  Greater City settlements (territorial cities)
     <city>/features.pmtiles   vector tiles z14, layer "features"
 ```
 

@@ -21,7 +21,9 @@ const state = {
   compareCities: null,    // selected city ids for comparison (null = all)
   opacity: 0.85,
   subPctOfCat: true,      // map sidebar: sub-category % relative to its category (true) or to the city (false)
+  territory: 'city',      // territory mode: city | hromada | greater (docs/SUBURBS.md)
 };
+const TERRITORIES = ['city', 'hromada', 'greater'];
 
 /**
  * Map panes. Pane 0 always exists; pane 1 is created when a second city is selected.
@@ -86,9 +88,44 @@ async function getJSON(path) {
   if (!r.ok) throw new Error(`${path}: ${r.status}`);
   return r.json();
 }
+/*
+ * stats.json holds City-mode figures at the top level and, for rebuilt cities, every territory mode under
+ * `modes`. `state.stats[id]` returns a *view* for the selected territory mode with the same shape as the
+ * top level (area, categories, buildings, validation...), plus:
+ *   _mode    mode actually shown ('city' when the selected mode is unavailable for this city)
+ *   _status  ok | same_as_city | no_hromada | occupied | not_computed
+ *   _units   territory units (A = city, B/C/D = extensions) shown on the map
+ */
+const rawStats = {};
+const viewCache = new Map();
+function statsView(id) {
+  const raw = rawStats[id];
+  const want = state.territory;
+  const key = `${id}|${want}`;
+  if (viewCache.has(key)) return viewCache.get(key);
+  const md = raw.modes?.[want];
+  const status = want === 'city' ? 'ok' : md ? md.status : 'not_computed';
+  const usable = want === 'city' || (md && status !== 'not_computed');
+  const src = usable ? (md || raw.modes?.city || raw) : (raw.modes?.city || raw);
+  const view = {
+    ...raw,
+    area: src.area, categories: src.categories, buildings: src.buildings,
+    estimated_line_footprints: src.estimated_line_footprints, network_length_km: src.network_length_km,
+    validation: src.validation || raw.validation,
+    _mode: usable ? want : 'city', _status: status, _units: src.units || ['A'],
+  };
+  viewCache.set(key, view);
+  return view;
+}
+state.stats = new Proxy({}, { get: (_, id) => (typeof id === 'string' && rawStats[id] ? statsView(id) : undefined) });
 async function loadStats(id) {
-  if (!state.stats[id]) state.stats[id] = await getJSON(`${DATA}/${id}/stats.json`);
+  if (!rawStats[id]) rawStats[id] = await getJSON(`${DATA}/${id}/stats.json`);
   return state.stats[id];
+}
+/** Note explaining why a city shows a different territory than the selected mode (or null). */
+function territoryNote(s) {
+  if (s._status === 'ok' || state.territory === 'city') return null;
+  return t(`terr.note.${s._status}`, { mode: t(`terr.${state.territory}`) });
 }
 const catDef = (id) => state.index.categories.find((c) => c.id === id);
 const subDef = (cat, sub) => catDef(cat)?.subcategories.find((s) => s.id === sub);
@@ -97,13 +134,14 @@ const subDef = (cat, sub) => catDef(cat)?.subcategories.find((s) => s.id === sub
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   return {
-    city: p.get('city'), city2: p.get('city2'), view: p.get('view'),
+    city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'),
     cities: p.get('cities') ? p.get('cities').split(',') : null,
   };
 }
 function writeHash() {
   const p = new URLSearchParams({ city: state.city, view: state.view });
   if (state.city2) p.set('city2', state.city2);
+  if (state.territory !== 'city') p.set('t', state.territory);
   if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
   history.replaceState(null, '', '#' + p.toString());
 }
@@ -219,8 +257,8 @@ function applyOpacity() {
     const { map } = pane;
     const vt = state.stats[pane.cityId].map.vector_tiles;
     for (const c of state.index.categories) {
-      const r = `ov-${c.id}`, v = `vt-${c.id}`;
-      if (map.getLayer(r)) {
+      const v = `vt-${c.id}`;
+      for (const r of pane.layers.filter((id) => id.startsWith(`ov-${c.id}-`))) {
         map.setPaintProperty(r, 'raster-opacity', ['interpolate', ['linear'], ['zoom'],
           vt.minzoom, state.opacity, vt.minzoom + VT_FADE, 0]);
       }
@@ -232,9 +270,11 @@ function applyOpacity() {
   }
 }
 
-function vtFilter(cat) {
+function vtFilter(cat, pane) {
   const hiddenSubs = [...state.hiddenSub].filter((k) => k.startsWith(cat + '/')).map((k) => k.split('/')[1]);
   const f = ['all', ['==', ['get', 'c'], cat]];
+  // everything outside the selected territory is hidden (tiles of rebuilt cities carry the unit `u`)
+  if (pane?.unitFilter) f.push(['in', ['get', 'u'], ['literal', pane.units]]);
   if (hiddenSubs.length) f.push(['!', ['in', ['get', 's'], ['literal', hiddenSubs]]]);
   return f;
 }
@@ -244,8 +284,10 @@ function applyVisibility() {
     const { map } = pane;
     for (const c of state.index.categories) {
       const vis = state.hidden.has(c.id) ? 'none' : 'visible';
-      for (const id of [`ov-${c.id}`, `vt-${c.id}`]) if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
-      if (map.getLayer(`vt-${c.id}`)) map.setFilter(`vt-${c.id}`, vtFilter(c.id));
+      for (const id of [...pane.layers.filter((x) => x.startsWith(`ov-${c.id}-`)), `vt-${c.id}`]) {
+        if (map.getLayer(id)) map.setLayoutProperty(id, 'visibility', vis);
+      }
+      if (map.getLayer(`vt-${c.id}`)) map.setFilter(`vt-${c.id}`, vtFilter(c.id, pane));
     }
   }
 }
@@ -256,33 +298,44 @@ async function loadCityIntoPane(pane, cityId) {
   await pane.ready;
   if (!pane.map) return; // pane was closed meanwhile
   const { map } = pane;
-  if (pane.cityId === cityId && pane.layers.length) return;
+  const unitKey = s._units.join(',');
+  if (pane.cityId === cityId && pane.unitKey === unitKey && pane.layers.length) return;
   const base = new URL(`${DATA}/${cityId}/`, location.href).href;
   clearCityLayers(pane);
   if (pane.popup) pane.popup.remove();
   pane.cityId = cityId;
+  pane.unitKey = unitKey;
+  pane.units = s._units;
+  pane.mode = s._mode;
 
   const vt = s.map.vector_tiles;
   const add = (id, spec) => { map.addSource(id, spec); pane.sources.push(id); };
   const layer = (spec) => { map.addLayer(spec); pane.layers.push(spec.id); };
 
-  // overview rasters (low zoom): one tiled PMTiles pyramid per category, so only visible tiles are loaded
+  // overview rasters (low zoom): one tiled PMTiles pyramid per unit and category, so only visible tiles of
+  // the selected territory are loaded. Older exports have one pyramid per category (city only).
   const ov = s.map.overview;
+  const perUnit = Object.values(ov.files).some((v) => typeof v === 'object');
+  pane.unitFilter = perUnit;
+  const ovFiles = perUnit ? s._units.map((u) => [u, ov.files[u] || {}]) : [['A', ov.files]];
   for (const c of state.index.categories) {
-    const file = ov.files[c.id];
-    if (!file) continue;
-    add(`ov-${c.id}`, { type: 'raster', url: `pmtiles://${base}${file}`, tileSize: ov.tile_size || 512 });
-    layer({
-      id: `ov-${c.id}`, type: 'raster', source: `ov-${c.id}`, maxzoom: vt.minzoom + VT_FADE,
-      paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' },
-    });
+    for (const [u, files] of ovFiles) {
+      const file = files[c.id];
+      if (!file) continue;
+      const id = `ov-${c.id}-${u}`;
+      add(id, { type: 'raster', url: `pmtiles://${base}${file}`, tileSize: ov.tile_size || 512 });
+      layer({
+        id, type: 'raster', source: id, maxzoom: vt.minzoom + VT_FADE,
+        paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' },
+      });
+    }
   }
   // vector tiles (high zoom) — each feature piece is exclusive, exactly what the statistics count
   add('vt', { type: 'vector', url: `pmtiles://${base}${vt.file}` });
   for (const c of state.index.categories) {
     layer({
       id: `vt-${c.id}`, type: 'fill', source: 'vt', 'source-layer': vt.layer, minzoom: vt.minzoom,
-      filter: vtFilter(c.id),
+      filter: vtFilter(c.id, pane),
       paint: { 'fill-color': subColorExpr(c.id), 'fill-antialias': false },
     });
   }
@@ -291,9 +344,11 @@ async function loadCityIntoPane(pane, cityId) {
     filter: ['==', ['get', 'id'], '__none__'],
     paint: { 'line-color': '#000', 'line-width': 2.5 },
   });
-  add('boundary', { type: 'geojson', data: `${base}boundary.geojson` });
+  // outline of the selected territory (older exports: the city boundary)
+  add('boundary', { type: 'geojson', data: `${base}${s.map.territories || 'boundary.geojson'}` });
   layer({
     id: 'boundary-line', type: 'line', source: 'boundary',
+    ...(s.map.territories ? { filter: ['==', ['get', 'mode'], s._mode] } : {}),
     layout: { visibility: $('#boundaryToggle').checked ? 'visible' : 'none' },
     paint: { 'line-color': '#222', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.2, 15, 3], 'line-dasharray': [3, 2] },
   });
@@ -327,7 +382,8 @@ function fitPanes() {
   const list = activePanes().filter((p) => p.cityId);
   if (!list.length) return;
   const cams = list.map((p) => {
-    const b = state.stats[p.cityId].map.bounds;
+    const sv = state.stats[p.cityId];
+    const b = sv.map.mode_bounds?.[sv._mode] || sv.map.bounds;
     const cam = p.map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: isDual() ? 40 : 30 });
     const center = maplibregl.LngLat.convert(cam.center);
     return { p, center, res: cosd(center.lat) / 2 ** cam.zoom }; // ∝ metres per pixel
@@ -432,7 +488,7 @@ function cityHeader(s, osmDate) {
   return [
     el('h1', { class: 'city-title' }, `${cityName(city)} `, el('span', { class: 'small' }, cityOtherName(city))),
     el('div', { class: 'city-meta' },
-      t('city.meta', { area: num(s.area.boundary_km2, 1) }),
+      t(s._mode === 'city' ? 'city.meta' : 'city.metaTerr', { area: num(s.area.boundary_km2, 1), mode: t(`terr.${s._mode}`).toLowerCase() }),
       el('a', { href: `https://www.openstreetmap.org/relation/${city.osm_relation}`, target: '_blank', rel: 'noopener' }, city.osm_relation),
       el('br'), t('city.osmDate', { date: osmDate })),
   ];
@@ -462,6 +518,11 @@ function renderSidebar() {
             el('a', { href: `https://www.openstreetmap.org/relation/${x.city.osm_relation}`, target: '_blank', rel: 'noopener' }, 'OSM')))))),
     el('div', { class: 'city-meta' }, t('dual.scaleNote'), el('br'), t('city.osmDate', { date: osmDateText(s) })));
   }
+  for (const x of list) {
+    const note = territoryNote(x);
+    if (note) head.append(el('div', { class: 'mode-note' }, s2 ? `${cityName(x.city)}: ${note}` : note));
+  }
+  renderSettlements(list);
   renderUnitToggle($('#unitToggleMap'), [['pct', t('unit.pctArea')], ['km2', t('unit.km2')]]);
   $('#subPctToggle').hidden = state.unit === 'km2'; // only meaningful for percentages
   $('#subPctCheckbox').checked = state.subPctOfCat;
@@ -649,8 +710,10 @@ function renderCityFilter() {
       saveCompareCities();
       renderCompare();
     });
+    const md = c.modes?.[state.territory];
+    const areaKm2 = md && !['not_computed'].includes(md.status) ? md.area_km2 : c.area_km2;
     list.append(el('label', { class: 'cf-item' }, box, el('span', {}, cityName(c)),
-      el('span', { class: 'small' }, `${num(c.area_km2, 0)} ${t('units.km2')}`)));
+      el('span', { class: 'small' }, `${num(areaKm2, 0)} ${t('units.km2')}`)));
   }
   if (!matches.length) list.append(el('div', { class: 'small', style: 'padding:6px' }, t('cf.noMatch')));
 }
@@ -685,6 +748,7 @@ async function renderCompare() {
   }
   if (state.unit === 'pctcat' && state.breakdown === 'categories') state.unit = 'pct';
   renderUnitToggle($('#unitToggleCompare'), unitOpts);
+  renderTerritoryToggles();
   renderCityFilter();
 
   const sel = $('#compareBreakdown');
@@ -785,7 +849,7 @@ async function renderCompare() {
       el('button', {
         type: 'button', class: 'city link', title: t('cmp.openMap', { city: cityName(s.city) }),
         onclick: () => { state.city = s.city.id; if (state.city2 === s.city.id) state.city2 = null; switchView('map'); },
-      }, cityName(s.city)),
+      }, cityName(s.city), territoryNote(s) ? el('span', { class: 'terr-mark', title: territoryNote(s) }, ' ⓘ') : null),
       el('div', {}, stack),
       el('div', { class: 'total' }, totalText)));
   }
@@ -912,13 +976,69 @@ async function selectCities(city, city2, fit = true) {
   await Promise.all([loadStats(city), city2 ? loadStats(city2) : null]);
   if (state.unit === 'pctcat') state.unit = 'pct';
   renderSidebar();
+  writeHash(); // before waiting for the map, so the URL is right even while tiles load
   if (changed) await updateMaps({ fit });
-  writeHash();
 }
 
 function renderAll() {
   if (state.view === 'map') renderSidebar();
   if (state.view === 'compare') renderCompare();
+}
+
+// ------------------------------------------------------------------ territory modes
+function renderTerritoryToggles() {
+  for (const box of [$('#territoryMap'), $('#territoryCompare')]) {
+    if (!box) continue;
+    box.innerHTML = '';
+    box.append(el('span', { class: 'terr-label' }, t('terr.label')),
+      el('div', { class: 'unit-toggle terr-toggle', role: 'group' }, TERRITORIES.map((m) => el('button', {
+        type: 'button', class: state.territory === m ? 'active' : '', 'aria-pressed': state.territory === m,
+        title: t(`terr.${m}.hint`), onclick: () => setTerritory(m),
+      }, t(`terr.${m}`)))));
+  }
+}
+
+async function setTerritory(mode) {
+  if (!TERRITORIES.includes(mode) || mode === state.territory) return;
+  state.territory = mode;
+  try { localStorage.setItem('territory', mode); } catch { /* storage unavailable */ }
+  renderTerritoryToggles();
+  hideTip();
+  if (state.view === 'compare') renderCompare();
+  renderSidebar();
+  renderPaneLabels();
+  for (const p of activePanes()) if (p.popup) p.popup.remove();
+  await Promise.all(activePanes().filter((p) => p.cityId).map((p) => loadCityIntoPane(p, p.cityId)));
+  fitPanes();
+  writeHash();
+}
+
+const settlementsCache = {};
+let settlementsToken = 0;
+/** Greater City mode: list of included settlements with drive times (one block per city). */
+async function renderSettlements(list) {
+  const token = ++settlementsToken; // later renders supersede this one
+  const box = $('#settlementsPanel');
+  box.innerHTML = '';
+  for (const x of list) {
+    if (x._mode !== 'greater' || !x.map.settlements) continue;
+    const id = x.city.id;
+    if (!settlementsCache[id]) {
+      try { settlementsCache[id] = await getJSON(`${DATA}/${id}/${x.map.settlements}`); } catch { continue; }
+    }
+    if (token !== settlementsToken) return; // superseded while loading
+    const inc = settlementsCache[id].features.map((f) => f.properties).filter((p) => p.in_greater)
+      .sort((a, b) => a.drive_min - b.drive_min);
+    const d = rawStats[id].territories?.greater_drive_min ?? 10;
+    box.append(el('details', { class: 'panel settlements' },
+      el('summary', {}, el('h3', { style: 'display:inline' },
+        t('set.title', { city: list.length > 1 ? cityName(x.city) + ': ' : '' }) + ` (${inc.length})`)),
+      el('div', { class: 'small', style: 'margin:4px 0 6px' }, t('set.rule', { d: num(d, 0) })),
+      el('ul', { class: 'set-list' }, inc.map((p) => el('li', {},
+        el('span', {}, p.name || '—', p.approx ? el('span', { class: 'small', title: t('set.approx') }, ' *') : null),
+        el('span', { class: 'small' }, `${num(p.drive_min, 1)} ${t('set.min')}`)))),
+      inc.some((p) => p.approx) ? el('div', { class: 'small' }, `* ${t('set.approx')}`) : null));
+  }
 }
 
 // ------------------------------------------------------------------ language
@@ -948,6 +1068,7 @@ function changeLanguage(lang) {
     addMapControls(p);
   }
   renderPaneLabels();
+  renderTerritoryToggles();
   renderSidebar();
   if (state.view === 'compare') renderCompare();
   if (state.view === 'about') renderAbout();
@@ -971,6 +1092,10 @@ async function main() {
   state.city = known(h.city) ? h.city : defaultCity;
   const city2 = known(h.city2) && h.city2 !== state.city ? h.city2 : null;
   loadCompareCities(h.cities);
+  let saved = null;
+  try { saved = localStorage.getItem('territory'); } catch { /* storage unavailable */ }
+  state.territory = TERRITORIES.includes(h.territory) ? h.territory : TERRITORIES.includes(saved) ? saved : 'city';
+  renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();
   $('#citySelect').addEventListener('change', (e) => selectCities(e.target.value, state.city2));

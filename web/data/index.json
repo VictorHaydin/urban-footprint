@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-15T14:00:13+00:00",
+ "generated_at": "2026-10-16T11:52:45+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -441,7 +441,22 @@
    "osm_relation": 421866,
    "notes": "City with special status (admin_level=4). Boundary includes large forest and floodplain areas.",
    "notes_uk": "Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 826.153
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 826.153
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 1322.088
+    }
+   }
   },
   {
    "id": "lviv",
@@ -463,7 +478,22 @@
    "osm_relation": 2032280,
    "notes": "City proper (not the whole Lviv urban hromada).",
    "notes_uk": "Власне місто (без решти Львівської міської громади).",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 148.301
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 314.945
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 318.766
+    }
+   }
   },
   {
    "id": "odesa",
@@ -485,7 +515,9 @@
    "osm_relation": 1413934,
    "notes": "City proper (not the whole Odesa urban hromada).",
    "notes_uk": "Власне місто (без решти Одеської міської громади).",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "kharkiv",
@@ -507,7 +539,22 @@
    "osm_relation": 3154746,
    "notes": "City proper (not the whole Kharkiv urban hromada).",
    "notes_uk": "Власне місто (без решти Харківської міської громади).",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 350.001
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 350.001
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 487.524
+    }
+   }
   },
   {
    "id": "dnipro",
@@ -529,7 +576,9 @@
    "osm_relation": 1017311,
    "notes": "City proper (not the whole Dnipro urban hromada).",
    "notes_uk": "Власне місто (без решти Дніпровської міської громади).",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "zaporizhzhia",
@@ -551,7 +600,9 @@
    "osm_relation": 1418311,
    "notes": "City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².",
    "notes_uk": "Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).",
-   "group": "million"
+   "group": "million",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "donetsk",
@@ -573,7 +624,9 @@
    "osm_relation": 1413957,
    "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).",
    "notes_uk": "Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).",
-   "group": "million"
+   "group": "million",
+   "occupied": true,
+   "modes": {}
   },
   {
    "id": "kryvyi_rih",
@@ -595,7 +648,9 @@
    "osm_relation": 1821193,
    "notes": "City proper; stretches ~60 km north–south along the iron-ore basin, with large mining and industrial areas. OSM boundary (~462 km²) is somewhat larger than the official ~430 km².",
    "notes_uk": "Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).",
-   "group": "other"
+   "group": "other",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "ivano_frankivsk",
@@ -617,7 +672,9 @@
    "osm_relation": 2362670,
    "notes": "OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².",
    "notes_uk": "Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².",
-   "group": "other"
+   "group": "other",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "ternopil",
@@ -639,7 +696,9 @@
    "osm_relation": 3058686,
    "notes": "City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.",
    "notes_uk": "Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.",
-   "group": "other"
+   "group": "other",
+   "occupied": false,
+   "modes": {}
   },
   {
    "id": "chernivtsi",
@@ -661,7 +720,9 @@
    "osm_relation": 1742393,
    "notes": "City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.",
    "notes_uk": "Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.",
-   "group": "other"
+   "group": "other",
+   "occupied": false,
+   "modes": {}
   }
  ],
  "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL)."

@@ -15,6 +15,12 @@
 #   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
 #                       (default from `defaults`). Cities sharing a source are extracted in one pass.
 #   notes / notes_uk    free text (English / Ukrainian), shown in reports and on the Method & data page
+#   territories         (optional, default false) also compute the Hromada and Greater City territory
+#                       modes (see docs/SUBURBS.md). Extraction then covers the wider region.
+#   hromada_relation    OSM relation of the city's hromada (admin_level=7), for Hromada mode.
+#                       Omit when the city has no hromada level (Kyiv).
+#   occupied            (optional) temporarily occupied: Hromada mode falls back to the city boundary
+#   suburbs_radius_km   (optional, default 25) search radius for Greater City settlements
 #   group               id of a city group below (default: the last group). The web app lists cities
 #                       by group (in the order of `groups`), alphabetically by Ukrainian name within a group.
 
@@ -31,6 +37,7 @@ cities:
     name_local: Київ
     country: UA
     boundary_relation: 421866
+    territories: true
     group: million
     notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
     notes_uk: Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.
@@ -40,6 +47,8 @@ cities:
     name_local: Львів
     country: UA
     boundary_relation: 2032280
+    territories: true
+    hromada_relation: 12219469
     group: million
     notes: City proper (not the whole Lviv urban hromada).
     notes_uk: Власне місто (без решти Львівської міської громади).
@@ -58,6 +67,8 @@ cities:
     name_local: Харків
     country: UA
     boundary_relation: 3154746
+    territories: true
+    hromada_relation: 12079098
     group: million
     notes: City proper (not the whole Kharkiv urban hromada).
     notes_uk: Власне місто (без решти Харківської міської громади).
@@ -85,6 +96,8 @@ cities:
     name_local: Донецьк
     country: UA
     boundary_relation: 1413957
+    occupied: true
+    hromada_relation: 17963109
     group: million
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
     notes_uk: Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).

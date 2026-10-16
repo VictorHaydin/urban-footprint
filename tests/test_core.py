@@ -92,6 +92,25 @@ def test_labels_do_not_change_method_hash(tmp_path):
     assert changed.display_hash != CLS.display_hash  # export re-runs
 
 
+def test_territory_units_are_disjoint_and_compose_modes():
+    from urbanfp.territories import compose_units
+    A = shapely.box(0, 0, 1000, 1000)                       # city
+    H = shapely.box(-500, -500, 1500, 1000)                 # hromada around it
+    G = shapely.union_all([A, shapely.box(1000, 0, 2000, 500), shapely.box(-500, -500, 0, 0)])  # greater city
+    u = compose_units(A, H, G)
+    assert set(u) == {"A", "B", "C", "D"}
+    for a in u:
+        for b in u:
+            if a < b:
+                assert shapely.intersection(u[a], u[b]).area < 1
+    area = lambda keys: sum(u[k].area for k in keys)
+    assert abs(area("ABC") - H.union(A).area) < 1            # Hromada mode = A + B + C
+    assert abs(area("ABD") - G.area) < 1                     # Greater City mode = A + B + D
+    # no hromada (Kyiv) / no greater city
+    assert set(compose_units(A, None, G)) == {"A", "D"}
+    assert set(compose_units(A, H, None)) == {"A", "C"}
+
+
 if __name__ == "__main__":
     for name, fn in list(globals().items()):
         if name.startswith("test_"):

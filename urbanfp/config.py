@@ -52,6 +52,10 @@ class City:
     notes: str = ""
     notes_uk: str = ""
     group: str = ""
+    territories: bool = False          # compute Hromada / Greater City modes (docs/SUBURBS.md)
+    hromada_relation: int | None = None
+    occupied: bool = False
+    suburbs_radius_km: float = 25.0
 
     @property
     def source_region(self) -> str:

@@ -23,14 +23,15 @@ from urbanfp.config import City, Classification, Paths, load_classification, sel
 
 log = logging.getLogger("urbanfp")
 
-STAGES = ["extract", "classify", "overlay", "stats", "export"]
+STAGES = ["extract", "territories", "classify", "overlay", "stats", "export"]
 
 
 def _stage_files(city: City) -> dict[str, tuple[list[Path], list[Path]]]:
     i, p, w = Paths.interim(city.id), Paths.processed(city.id), Paths.web_city(city.id)
     return {
+        "territories": ([i / "osm_features.parquet", i / "boundary.geojson"], [i / "units.parquet", i / "territories.json"]),
         "classify": ([i / "osm_features.parquet"], [i / "classified.parquet"]),
-        "overlay": ([i / "classified.parquet"], [p / "exclusive.parquet", p / "tile_stats.parquet"]),
+        "overlay": ([i / "classified.parquet", i / "units.parquet"], [p / "exclusive.parquet", p / "tile_stats.parquet"]),
         "stats": ([p / "exclusive.parquet"], [p / "stats.json", p / "validation.json"]),
         "export": ([p / "stats.json"], [w / "stats.json", w / "features.pmtiles"]),
     }
@@ -73,7 +74,10 @@ def run_stage(stage: str, cities: list[City], cls: Classification, force: bool) 
             log.info("[%s] %s up to date, skipping", city.id, stage)
             continue
         t0 = time.time()
-        if stage == "classify":
+        if stage == "territories":
+            from urbanfp.territories import build_territories
+            build_territories(city)
+        elif stage == "classify":
             from urbanfp.classify import classify_city
             classify_city(city, cls)
         elif stage == "overlay":

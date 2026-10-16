@@ -8,5 +8,6 @@ data/sources/
 data/interim/
 data/processed/
 data/logs/
+data/preview/
 
 .claude/

@@ -16,6 +16,10 @@ Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih,
 | Local processing pipeline | [`urbanfp/`](urbanfp), [`config/`](config) | Downloads OSM data, classifies features, builds a mutually exclusive area partition, validates it, exports datasets |
 | Static web app | [`web/`](web) | Reads only precomputed files in `web/data/`; runs on GitHub Pages without a backend |
 
+A **Territory** switch measures not only the city itself but also its **hromada** or the **Greater City**
+(the city plus settlements within a 10-minute drive), see [docs/SUBURBS.md](docs/SUBURBS.md). These modes are
+currently computed for Kyiv, Lviv and Kharkiv.
+
 Documentation (in English):
 * [docs/METHODOLOGY.md](docs/METHODOLOGY.md): classification, footprint estimation, overlap resolution, assumptions, limitations
 * [docs/DATA_MODEL.md](docs/DATA_MODEL.md): every output file and its schema, plus how to use the feature-level data for animation

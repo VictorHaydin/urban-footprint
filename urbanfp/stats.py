@@ -31,45 +31,32 @@ def _r(x: float, nd: int = 1) -> float:
     return float(round(float(x), nd))
 
 
-def compute_stats(city: City, cls: Classification) -> dict:
-    interim, proc = Paths.interim(city.id), Paths.processed(city.id)
-    excl = gpd.read_parquet(proc / "exclusive.parquet")
-    feats = gpd.read_parquet(interim / "classified.parquet")
-    tiles = pd.read_parquet(proc / "tile_stats.parquet")
-    overlay_meta = json.loads((proc / "overlay.json").read_text())
-    extract_meta = json.loads((interim / "extract.json").read_text())
-    classify_rep = json.loads((interim / "classify_report.json").read_text(encoding="utf-8"))
-
-    boundary_area = float(overlay_meta["boundary_area_m2"])
-    tile_total = float(tiles["tile_area"].sum())
-    cls_area = {c: float(tiles[c].sum()) for c in overlay_meta["class_order"]}
+def _mode_stats(cls: Classification, excl, feats, tiles, class_order, mode_area: float, mode_geom, line_feats, line_geoms) -> dict:
+    """Statistics for one territory mode (a set of units). `excl`/`tiles` are already filtered to its units."""
+    cls_area = {c: float(tiles[c].sum()) for c in class_order}
     cls_area["unclassified/no_data"] = float(tiles["unclassified/no_data"].sum())
-    fp_area = {c: float(tiles["fp:" + c].sum()) for c in overlay_meta["class_order"]}
-    sum_classes = sum(cls_area.values())
-    piece_sum = float(excl["area_m2"].sum())
-
+    fp_area = {c: float(tiles["fp:" + c].sum()) for c in class_order}
     counts = excl[excl["cls"] != "unclassified/no_data"].groupby("cls")["fid"].nunique().to_dict()
+    # a feature crossing unit borders has one piece per unit: sum per feature within the mode
+    area_by_fid = excl.groupby("fid")["area_m2"].sum()
 
-    # ---------------- category breakdown
     categories = []
     for c in cls.categories:
         subs = []
-        for s in c["subcategories"]:
-            cid = f"{c['id']}/{s['id']}"
+        for sc in c["subcategories"]:
+            cid = f"{c['id']}/{sc['id']}"
             a = cls_area.get(cid, 0.0)
-            subs.append({"id": s["id"], "label": s["label"], "color": s["color"],
-                         "area_m2": _r(a), "pct": _r(100 * a / boundary_area, 4),
+            subs.append({"id": sc["id"], "label": sc["label"], "color": sc["color"],
+                         "area_m2": _r(a), "pct": _r(100 * a / mode_area, 4),
                          "feature_count": int(counts.get(cid, 0))})
         a = sum(x["area_m2"] for x in subs)
         categories.append({"id": c["id"], "label": c["label"], "color": c["color"],
-                           "area_m2": _r(a), "pct": _r(100 * a / boundary_area, 4),
+                           "area_m2": _r(a), "pct": _r(100 * a / mode_area, 4),
                            "feature_count": int(sum(x["feature_count"] for x in subs)),
                            "subcategories": subs})
 
     # ---------------- buildings
-    b_feats = feats[feats["category"] == "buildings"].copy()
-    b_excl = excl[excl["category"] == "buildings"][["fid", "area_m2"]]
-    b = b_feats.merge(b_excl, on="fid", how="inner")
+    b = feats[feats["category"] == "buildings"].merge(area_by_fid.rename("area_m2"), left_on="fid", right_index=True, how="inner")
     tags_b = b["tags"].map(json.loads)
     bval = Counter(t.get("building", "") for t in tags_b)
     with_levels = b["levels"].notna() & (b["levels"] > 0) & (b["levels"] < 200)
@@ -90,8 +77,7 @@ def compute_stats(city: City, cls: Classification) -> dict:
     }
 
     # ---------------- line-based (estimated) footprints
-    line_feats = feats[feats["kind"] == "line"][["fid", "cls", "category", "width_source", "width_m", "tags", "source_wkb"]]
-    lf = line_feats.merge(excl[["fid", "area_m2"]], on="fid", how="inner")
+    lf = line_feats.merge(area_by_fid.rename("area_m2"), left_on="fid", right_index=True, how="inner")
     est = {}
     for cat, g in lf.groupby("category"):
         by_src = g.groupby(g["width_source"].str.split("+").str[0])["area_m2"].sum()
@@ -100,59 +86,117 @@ def compute_stats(city: City, cls: Classification) -> dict:
             "area_by_width_source_m2": {k: _r(v) for k, v in by_src.items()},
             "pct_area_default_width": _r(100 * by_src.get("default", 0) / max(g["area_m2"].sum(), 1), 2),
         }
-    # network lengths (clipped to the boundary)
-    boundary = gpd.read_file(interim / "boundary.geojson").to_crs(feats.crs).geometry.iloc[0]
-    lines = gpd.GeoSeries(shapely.from_wkb(line_feats["source_wkb"].values), crs="EPSG:4326").to_crs(feats.crs)
-    shapely.prepare(boundary)
-    clipped_len = shapely.length(shapely.intersection(lines.values, boundary))
-    line_feats = line_feats.assign(length_m=clipped_len)
-    lt = line_feats["tags"].map(json.loads)
-    line_feats["type"] = [t.get("highway") or t.get("railway") or t.get("waterway") or t.get("aeroway") for t in lt]
-    lengths = {cat: {k: _r(v / 1000, 2) for k, v in g.groupby("type")["length_m"].sum().sort_values(ascending=False).items()}
-               for cat, g in line_feats.groupby("category")}
+    # network lengths, clipped to the mode's territory
+    shapely.prepare(mode_geom)
+    lengths_m = shapely.length(shapely.intersection(line_geoms, mode_geom))
+    lt = line_feats.assign(length_m=lengths_m)
+    lengths = {cat: {k: _r(v / 1000, 2) for k, v in g.groupby("type")["length_m"].sum().sort_values(ascending=False).items() if v > 0}
+               for cat, g in lt.groupby("category")}
 
-    # ---------------- overlap accounting (how much of each class was covered by higher-priority classes)
     overlap = []
-    for c in overlay_meta["class_order"]:
+    for c in class_order:
         if fp_area[c] <= 0:
             continue
         overlap.append({"cls": c, "footprint_m2": _r(fp_area[c]), "exclusive_m2": _r(cls_area[c]),
                         "hidden_by_higher_priority_m2": _r(fp_area[c] - cls_area[c]),
                         "hidden_pct": _r(100 * (fp_area[c] - cls_area[c]) / fp_area[c], 2)})
-
-    stats = {
-        "schema_version": 1,
-        "city": {"id": city.id, "name": city.name, "name_local": city.name_local, "country": city.country,
-                 "osm_relation": city.boundary_relation, "notes": city.notes, "notes_uk": city.notes_uk},
-        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-        "osm_timestamp": extract_meta.get("source_osm_timestamp"),
-        "source": city.source,
-        "config_hash": cls.hash,
-        "area": {"boundary_m2": _r(boundary_area), "boundary_km2": _r(boundary_area / KM2, 3)},
+    return {
+        "area": {"boundary_m2": _r(mode_area), "boundary_km2": _r(mode_area / KM2, 3)},
         "categories": categories,
         "buildings": buildings,
         "estimated_line_footprints": est,
         "network_length_km": lengths,
         "overlap": overlap,
+        "_tile_total": float(tiles["tile_area"].sum()),
+        "_sum_classes": float(sum(cls_area.values())),
+        "_unclassified": cls_area["unclassified/no_data"],
+    }
+
+
+def compute_stats(city: City, cls: Classification) -> dict:
+    interim, proc = Paths.interim(city.id), Paths.processed(city.id)
+    excl = gpd.read_parquet(proc / "exclusive.parquet")
+    feats = gpd.read_parquet(interim / "classified.parquet")
+    tiles = pd.read_parquet(proc / "tile_stats.parquet")
+    overlay_meta = json.loads((proc / "overlay.json").read_text())
+    extract_meta = json.loads((interim / "extract.json").read_text())
+    classify_rep = json.loads((interim / "classify_report.json").read_text(encoding="utf-8"))
+    terr = json.loads((interim / "territories.json").read_text(encoding="utf-8"))
+    units = gpd.read_parquet(interim / "units.parquet").to_crs(feats.crs)
+    unit_geom = dict(zip(units["unit"], units.geometry.values))
+    unit_area = overlay_meta["unit_area_m2"]
+    class_order = overlay_meta["class_order"]
+
+    line_feats = feats[feats["kind"] == "line"][["fid", "cls", "category", "width_source", "width_m", "tags", "source_wkb"]].copy()
+    line_geoms = gpd.GeoSeries(shapely.from_wkb(line_feats["source_wkb"].values), crs="EPSG:4326").to_crs(feats.crs).values
+    lt = line_feats["tags"].map(json.loads)
+    line_feats["type"] = [t.get("highway") or t.get("railway") or t.get("waterway") or t.get("aeroway") for t in lt]
+
+    # implausibly large polygons in categories that are normally narrow/small (likely OSM tagging errors)
+    big = feats[(feats["kind"] == "area") & feats["category"].isin(SUSPICIOUS_LIMITS_M2) & (feats["subcategory"] != "airfield")]
+    big = big[big["footprint_area_m2"] > big["category"].map(SUSPICIOUS_LIMITS_M2)]
+
+    modes = {}
+    for mode, spec in terr["modes"].items():
+        us = [u for u in spec["units"] if u in unit_area]
+        ex = excl[excl["unit"].isin(us)]
+        ms = _mode_stats(cls, ex, feats, tiles[tiles["unit"].isin(us)], class_order,
+                         sum(unit_area[u] for u in us), shapely.union_all([unit_geom[u] for u in us]), line_feats, line_geoms)
+        fids = set(ex["fid"])
+        suspicious = [{"fid": r.fid, "cls": r.cls, "rule_tag": r.rule_tag, "name": r.name,
+                       "footprint_km2": round(r.footprint_area_m2 / KM2, 3)}
+                      for r in big[big["fid"].isin(fids)].sort_values("footprint_area_m2", ascending=False).itertuples()]
+        validation = _validate(city, cls, ms, ms["area"]["boundary_m2"], ms["_tile_total"], ms["_sum_classes"],
+                               float(ex["area_m2"].sum()), ex, classify_rep, extract_meta, suspicious)
+        for k in ("_tile_total", "_sum_classes", "_unclassified"):
+            ms.pop(k)
+        modes[mode] = {"status": spec["status"], "units": us, **ms, "validation": validation}
+
+    city_mode = modes["city"]
+    stats = {
+        "schema_version": 2,
+        "city": {"id": city.id, "name": city.name, "name_local": city.name_local, "country": city.country,
+                 "osm_relation": city.boundary_relation, "notes": city.notes, "notes_uk": city.notes_uk,
+                 "occupied": city.occupied},
+        "generated_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "osm_timestamp": extract_meta.get("source_osm_timestamp"),
+        "source": city.source,
+        "config_hash": cls.hash,
+        # City mode at the top level (unchanged schema for consumers that ignore territory modes)
+        **{k: city_mode[k] for k in ("area", "categories", "buildings", "estimated_line_footprints", "network_length_km", "overlap")},
+        "modes": {m: {k: v for k, v in d.items() if k != "validation"} for m, d in modes.items()},
+        "territories": {k: terr[k] for k in ("greater_drive_min", "suburbs_radius_km", "settlements_evaluated",
+                                             "settlements_in_greater", "approx_outlines") if k in terr},
     }
     proc.joinpath("stats.json").write_text(json.dumps(stats, indent=2, ensure_ascii=False), encoding="utf-8")
 
-    # implausibly large polygons in categories that are normally narrow/small (likely OSM tagging errors)
-    big = feats[(feats["kind"] == "area") & feats["category"].isin(SUSPICIOUS_LIMITS_M2)
-                & (feats["subcategory"] != "airfield")]
-    big = big[big["footprint_area_m2"] > big["category"].map(SUSPICIOUS_LIMITS_M2)]
-    suspicious = [{"fid": r.fid, "cls": r.cls, "rule_tag": r.rule_tag, "name": r.name,
-                   "footprint_km2": round(r.footprint_area_m2 / KM2, 3)}
-                  for r in big.sort_values("footprint_area_m2", ascending=False).itertuples()]
-
-    validation = _validate(city, cls, stats, boundary_area, tile_total, sum_classes, piece_sum, excl, classify_rep,
-                           extract_meta, suspicious)
+    validation = {**modes["city"]["validation"],
+                  "modes": {m: {"status": d["validation"]["status"], "checks": d["validation"]["checks"]} for m, d in modes.items()}}
     proc.joinpath("validation.json").write_text(json.dumps(validation, indent=2, ensure_ascii=False), encoding="utf-8")
-    proc.joinpath("validation.md").write_text(_validation_md(stats, validation), encoding="utf-8")
-    log.info("[%s] stats: %.1f km², unclassified %.1f%%, unknown buildings %.1f%% of building area",
-             city.id, boundary_area / KM2, cls_area["unclassified/no_data"] / boundary_area * 100,
-             validation["metrics"]["unknown_building_area_pct"])
+    md = _validation_md(stats, modes["city"]["validation"])
+    md += _territories_md(city, terr, modes, interim)
+    proc.joinpath("validation.md").write_text(md, encoding="utf-8")
+    for m, d in modes.items():
+        log.info("[%s] %-8s %s: %.1f km², unclassified %.1f%%", city.id, m, d["status"], d["area"]["boundary_km2"],
+                 next(c["pct"] for c in d["categories"] if c["id"] == "unclassified"))
     return stats
+
+
+def _territories_md(city: City, terr: dict, modes: dict, interim) -> str:
+    L = ["", "## Territory modes", "", "| Mode | Status | Units | km² | Validation |", "|---|---|---|---:|---|"]
+    for m, d in modes.items():
+        L.append(f"| {m} | {d['status']} | {'+'.join(d['units'])} | {d['area']['boundary_km2']:.2f} | {d['validation']['status']} |")
+    p = interim / "settlements.geojson"
+    if p.exists():
+        s = gpd.read_file(p)
+        L += ["", f"### Greater City settlements (drive time ≤ {terr['greater_drive_min']:g} min, "
+                  f"{int(s['in_greater'].sum())} of {len(s)} included; * = approximate outline)", "",
+              "| Settlement | Type | Drive min | Contiguous share | Built-up ha | In hromada | Included |", "|---|---|---:|---:|---:|---|---|"]
+        s = s.sort_values("drive_min", na_position="last")
+        for r in s[s["drive_min"].fillna(99) <= terr["greater_drive_min"] + 5].itertuples():
+            L.append(f"| {r.name}{'*' if r.approx else ''} | {r.type} | {r.drive_min} | {r.contig_share} | {r.built_ha} | "
+                     f"{'' if r.in_hromada is None else ('yes' if r.in_hromada else 'no')} | {'**yes**' if r.in_greater else 'no'} |")
+    return "\n".join(L) + "\n"
 
 
 def _check(checks, id_, ok, warn, message, value):
