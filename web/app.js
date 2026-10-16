@@ -292,6 +292,21 @@ function applyVisibility() {
   }
 }
 
+/** The world minus the territory of `mode` (all features if null): a polygon to grey out the outside. */
+function outsideMask(fc, mode) {
+  const polys = [];
+  for (const f of fc.features) {
+    if (mode && f.properties.mode !== mode) continue;
+    const g = f.geometry;
+    if (g.type === 'Polygon') polys.push(g.coordinates);
+    else if (g.type === 'MultiPolygon') polys.push(...g.coordinates);
+  }
+  const world = [[-180, -85], [180, -85], [180, 85], [-180, 85], [-180, -85]];
+  const coords = [[world, ...polys.map((p) => p[0])]]; // territory outer rings are holes in the world
+  for (const p of polys) for (const hole of p.slice(1)) coords.push([hole]); // enclaves stay grey
+  return { type: 'Feature', properties: {}, geometry: { type: 'MultiPolygon', coordinates: coords } };
+}
+
 /** Load a city's layers into a pane (does not move the camera). */
 async function loadCityIntoPane(pane, cityId) {
   const s = await loadStats(cityId);
@@ -311,6 +326,19 @@ async function loadCityIntoPane(pane, cityId) {
   const vt = s.map.vector_tiles;
   const add = (id, spec) => { map.addSource(id, spec); pane.sources.push(id); };
   const layer = (spec) => { map.addLayer(spec); pane.layers.push(spec.id); };
+
+  // outline of the selected territory (older exports: the city boundary). Land outside it is greyed out, so
+  // unmapped land inside the territory reads differently from land that is not part of it
+  const terrUrl = `${base}${s.map.territories || 'boundary.geojson'}`;
+  add('boundary', { type: 'geojson', data: terrUrl });
+  const modeFilter = s.map.territories ? { filter: ['==', ['get', 'mode'], s._mode] } : {};
+  const terr = await getJSON(terrUrl);
+  if (pane.cityId !== cityId || pane.unitKey !== unitKey) return; // superseded while loading
+  add('outside', { type: 'geojson', data: outsideMask(terr, s.map.territories ? s._mode : null) });
+  layer({
+    id: 'outside-mask', type: 'fill', source: 'outside',
+    paint: { 'fill-color': '#3c3c3c', 'fill-opacity': 0.28, 'fill-antialias': false },
+  });
 
   // overview rasters (low zoom): one tiled PMTiles pyramid per unit and category, so only visible tiles of
   // the selected territory are loaded. Older exports have one pyramid per category (city only).
@@ -344,13 +372,22 @@ async function loadCityIntoPane(pane, cityId) {
     filter: ['==', ['get', 'id'], '__none__'],
     paint: { 'line-color': '#000', 'line-width': 2.5 },
   });
-  // outline of the selected territory (older exports: the city boundary)
-  add('boundary', { type: 'geojson', data: `${base}${s.map.territories || 'boundary.geojson'}` });
+  // Hromada / Greater City: faint hairline around the whole territory (the map is empty outside it anyway),
+  // so dozens of settlement outlines do not clutter the map; the city boundary stays the main reference
+  const vis = $('#boundaryToggle').checked ? 'visible' : 'none';
+  if (s.map.territories && s._mode !== 'city') {
+    layer({
+      id: 'territory-line', type: 'line', source: 'boundary',
+      ...modeFilter,
+      layout: { visibility: vis },
+      paint: { 'line-color': '#444', 'line-opacity': 0.35, 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 0.6, 15, 1.5] },
+    });
+  }
   layer({
     id: 'boundary-line', type: 'line', source: 'boundary',
-    ...(s.map.territories ? { filter: ['==', ['get', 'mode'], s._mode] } : {}),
-    layout: { visibility: $('#boundaryToggle').checked ? 'visible' : 'none' },
-    paint: { 'line-color': '#222', 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.2, 15, 3], 'line-dasharray': [3, 2] },
+    ...(s.map.territories ? { filter: ['==', ['get', 'mode'], 'city'] } : {}),
+    layout: { visibility: vis },
+    paint: { 'line-color': '#222', 'line-opacity': 0.75, 'line-width': ['interpolate', ['linear'], ['zoom'], 9, 1.2, 15, 3] },
   });
   applyOpacity();
   applyVisibility();
@@ -1112,7 +1149,9 @@ async function main() {
   });
   $('#boundaryToggle').addEventListener('change', (e) => {
     for (const p of activePanes()) {
-      if (p.map.getLayer('boundary-line')) p.map.setLayoutProperty('boundary-line', 'visibility', e.target.checked ? 'visible' : 'none');
+      for (const id of ['boundary-line', 'territory-line']) {
+        if (p.map.getLayer(id)) p.map.setLayoutProperty(id, 'visibility', e.target.checked ? 'visible' : 'none');
+      }
     }
   });
   $('#opacityRange').addEventListener('input', (e) => { state.opacity = +e.target.value; applyOpacity(); });
