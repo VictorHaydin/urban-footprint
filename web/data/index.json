@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-16T11:52:45+00:00",
+ "generated_at": "2026-10-16T13:25:24+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -454,7 +454,7 @@
     },
     "greater": {
      "status": "ok",
-     "area_km2": 1322.088
+     "area_km2": 1321.355
     }
    }
   },
@@ -517,7 +517,20 @@
    "notes_uk": "Власне місто (без решти Одеської міської громади).",
    "group": "million",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 163.151
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 163.151
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 282.317
+    }
+   }
   },
   {
    "id": "kharkiv",
@@ -578,7 +591,20 @@
    "notes_uk": "Власне місто (без решти Дніпровської міської громади).",
    "group": "million",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 410.257
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 416.858
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 556.848
+    }
+   }
   },
   {
    "id": "zaporizhzhia",
@@ -602,7 +628,20 @@
    "notes_uk": "Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).",
    "group": "million",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 314.272
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 315.374
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 362.145
+    }
+   }
   },
   {
    "id": "donetsk",
@@ -626,7 +665,20 @@
    "notes_uk": "Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).",
    "group": "million",
    "occupied": true,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 401.314
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 401.314
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 608.772
+    }
+   }
   },
   {
    "id": "kryvyi_rih",
@@ -650,7 +702,20 @@
    "notes_uk": "Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).",
    "group": "other",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 462.153
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 465.405
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 533.648
+    }
+   }
   },
   {
    "id": "ivano_frankivsk",
@@ -674,7 +739,20 @@
    "notes_uk": "Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².",
    "group": "other",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 40.596
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 264.453
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 159.98
+    }
+   }
   },
   {
    "id": "ternopil",
@@ -698,7 +776,20 @@
    "notes_uk": "Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.",
    "group": "other",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 58.645
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 166.798
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 146.459
+    }
+   }
   },
   {
    "id": "chernivtsi",
@@ -722,7 +813,20 @@
    "notes_uk": "Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.",
    "group": "other",
    "occupied": false,
-   "modes": {}
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 151.506
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 180.363
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 289.38
+    }
+   }
   }
  ],
  "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL)."

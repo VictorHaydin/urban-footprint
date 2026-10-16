@@ -18,7 +18,7 @@ Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih,
 
 A **Territory** switch measures not only the city itself but also its **hromada** or the **Greater City**
 (the city plus settlements within a 10-minute drive), see [docs/SUBURBS.md](docs/SUBURBS.md). These modes are
-currently computed for Kyiv, Lviv and Kharkiv.
+computed for every city; for temporarily occupied Donetsk, Hromada mode shows the city boundary.
 
 Documentation (in English):
 * [docs/METHODOLOGY.md](docs/METHODOLOGY.md): classification, footprint estimation, overlap resolution, assumptions, limitations

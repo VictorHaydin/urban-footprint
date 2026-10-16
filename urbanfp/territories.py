@@ -108,6 +108,9 @@ def _select_settlements(sett_raw: gpd.GeoDataFrame, city_p, radius_m: float) -> 
     sett_raw = sett_raw.assign(t=tags.values, name=tags.map(lambda t: t.get("name", "")).values,
                                place=tags.map(lambda t: t.get("place") or "").values)
     polys = sett_raw[sett_raw["kind"] == "area"]
+    # settlements only: place=city|town|village|hamlet, or an untagged admin_level 9 boundary. Excludes city
+    # districts such as Makiivka's boroughs (admin_level 8, place=borough).
+    polys = polys[polys["place"].isin(PLACES) | (polys["t"].map(lambda t: t.get("admin_level") == "9") & (polys["place"] == ""))]
     pts = sett_raw[(sett_raw["kind"] == "point") & sett_raw["place"].isin(PLACES)]
     polys = polys[(polys.geometry.distance(city_p) < radius_m) & ~polys.geometry.representative_point().within(city_p)]
     polys = polys[polys.geometry.area > 0]

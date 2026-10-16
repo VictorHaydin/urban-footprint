@@ -1,8 +1,7 @@
 # Territory modes: City · Hromada · Greater City (design)
 
-Status: implemented on branch `feature/suburbs` (pipeline stage `territories`, web app switch). Data rebuilt
-for Kyiv, Lviv and Kharkiv; other cities show the city boundary in the new modes until they are rebuilt with
-`territories: true`.
+Status: implemented on branch `feature/suburbs` (pipeline stage `territories`, web app switch); data rebuilt for
+all configured cities. A city without `territories: true` shows the city boundary in the new modes.
 
 The app currently measures each city inside its own administrative boundary. This feature adds a **global
 setting** with three territory modes:

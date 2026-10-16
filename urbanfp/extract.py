@@ -69,6 +69,8 @@ def is_settlement_polygon(tags: dict) -> bool:
     """Settlement outline: place=* area, or an admin_level 8/9 boundary (tagging differs by oblast)."""
     if tags.get("place") in PLACES:
         return (tags.get("admin_level") or "99") not in ("2", "3", "4", "5", "6", "7")
+    # admin_level 8 without a settlement place tag is a district (e.g. place=borough), not a settlement;
+    # it is still extracted (cheap) but rejected in territories._select_settlements
     return tags.get("boundary") == "administrative" and tags.get("admin_level") in ("8", "9")
 
 

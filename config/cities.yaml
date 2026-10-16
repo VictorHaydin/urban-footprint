@@ -58,6 +58,8 @@ cities:
     name_local: Одеса
     country: UA
     boundary_relation: 1413934
+    territories: true
+    hromada_relation: 12888405
     group: million
     notes: City proper (not the whole Odesa urban hromada).
     notes_uk: Власне місто (без решти Одеської міської громади).
@@ -78,6 +80,8 @@ cities:
     name_local: Дніпро
     country: UA
     boundary_relation: 1017311
+    territories: true
+    hromada_relation: 12617747
     group: million
     notes: City proper (not the whole Dnipro urban hromada).
     notes_uk: Власне місто (без решти Дніпровської міської громади).
@@ -87,6 +91,8 @@ cities:
     name_local: Запоріжжя
     country: UA
     boundary_relation: 1418311
+    territories: true
+    hromada_relation: 12152861
     group: million
     notes: City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².
     notes_uk: Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).
@@ -96,6 +102,7 @@ cities:
     name_local: Донецьк
     country: UA
     boundary_relation: 1413957
+    territories: true
     occupied: true
     hromada_relation: 17963109
     group: million
@@ -107,6 +114,8 @@ cities:
     name_local: Кривий Ріг
     country: UA
     boundary_relation: 1821193
+    territories: true
+    hromada_relation: 12578206
     notes: City proper; stretches ~60 km north–south along the iron-ore basin, with large mining and industrial areas. OSM boundary (~462 km²) is somewhat larger than the official ~430 km².
     notes_uk: Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).
 
@@ -115,6 +124,8 @@ cities:
     name_local: Івано-Франківськ
     country: UA
     boundary_relation: 2362670
+    territories: true
+    hromada_relation: 11890980
     notes: OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².
     notes_uk: Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².
 
@@ -123,6 +134,8 @@ cities:
     name_local: Тернопіль
     country: UA
     boundary_relation: 3058686
+    territories: true
+    hromada_relation: 12180839
     notes: City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.
     notes_uk: Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.
 
@@ -131,5 +144,7 @@ cities:
     name_local: Чернівці
     country: UA
     boundary_relation: 1742393
+    territories: true
+    hromada_relation: 12461821
     notes: City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.
     notes_uk: Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.
