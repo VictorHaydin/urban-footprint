@@ -21,7 +21,8 @@ const state = {
   compareCities: null,    // selected city ids for comparison (null = all)
   opacity: 0.85,
   subPctOfCat: true,      // map sidebar: sub-category % relative to its category (true) or to the city (false)
-  territory: 'city',      // territory mode: city | hromada | greater (docs/SUBURBS.md)
+  territory: 'city',      // territory mode: city | hromada | greater (docs/SUBURBS.md); compare screen + map pane 0
+  territory2: 'city',     // territory mode of map pane 1 (split screen), so a city can be compared with itself
 };
 const TERRITORIES = ['city', 'hromada', 'greater'];
 
@@ -98,9 +99,8 @@ async function getJSON(path) {
  */
 const rawStats = {};
 const viewCache = new Map();
-function statsView(id) {
+function statsView(id, want = state.territory) {
   const raw = rawStats[id];
-  const want = state.territory;
   const key = `${id}|${want}`;
   if (viewCache.has(key)) return viewCache.get(key);
   const md = raw.modes?.[want];
@@ -112,7 +112,7 @@ function statsView(id) {
     area: src.area, categories: src.categories, buildings: src.buildings,
     estimated_line_footprints: src.estimated_line_footprints, network_length_km: src.network_length_km,
     validation: src.validation || raw.validation,
-    _mode: usable ? want : 'city', _status: status, _units: src.units || ['A'],
+    _mode: usable ? want : 'city', _want: want, _status: status, _units: src.units || ['A'],
   };
   viewCache.set(key, view);
   return view;
@@ -122,10 +122,25 @@ async function loadStats(id) {
   if (!rawStats[id]) rawStats[id] = await getJSON(`${DATA}/${id}/stats.json`);
   return state.stats[id];
 }
+/** Territory mode of map pane `i` (pane 1 has its own setting). */
+const paneMode = (i) => (i === 1 ? state.territory2 : state.territory);
+/** Stats view of the city shown in map pane `i`, for that pane's territory mode (stats must be loaded). */
+const paneStats = (i) => {
+  const id = i === 1 ? state.city2 : state.city;
+  return id && rawStats[id] ? statsView(id, paneMode(i)) : undefined;
+};
+/** Names for the cities in `list` (map panes); in split screen, the territory is added when it tells them apart. */
+function paneNames(list) {
+  const names = list.map((x) => cityName(x.city));
+  if (list.length < 2) return names;
+  const showMode = list[0].city.id === list[1].city.id || list[0]._mode !== list[1]._mode;
+  return showMode ? list.map((x, i) => `${names[i]} · ${t(`terr.${x._mode}`).toLowerCase()}`) : names;
+}
+
 /** Note explaining why a city shows a different territory than the selected mode (or null). */
 function territoryNote(s) {
-  if (s._status === 'ok' || state.territory === 'city') return null;
-  return t(`terr.note.${s._status}`, { mode: t(`terr.${state.territory}`) });
+  if (s._status === 'ok' || s._want === 'city') return null;
+  return t(`terr.note.${s._status}`, { mode: t(`terr.${s._want}`) });
 }
 const catDef = (id) => state.index.categories.find((c) => c.id === id);
 const subDef = (cat, sub) => catDef(cat)?.subcategories.find((s) => s.id === sub);
@@ -134,7 +149,7 @@ const subDef = (cat, sub) => catDef(cat)?.subcategories.find((s) => s.id === sub
 function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   return {
-    city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'),
+    city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'), territory2: p.get('t2'),
     cities: p.get('cities') ? p.get('cities').split(',') : null,
   };
 }
@@ -142,6 +157,7 @@ function writeHash() {
   const p = new URLSearchParams({ city: state.city, view: state.view });
   if (state.city2) p.set('city2', state.city2);
   if (state.territory !== 'city') p.set('t', state.territory);
+  if (state.city2) p.set('t2', state.territory2);
   if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
   history.replaceState(null, '', '#' + p.toString());
 }
@@ -255,7 +271,7 @@ function applyOpacity() {
   for (const pane of activePanes()) {
     if (!pane.cityId) continue;
     const { map } = pane;
-    const vt = state.stats[pane.cityId].map.vector_tiles;
+    const vt = rawStats[pane.cityId].map.vector_tiles;
     for (const c of state.index.categories) {
       const v = `vt-${c.id}`;
       for (const r of pane.layers.filter((id) => id.startsWith(`ov-${c.id}-`))) {
@@ -309,7 +325,8 @@ function outsideMask(fc, mode) {
 
 /** Load a city's layers into a pane (does not move the camera). */
 async function loadCityIntoPane(pane, cityId) {
-  const s = await loadStats(cityId);
+  await loadStats(cityId);
+  const s = statsView(cityId, paneMode(pane.idx));
   await pane.ready;
   if (!pane.map) return; // pane was closed meanwhile
   const { map } = pane;
@@ -419,7 +436,7 @@ function fitPanes() {
   const list = activePanes().filter((p) => p.cityId);
   if (!list.length) return;
   const cams = list.map((p) => {
-    const sv = state.stats[p.cityId];
+    const sv = statsView(p.cityId, paneMode(p.idx));
     const b = sv.map.mode_bounds?.[sv._mode] || sv.map.bounds;
     const cam = p.map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: isDual() ? 40 : 30 });
     const center = maplibregl.LngLat.convert(cam.center);
@@ -482,13 +499,14 @@ function onMapClick(pane, e) {
 
 function renderPaneLabels() {
   const dual = isDual();
-  [state.city, state.city2].forEach((id, i) => {
+  const list = [paneStats(0), paneStats(1)];
+  const names = dual && list[1] ? paneNames(list) : [];
+  list.forEach((s, i) => {
     const lab = $(`#paneLabel${i}`);
-    lab.hidden = !dual || !id;
+    lab.hidden = !dual || !s;
     if (lab.hidden) return;
-    const s = state.stats[id];
     lab.innerHTML = '';
-    lab.append(cityName(s.city), el('span', { class: 'small' }, ` · ${num(s.area.boundary_km2, 0)} ${t('units.km2')}`));
+    lab.append(names[i], el('span', { class: 'small' }, ` · ${num(s.area.boundary_km2, 0)} ${t('units.km2')}`));
   });
 }
 
@@ -534,11 +552,14 @@ const osmDateText = (s) => (s.osm_timestamp
   ? new Date(s.osm_timestamp).toLocaleDateString(locale(), { year: 'numeric', month: 'long', day: 'numeric' }) : '—');
 
 function renderSidebar() {
-  const s = state.stats[state.city];
+  const s = paneStats(0);
   if (!s) return;
-  const s2 = isDual() ? state.stats[state.city2] : null;
+  const s2 = isDual() ? paneStats(1) : null;
   if (isDual() && !s2) return;
   const list = s2 ? [s, s2] : [s];
+  const names = paneNames(list);
+  // narrow column headers: the territory alone when both panes show the same city
+  const colNames = s2 && s.city.id === s2.city.id ? list.map((x) => t(`terr.${x._mode}`)) : names;
 
   // ---- header
   const head = $('#cityHeader');
@@ -550,16 +571,16 @@ function renderSidebar() {
       el('div', { class: 'dual-city' },
         el('span', { class: `city-key k${i}` }),
         el('div', {},
-          el('div', { class: 'name' }, cityName(x.city)),
+          el('div', { class: 'name' }, names[i]),
           el('div', { class: 'small' }, `${num(x.area.boundary_km2, 1)} ${t('units.km2')} · `,
             el('a', { href: `https://www.openstreetmap.org/relation/${x.city.osm_relation}`, target: '_blank', rel: 'noopener' }, 'OSM')))))),
     el('div', { class: 'city-meta' }, t('dual.scaleNote'), el('br'), t('city.osmDate', { date: osmDateText(s) })));
   }
-  for (const x of list) {
+  list.forEach((x, i) => {
     const note = territoryNote(x);
-    if (note) head.append(el('div', { class: 'mode-note' }, s2 ? `${cityName(x.city)}: ${note}` : note));
-  }
-  renderSettlements(list);
+    if (note) head.append(el('div', { class: 'mode-note' }, s2 ? `${names[i]}: ${note}` : note));
+  });
+  renderSettlements(list, names);
   renderUnitToggle($('#unitToggleMap'), [['pct', t('unit.pctArea')], ['km2', t('unit.km2')]]);
   $('#subPctToggle').hidden = state.unit === 'km2'; // only meaningful for percentages
   $('#subPctCheckbox').checked = state.subPctOfCat;
@@ -573,7 +594,7 @@ function renderSidebar() {
   const maxVal = Math.max(...allCats.map(metricOf), 1e-9);
   if (s2) {
     legend.append(el('div', { class: 'legend-row legend-head' }, el('span'), el('span'),
-      ...list.map((x, i) => el('div', { class: 'value' }, el('span', { class: `city-key k${i}` }), cityName(x.city)))));
+      ...list.map((x, i) => el('div', { class: 'value' }, el('span', { class: `city-key k${i}` }), colNames[i]))));
   }
   const bars = (vals, color, max = maxVal) => el('div', { class: 'bars' }, vals.map((v, i) =>
     el('div', { class: 'bar' }, el('span', { class: `k${i}`, style: `width:${(100 * v) / max}%;--c:${color}` }))));
@@ -595,7 +616,7 @@ function renderSidebar() {
         bars(cs.map(metricOf), def.color)),
       ...cs.map((cc) => el('div', { class: 'value' }, valueText(cc.area_m2, cc.pct))));
     row.addEventListener('mousemove', (ev) => showTip(ev, `<b>${label(def)}</b>` + cs.map((cc, i) =>
-      `<br>${s2 ? cityName(list[i].city) + ': ' : ''}${fmtKm2(cc.area_m2)} · ${fmtPct(cc.pct)} ${t('tip.ofCity')} · ${t('tip.features', { n: fmtInt(cc.feature_count) })}`).join('')));
+      `<br>${s2 ? names[i] + ': ' : ''}${fmtKm2(cc.area_m2)} · ${fmtPct(cc.pct)} ${t('tip.ofCity')} · ${t('tip.features', { n: fmtInt(cc.feature_count) })}`).join('')));
     row.addEventListener('mouseleave', hideTip);
     legend.append(row);
     if (open && subIds.length > 1) {
@@ -618,7 +639,7 @@ function renderSidebar() {
           el('div', { class: 'label' }, el('div', { class: 'name' }, label(sd)), s2 ? bars(xs.map(subMetric), sd.color, subMax) : null),
           ...xs.map((x, i) => el('div', { class: 'value' }, valueText(x.area_m2, subPct(x, i)))));
         sr.addEventListener('mousemove', (ev) => showTip(ev, `<b>${label(sd)}</b>` + xs.map((x, i) =>
-          `<br>${s2 ? cityName(list[i].city) + ': ' : ''}${fmtKm2(x.area_m2)} · ${fmtPct(x.pct)} ${t('tip.ofCity')} · ` +
+          `<br>${s2 ? names[i] + ': ' : ''}${fmtKm2(x.area_m2)} · ${fmtPct(x.pct)} ${t('tip.ofCity')} · ` +
           `${num((100 * x.area_m2) / Math.max(cs[i].area_m2, 1), 1)}% ${t('tip.ofCat', { cat: label(def).toLowerCase() })}`).join('')));
         sr.addEventListener('mouseleave', hideTip);
         sub.append(sr);
@@ -645,7 +666,7 @@ function renderSidebar() {
   bp.append(el('div', { class: 'panel' },
     el('h3', {}, t('b.title')),
     el('div', { class: 'kv' + (s2 ? ' kv3' : '') },
-      s2 ? [el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), cityName(x.city)))] : null,
+      s2 ? [el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), colNames[i]))] : null,
       bRows.flatMap(([k, f]) => [el('span', {}, k), ...list.map((x) => el('span', { class: 'v' }, f(x.buildings)))]))));
 
   // ---- validation (one block per city; collapsed in split mode)
@@ -657,7 +678,7 @@ function renderSidebar() {
     const checks = el('ul', { class: 'checks' }, v.checks.map((c) =>
       el('li', {}, el('span', {}, el('span', { class: `badge ${c.status}` }, t(`status.${c.status}`))),
         el('span', {}, checkMessage(c, num)))));
-    const title = [`${t('q.title')}${s2 ? ' — ' + cityName(x.city) : ''} `, el('span', { class: `badge ${v.status}` }, t(`status.${v.status}`))];
+    const title = [`${t('q.title')}${s2 ? ' — ' + names[list.indexOf(x)] : ''} `, el('span', { class: `badge ${v.status}` }, t(`status.${v.status}`))];
     vp.append(s2
       ? el('details', { class: 'panel' }, el('summary', {}, el('h3', { style: 'display:inline' }, ...title)), checks)
       : el('div', { class: 'panel' }, el('h3', {}, ...title), checks));
@@ -1005,16 +1026,26 @@ function switchView(view) {
 
 /** Set main / second city of the map screen; reloads (and refits) panes when the cities changed. */
 async function selectCities(city, city2, fit = true) {
-  if (city2 === city) city2 = null;
+  if (city2 && !state.city2) state.territory2 = state.territory; // entering split screen
+  // comparing a city with itself only makes sense in different territories
+  if (city2 && city2 === city && state.territory2 === state.territory) {
+    state.territory2 = state.territory === 'city' ? 'greater' : 'city';
+  }
   const changed = city !== panes[0].cityId || (city2 || null) !== (panes[1]?.cityId || null);
   state.city = city;
   state.city2 = city2 || null;
   fillCitySelects();
   await Promise.all([loadStats(city), city2 ? loadStats(city2) : null]);
   if (state.unit === 'pctcat') state.unit = 'pct';
+  renderTerritoryToggles();
   renderSidebar();
   writeHash(); // before waiting for the map, so the URL is right even while tiles load
   if (changed) await updateMaps({ fit });
+  else if (panes[1]?.map && panes[1].mode !== paneStats(1)?._mode) { // same cities, pane 1 territory changed
+    await loadCityIntoPane(panes[1], state.city2);
+    renderPaneLabels();
+    fitPanes();
+  }
 }
 
 function renderAll() {
@@ -1024,19 +1055,42 @@ function renderAll() {
 
 // ------------------------------------------------------------------ territory modes
 function renderTerritoryToggles() {
-  for (const box of [$('#territoryMap'), $('#territoryCompare')]) {
-    if (!box) continue;
-    box.innerHTML = '';
-    box.append(el('span', { class: 'terr-label' }, t('terr.label')),
-      el('div', { class: 'unit-toggle terr-toggle', role: 'group' }, TERRITORIES.map((m) => el('button', {
-        type: 'button', class: state.territory === m ? 'active' : '', 'aria-pressed': state.territory === m,
-        title: t(`terr.${m}.hint`), onclick: () => setTerritory(m),
-      }, t(`terr.${m}`)))));
+  const toggle = (cur, idx) => el('div', { class: 'unit-toggle terr-toggle', role: 'group' }, TERRITORIES.map((m) => el('button', {
+    type: 'button', class: cur === m ? 'active' : '', 'aria-pressed': cur === m,
+    title: t(`terr.${m}.hint`), onclick: () => setTerritory(m, idx),
+  }, t(`terr.${m}`))));
+  const cmp = $('#territoryCompare');
+  if (cmp) {
+    cmp.innerHTML = '';
+    cmp.append(el('span', { class: 'terr-label' }, t('terr.label')), toggle(state.territory, 0));
   }
+  const box = $('#territoryMap');
+  if (!box) return;
+  box.innerHTML = '';
+  box.append(el('span', { class: 'terr-label' }, t('terr.label')));
+  if (!isDual()) {
+    box.append(toggle(state.territory, 0));
+    return;
+  }
+  // split screen: one switch per pane, so a city can be compared with itself (e.g. city vs. Greater City)
+  [state.city, state.city2].forEach((id, i) => box.append(el('div', { class: 'terr-pane' },
+    el('span', { class: `city-key k${i}`, title: cityName(cityById(id)) }), toggle(paneMode(i), i))));
 }
 
-async function setTerritory(mode) {
-  if (!TERRITORIES.includes(mode) || mode === state.territory) return;
+async function setTerritory(mode, idx = 0) {
+  if (!TERRITORIES.includes(mode) || mode === paneMode(idx)) return;
+  if (idx === 1) {
+    state.territory2 = mode;
+    renderTerritoryToggles();
+    hideTip();
+    renderSidebar();
+    if (panes[1]?.popup) panes[1].popup.remove();
+    if (panes[1]?.cityId) await loadCityIntoPane(panes[1], panes[1].cityId);
+    renderPaneLabels();
+    fitPanes();
+    writeHash();
+    return;
+  }
   state.territory = mode;
   try { localStorage.setItem('territory', mode); } catch { /* storage unavailable */ }
   renderTerritoryToggles();
@@ -1045,7 +1099,8 @@ async function setTerritory(mode) {
   renderSidebar();
   renderPaneLabels();
   for (const p of activePanes()) if (p.popup) p.popup.remove();
-  await Promise.all(activePanes().filter((p) => p.cityId).map((p) => loadCityIntoPane(p, p.cityId)));
+  if (panes[0]?.cityId) await loadCityIntoPane(panes[0], panes[0].cityId);
+  renderPaneLabels();
   fitPanes();
   writeHash();
 }
@@ -1053,11 +1108,11 @@ async function setTerritory(mode) {
 const settlementsCache = {};
 let settlementsToken = 0;
 /** Greater City mode: list of included settlements with drive times (one block per city). */
-async function renderSettlements(list) {
+async function renderSettlements(list, names = list.map((x) => cityName(x.city))) {
   const token = ++settlementsToken; // later renders supersede this one
   const box = $('#settlementsPanel');
   box.innerHTML = '';
-  for (const x of list) {
+  for (const [i, x] of list.entries()) {
     if (x._mode !== 'greater' || !x.map.settlements) continue;
     const id = x.city.id;
     if (!settlementsCache[id]) {
@@ -1069,7 +1124,7 @@ async function renderSettlements(list) {
     const d = rawStats[id].territories?.greater_drive_min ?? 10;
     box.append(el('details', { class: 'panel settlements' },
       el('summary', {}, el('h3', { style: 'display:inline' },
-        t('set.title', { city: list.length > 1 ? cityName(x.city) + ': ' : '' }) + ` (${inc.length})`)),
+        t('set.title', { city: list.length > 1 ? names[i] + ': ' : '' }) + ` (${inc.length})`)),
       el('div', { class: 'small', style: 'margin:4px 0 6px' }, t('set.rule', { d: num(d, 0) })),
       el('ul', { class: 'set-list' }, inc.map((p) => el('li', {},
         el('span', {}, p.name || '—', p.approx ? el('span', { class: 'small', title: t('set.approx') }, ' *') : null),
@@ -1092,7 +1147,7 @@ function fillCitySelects() {
   sel.value = state.city;
   const sel2 = $('#citySelect2');
   sel2.innerHTML = '';
-  sel2.append(el('option', { value: '' }, t('city2.none')), ...options(state.city));
+  sel2.append(el('option', { value: '' }, t('city2.none')), ...options(null)); // the same city: compare territories
   sel2.value = state.city2 || '';
 }
 
@@ -1127,11 +1182,15 @@ async function main() {
   const h = readHash();
   const known = (id) => state.index.cities.some((c) => c.id === id);
   state.city = known(h.city) ? h.city : defaultCity;
-  const city2 = known(h.city2) && h.city2 !== state.city ? h.city2 : null;
+  const city2 = known(h.city2) ? h.city2 : null;
   loadCompareCities(h.cities);
   let saved = null;
   try { saved = localStorage.getItem('territory'); } catch { /* storage unavailable */ }
   state.territory = TERRITORIES.includes(h.territory) ? h.territory : TERRITORIES.includes(saved) ? saved : 'city';
+  if (city2 && TERRITORIES.includes(h.territory2)) {
+    state.territory2 = h.territory2;
+    state.city2 = city2; // keep t2 from the URL (selectCities resets it when entering split screen)
+  }
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();
