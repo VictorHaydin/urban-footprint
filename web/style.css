@@ -300,3 +300,14 @@ details.panel > summary h3 { font-size: 14px; }
 /* ---- author link ---- */
 .author-link { color: var(--muted); font-size: 13px; text-decoration: none; white-space: nowrap; }
 .author-link:hover { color: var(--accent); text-decoration: underline; }
+
+/* ---- territory modes ---- */
+.territory { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 2px 0 8px; }
+.territory .terr-label { color: var(--muted); font-size: 13px; }
+.territory .terr-toggle { margin: 0; }
+.territory .terr-pane { display: flex; align-items: center; flex-basis: 100%; }
+.mode-note { font-size: 12px; color: var(--warn); background: var(--panel); border-left: 3px solid var(--warn);
+  padding: 4px 8px; margin: 4px 0 8px; border-radius: 0 6px 6px 0; }
+.terr-mark { color: var(--warn); cursor: help; font-weight: 400; }
+.settlements .set-list { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 16px; font-size: 13px; }
+.settlements .set-list li { display: flex; justify-content: space-between; gap: 6px; break-inside: avoid; padding: 1px 0; }

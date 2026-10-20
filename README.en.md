@@ -8,13 +8,17 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil, Chernivtsi**. More can be added in
+Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil, Chernivtsi, Lutsk, Zhytomyr, Poltava, Sumy, Vinnytsia, Uzhhorod, Cherkasy, Rivne, Mykolaiv, Bila Tserkva**. More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |
 |---|---|---|
 | Local processing pipeline | [`urbanfp/`](urbanfp), [`config/`](config) | Downloads OSM data, classifies features, builds a mutually exclusive area partition, validates it, exports datasets |
 | Static web app | [`web/`](web) | Reads only precomputed files in `web/data/`; runs on GitHub Pages without a backend |
+
+A **Territory** switch measures not only the city itself but also its **hromada** or the **Greater City**
+(the city plus settlements within a 10-minute drive), see [docs/SUBURBS.md](docs/SUBURBS.md). These modes are
+computed for every city; for temporarily occupied Donetsk, Hromada mode shows the city boundary.
 
 Documentation (in English):
 * [docs/METHODOLOGY.md](docs/METHODOLOGY.md): classification, footprint estimation, overlap resolution, assumptions, limitations

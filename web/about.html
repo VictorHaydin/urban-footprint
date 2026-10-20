@@ -13,6 +13,24 @@
 </p>
 <div id="aboutCities"></div>
 
+<h2>Territory: City, Hromada, Greater City</h2>
+<p>The "Territory" switch on the map and comparison pages sets which territory is measured:</p>
+<ul>
+  <li><strong>City</strong>: the city's own administrative boundary.</li>
+  <li><strong>Hromada</strong>: the whole urban territorial community (hromada) the city belongs to, including its
+    villages and the land between them. Kyiv, a city with special status, has no separate hromada, so the city
+    boundary is shown. Temporarily occupied cities also show the city boundary. Some hromadas (e.g. Kharkiv's)
+    contain no other settlements, so the result equals the city.</li>
+  <li><strong>Greater City</strong>: the city plus every settlement from which a typical car trip to the nearest
+    built-up part of the city takes at most <strong>10 minutes</strong> (free-flow, no traffic). Time is always
+    measured to the city itself, never via other suburbs. The settlement's whole territory is added, whatever
+    hromada or oblast it belongs to. Where OpenStreetMap maps a settlement only as a point, its outline is
+    approximated from the built-up land around that point.</li>
+</ul>
+<p>Every figure is computed separately for each mode, and everything outside the selected territory is hidden on
+  the map. The list of Greater City settlements with drive times is shown in the map sidebar. The Hromada and
+  Greater City modes are computed when a city is processed; until then the city boundary is shown.</p>
+
 <h2>How the area breakdown is computed</h2>
 <ol>
   <li><strong>Source.</strong> The Geofabrik extract for Ukraine (a daily OpenStreetMap snapshot), processed locally.</li>

@@ -15,6 +15,12 @@
 #   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
 #                       (default from `defaults`). Cities sharing a source are extracted in one pass.
 #   notes / notes_uk    free text (English / Ukrainian), shown in reports and on the Method & data page
+#   territories         (optional, default false) also compute the Hromada and Greater City territory
+#                       modes (see docs/SUBURBS.md). Extraction then covers the wider region.
+#   hromada_relation    OSM relation of the city's hromada (admin_level=7), for Hromada mode.
+#                       Omit when the city has no hromada level (Kyiv).
+#   occupied            (optional) temporarily occupied: Hromada mode falls back to the city boundary
+#   suburbs_radius_km   (optional, default 25) search radius for Greater City settlements
 #   group               id of a city group below (default: the last group). The web app lists cities
 #                       by group (in the order of `groups`), alphabetically by Ukrainian name within a group.
 
@@ -31,6 +37,7 @@ cities:
     name_local: Київ
     country: UA
     boundary_relation: 421866
+    territories: true
     group: million
     notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
     notes_uk: Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.
@@ -40,6 +47,8 @@ cities:
     name_local: Львів
     country: UA
     boundary_relation: 2032280
+    territories: true
+    hromada_relation: 12219469
     group: million
     notes: City proper (not the whole Lviv urban hromada).
     notes_uk: Власне місто (без решти Львівської міської громади).
@@ -49,6 +58,8 @@ cities:
     name_local: Одеса
     country: UA
     boundary_relation: 1413934
+    territories: true
+    hromada_relation: 12888405
     group: million
     notes: City proper (not the whole Odesa urban hromada).
     notes_uk: Власне місто (без решти Одеської міської громади).
@@ -58,6 +69,8 @@ cities:
     name_local: Харків
     country: UA
     boundary_relation: 3154746
+    territories: true
+    hromada_relation: 12079098
     group: million
     notes: City proper (not the whole Kharkiv urban hromada).
     notes_uk: Власне місто (без решти Харківської міської громади).
@@ -67,6 +80,8 @@ cities:
     name_local: Дніпро
     country: UA
     boundary_relation: 1017311
+    territories: true
+    hromada_relation: 12617747
     group: million
     notes: City proper (not the whole Dnipro urban hromada).
     notes_uk: Власне місто (без решти Дніпровської міської громади).
@@ -76,6 +91,8 @@ cities:
     name_local: Запоріжжя
     country: UA
     boundary_relation: 1418311
+    territories: true
+    hromada_relation: 12152861
     group: million
     notes: City proper. OSM boundary is ~314 km², somewhat smaller than the official ~331 km².
     notes_uk: Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).
@@ -85,6 +102,9 @@ cities:
     name_local: Донецьк
     country: UA
     boundary_relation: 1413957
+    territories: true
+    occupied: true
+    hromada_relation: 17963109
     group: million
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
     notes_uk: Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).
@@ -94,6 +114,8 @@ cities:
     name_local: Кривий Ріг
     country: UA
     boundary_relation: 1821193
+    territories: true
+    hromada_relation: 12578206
     notes: City proper; stretches ~60 km north–south along the iron-ore basin, with large mining and industrial areas. OSM boundary (~462 km²) is somewhat larger than the official ~430 km².
     notes_uk: Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).
 
@@ -102,6 +124,8 @@ cities:
     name_local: Івано-Франківськ
     country: UA
     boundary_relation: 2362670
+    territories: true
+    hromada_relation: 11890980
     notes: OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².
     notes_uk: Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².
 
@@ -110,6 +134,8 @@ cities:
     name_local: Тернопіль
     country: UA
     boundary_relation: 3058686
+    territories: true
+    hromada_relation: 12180839
     notes: City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.
     notes_uk: Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.
 
@@ -118,5 +144,107 @@ cities:
     name_local: Чернівці
     country: UA
     boundary_relation: 1742393
+    territories: true
+    hromada_relation: 12461821
     notes: City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.
     notes_uk: Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.
+
+  - id: lutsk
+    name: Lutsk
+    name_local: Луцьк
+    country: UA
+    boundary_relation: 1951964
+    territories: true
+    hromada_relation: 12218757
+    notes: City proper (not the whole Lutsk urban hromada).
+    notes_uk: Власне місто (без решти Луцької міської громади).
+
+  - id: zhytomyr
+    name: Zhytomyr
+    name_local: Житомир
+    country: UA
+    boundary_relation: 2692156
+    territories: true
+    hromada_relation: 9093195
+    notes: City proper (not the whole Zhytomyr urban hromada).
+    notes_uk: Власне місто (без решти Житомирської міської громади).
+
+  - id: poltava
+    name: Poltava
+    name_local: Полтава
+    country: UA
+    boundary_relation: 1641691
+    territories: true
+    hromada_relation: 12186978
+    notes: City proper (not the whole Poltava urban hromada).
+    notes_uk: Власне місто (без решти Полтавської міської громади).
+
+  - id: sumy
+    name: Sumy
+    name_local: Суми
+    country: UA
+    boundary_relation: 3678531
+    territories: true
+    hromada_relation: 10553891
+    notes: City proper (not the whole Sumy urban hromada).
+    notes_uk: Власне місто (без решти Сумської міської громади).
+
+  - id: vinnytsia
+    name: Vinnytsia
+    name_local: Вінниця
+    country: UA
+    boundary_relation: 361818
+    territories: true
+    hromada_relation: 12411968
+    notes: City proper (not the whole Vinnytsia urban hromada).
+    notes_uk: Власне місто (без решти Вінницької міської громади).
+
+  - id: uzhhorod
+    name: Uzhhorod
+    name_local: Ужгород
+    country: UA
+    boundary_relation: 2692232
+    territories: true
+    hromada_relation: 11842502
+    notes: The Uzhhorod urban hromada consists of the city only.
+    notes_uk: Ужгородська міська громада складається лише з міста.
+
+  - id: cherkasy
+    name: Cherkasy
+    name_local: Черкаси
+    country: UA
+    boundary_relation: 2825507
+    territories: true
+    hromada_relation: 11896205
+    notes: City boundary as mapped in OSM (relation tagged admin_level 10); the hromada adds about 1.6 km².
+    notes_uk: Межа міста за OSM (відношення з admin_level 10); громада додає близько 1,6 км².
+
+  - id: rivne
+    name: Rivne
+    name_local: Рівне
+    country: UA
+    boundary_relation: 448930
+    territories: true
+    hromada_relation: 12234138
+    notes: City proper (not the whole Rivne urban hromada).
+    notes_uk: Власне місто (без решти Рівненської міської громади).
+
+  - id: mykolaiv
+    name: Mykolaiv
+    name_local: Миколаїв
+    country: UA
+    boundary_relation: 11622860
+    territories: true
+    hromada_relation: 11859916
+    notes: Mykolaiv in Mykolaiv Oblast (southern Ukraine). The urban hromada consists of the city only; the boundary includes river water areas.
+    notes_uk: Миколаїв у Миколаївській області (південь України). Міська громада складається лише з міста; межа охоплює водні простори річок.
+
+  - id: bila_tserkva
+    name: Bila Tserkva
+    name_local: Біла Церква
+    country: UA
+    boundary_relation: 2069683
+    territories: true
+    hromada_relation: 12719741
+    notes: City proper (not the whole Bila Tserkva urban hromada). Kyiv Oblast.
+    notes_uk: Власне місто (без решти Білоцерківської міської громади). Київська область.

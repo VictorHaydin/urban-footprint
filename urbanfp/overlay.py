@@ -13,8 +13,11 @@ By construction   Σ exclusive areas + unclassified = tile area,   summed over t
 
 Pieces of the same feature from different tiles are dissolved back into one geometry.
 
+The partition is computed separately for every territory unit (A = city, B/C/D = hromada and Greater
+City extensions, see territories.py), so each piece belongs to exactly one unit.
+
 Output (data/processed/<city>/exclusive.parquet), local LAEA CRS:
-    fid, cls, category, subcategory, area_m2, geometry
+    fid, unit, cls, category, subcategory, area_m2, geometry
 plus per-tile area accounting used for validation (tile_stats.parquet).
 """
 
@@ -185,8 +188,7 @@ def run_overlay(city: City, cls: Classification, workers: int | None = None) -> 
     crs = local_crs(boundary_wgs)
     if feats.crs is None or not feats.crs.equals(crs):
         feats = feats.to_crs(crs)
-    boundary = gpd.GeoSeries([boundary_wgs], crs="EPSG:4326").to_crs(crs).iloc[0]
-    boundary = shapely.make_valid(boundary)
+    units = gpd.read_parquet(src / "units.parquet").to_crs(crs)
 
     class_order = cls.priority[:-1] if cls.priority[-1].startswith("unclassified/") else cls.priority
     code = {c: i for i, c in enumerate(class_order)}
@@ -197,13 +199,24 @@ def run_overlay(city: City, cls: Classification, workers: int | None = None) -> 
     geoms = feats.geometry.values.to_numpy() if hasattr(feats.geometry.values, "to_numpy") else np.asarray(feats.geometry.values)
     geoms = np.asarray(geoms, dtype=object)
 
-    tile_ids, tile_geoms = _tiles(boundary, TILE_SIZE_M)
+    tile_ids, tile_geoms, tile_units = [], [], []
+    for unit, ug in zip(units["unit"], units.geometry.values):
+        ids_u, geoms_u = _tiles(shapely.make_valid(ug), TILE_SIZE_M)
+        tile_ids += [f"{unit}:{t}" for t in ids_u]
+        tile_geoms += list(geoms_u)
+        tile_units += [unit] * len(ids_u)
+    tile_geoms = np.array(tile_geoms, dtype=object)
+    keep = ~shapely.is_empty(tile_geoms) & (shapely.area(tile_geoms) > 0)
+    tile_geoms = tile_geoms[keep]
+    tile_ids = [t for t, k in zip(tile_ids, keep) if k]
+    tile_units = [u for u, k in zip(tile_units, keep) if k]
     tree = shapely.STRtree(geoms)
     tile_idx, feat_idx = tree.query(tile_geoms, predicate="intersects")
     order = np.argsort(tile_idx, kind="stable")
     tile_idx, feat_idx = tile_idx[order], feat_idx[order]
     bounds = np.searchsorted(tile_idx, np.arange(len(tile_geoms) + 1))
-    log.info("[%s] overlay: %d features, %d tiles of %.0f m", city.id, len(feats), len(tile_geoms), TILE_SIZE_M)
+    log.info("[%s] overlay: %d features, %d tiles of %.0f m in units %s", city.id, len(feats), len(tile_geoms),
+             TILE_SIZE_M, list(units["unit"]))
 
     def tasks():
         for t in range(len(tile_geoms)):
@@ -222,21 +235,23 @@ def run_overlay(city: City, cls: Classification, workers: int | None = None) -> 
     p_idx = np.concatenate([np.asarray(r["pieces_idx"], dtype=np.int64) for r in results])
     p_cls = np.concatenate([np.asarray(r["pieces_cls"], dtype=np.int64) for r in results])
     p_tile = np.concatenate([np.full(len(r["pieces_idx"]), r["tile_id"], dtype=object) for r in results])
+    p_unit = np.array([t.split(":", 1)[0] for t in p_tile], dtype=object)
     p_geom = shapely.from_wkb(np.concatenate([np.asarray(r["pieces_wkb"], dtype=object) for r in results if len(r["pieces_wkb"])]))
 
     fids = feats["fid"].to_numpy()
     all_cls = np.array(class_order + ["unclassified/no_data"], dtype=object)
     df = pd.DataFrame({
         "fid": np.where(p_idx >= 0, fids[np.maximum(p_idx, 0)], "u" + p_tile.astype(str)),
+        "unit": p_unit,
         "cls": all_cls[p_cls],
     })
     df["geometry"] = p_geom
-    # dissolve features split across tiles
-    dup = df["fid"].duplicated(keep=False)
+    # dissolve features split across tiles (within the same unit)
+    dup = df.duplicated(subset=["fid", "unit"], keep=False)
     single = df[~dup]
     multi = df[dup]
     if len(multi):
-        merged = (multi.groupby(["fid", "cls"], sort=False)["geometry"]
+        merged = (multi.groupby(["fid", "unit", "cls"], sort=False)["geometry"]
                   .agg(lambda s: shapely.union_all(np.asarray(s.values, dtype=object), grid_size=GRID))
                   .reset_index())
         df = pd.concat([single, merged], ignore_index=True)
@@ -244,13 +259,14 @@ def run_overlay(city: City, cls: Classification, workers: int | None = None) -> 
     gdf["category"] = gdf["cls"].str.split("/").str[0]
     gdf["subcategory"] = gdf["cls"].str.split("/").str[1]
     gdf["area_m2"] = gdf.geometry.area
-    gdf = gdf[["fid", "cls", "category", "subcategory", "area_m2", "geometry"]]
+    gdf = gdf[["fid", "unit", "cls", "category", "subcategory", "area_m2", "geometry"]]
     gdf.to_parquet(out / "exclusive.parquet", compression="zstd")
 
     # ---------------- per-tile accounting
     rows = []
     for r in results:
-        row = {"tile_id": r["tile_id"], "tile_area": r["tile_area"], "unclassified/no_data": r["unclassified_area"]}
+        row = {"tile_id": r["tile_id"], "unit": r["tile_id"].split(":", 1)[0], "tile_area": r["tile_area"],
+               "unclassified/no_data": r["unclassified_area"]}
         for i, c in enumerate(class_order):
             row[c] = r["exclusive_area"][i]
             row["fp:" + c] = r["footprint_area"][i]
@@ -258,7 +274,9 @@ def run_overlay(city: City, cls: Classification, workers: int | None = None) -> 
     pd.DataFrame(rows).to_parquet(out / "tile_stats.parquet")
     (out / "overlay.json").write_text(json.dumps({
         "tile_size_m": TILE_SIZE_M, "grid_size_m": GRID, "tiles": len(results),
-        "boundary_area_m2": boundary.area, "crs": crs.to_string(),
+        "boundary_area_m2": float(units[units["unit"] == "A"].geometry.area.sum()),
+        "unit_area_m2": {u: float(a) for u, a in zip(units["unit"], units.geometry.area)},
+        "crs": crs.to_string(),
         "class_order": class_order, "seconds": round(time.time() - t0, 1),
     }, indent=2))
     log.info("[%s] overlay done in %.0fs: %d exclusive pieces", city.id, time.time() - t0, len(gdf))
