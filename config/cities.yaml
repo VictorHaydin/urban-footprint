@@ -258,3 +258,23 @@ cities:
     hromada_relation: 12323074
     notes: City proper (not the whole Kherson urban hromada). Occupied in March–November 2022; the left bank of the Dnipro opposite the city remains occupied. Drive times use the OSM road network as mapped, including river crossings that may be destroyed.
     notes_uk: Власне місто (без решти Херсонської міської громади). Було окуповане з березня по листопад 2022 року; лівий берег Дніпра навпроти міста залишається окупованим. Час доїзду розраховано за дорожньою мережею OSM як вона нанесена, зокрема з переправами, які можуть бути зруйновані.
+
+  - id: kovel
+    name: Kovel
+    name_local: Ковель
+    country: UA
+    boundary_relation: 2814537
+    territories: true
+    hromada_relation: 12216034
+    notes: City proper (not the whole Kovel urban hromada). Volyn Oblast.
+    notes_uk: Власне місто (без решти Ковельської міської громади). Волинська область.
+
+  - id: mukachevo
+    name: Mukachevo
+    name_local: Мукачево
+    country: UA
+    boundary_relation: 2283083
+    territories: true
+    hromada_relation: 11855321
+    notes: City proper (not the whole Mukachevo urban hromada). Zakarpattia Oblast.
+    notes_uk: Власне місто (без решти Мукачівської міської громади). Закарпатська область.

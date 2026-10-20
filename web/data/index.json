@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-20T17:32:41+00:00",
+ "generated_at": "2026-10-20T18:11:01+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -1232,6 +1232,80 @@
     "greater": {
      "status": "ok",
      "area_km2": 106.669
+    }
+   }
+  },
+  {
+   "id": "kovel",
+   "name": "Kovel",
+   "name_local": "Ковель",
+   "country": "UA",
+   "area_km2": 46.875,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    24.701184,
+    51.214257
+   ],
+   "bounds": [
+    24.636278,
+    51.172821,
+    24.779427,
+    51.254152
+   ],
+   "osm_relation": 2814537,
+   "notes": "City proper (not the whole Kovel urban hromada). Volyn Oblast.",
+   "notes_uk": "Власне місто (без решти Ковельської міської громади). Волинська область.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 46.875
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 310.986
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 74.836
+    }
+   }
+  },
+  {
+   "id": "mukachevo",
+   "name": "Mukachevo",
+   "name_local": "Мукачево",
+   "country": "UA",
+   "area_km2": 28.183,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    22.717438,
+    48.439309
+   ],
+   "bounds": [
+    22.65729,
+    48.410089,
+    22.764264,
+    48.469733
+   ],
+   "osm_relation": 2283083,
+   "notes": "City proper (not the whole Mukachevo urban hromada). Zakarpattia Oblast.",
+   "notes_uk": "Власне місто (без решти Мукачівської міської громади). Закарпатська область.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 28.183
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 266.611
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 150.843
     }
    }
   }

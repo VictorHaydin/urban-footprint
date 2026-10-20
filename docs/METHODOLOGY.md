@@ -59,6 +59,8 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Mykolaiv | 11622860 | Mykolaiv Oblast (south). City; the hromada is the city only. Includes river water. OSM boundary ≈ 251.1 km² |
 | Bila Tserkva | 2069683 | City proper, Kyiv Oblast. OSM boundary ≈ 68.0 km² |
 | Kherson | 2175078 | City proper. Occupied March–November 2022; the left bank opposite remains occupied and has no road link to the city in OSM. OSM boundary ≈ 77.9 km² |
+| Kovel | 2814537 | City proper, Volyn Oblast. OSM boundary ≈ 46.9 km² |
+| Mukachevo | 2283083 | City proper, Zakarpattia Oblast. OSM boundary ≈ 28.2 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
