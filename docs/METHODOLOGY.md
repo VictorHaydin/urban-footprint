@@ -48,6 +48,16 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Ivano-Frankivsk | 2362670 | OSM settlement boundary (≈ 41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are separate settlements in OSM and are not included; official area ≈ 84 km² |
 | Ternopil | 3058686 | City proper. OSM boundary ≈ 58.6 km² (official ≈ 59 km²) |
 | Chernivtsi | 1742393 | City proper, on both banks of the Prut. OSM boundary ≈ 151.5 km² (official ≈ 153 km²) |
+| Lutsk | 1951964 | City proper. OSM boundary ≈ 40.7 km² |
+| Zhytomyr | 2692156 | City proper. OSM boundary ≈ 60.5 km² |
+| Poltava | 1641691 | City proper. OSM boundary ≈ 105.3 km² |
+| Sumy | 3678531 | City proper. OSM boundary ≈ 105.7 km² |
+| Vinnytsia | 361818 | City proper. OSM boundary ≈ 113.2 km² |
+| Uzhhorod | 2692232 | City; the hromada is the city only. OSM boundary ≈ 37.6 km² |
+| Cherkasy | 2825507 | City (relation tagged admin_level 10). OSM boundary ≈ 79.2 km² |
+| Rivne | 448930 | City proper. OSM boundary ≈ 58.2 km² |
+| Mykolaiv | 11622860 | Mykolaiv Oblast (south). City; the hromada is the city only. Includes river water. OSM boundary ≈ 251.1 km² |
+| Bila Tserkva | 2069683 | City proper, Kyiv Oblast. OSM boundary ≈ 68.0 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.

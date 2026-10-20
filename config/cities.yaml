@@ -148,3 +148,103 @@ cities:
     hromada_relation: 12461821
     notes: City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.
     notes_uk: Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.
+
+  - id: lutsk
+    name: Lutsk
+    name_local: Луцьк
+    country: UA
+    boundary_relation: 1951964
+    territories: true
+    hromada_relation: 12218757
+    notes: City proper (not the whole Lutsk urban hromada).
+    notes_uk: Власне місто (без решти Луцької міської громади).
+
+  - id: zhytomyr
+    name: Zhytomyr
+    name_local: Житомир
+    country: UA
+    boundary_relation: 2692156
+    territories: true
+    hromada_relation: 9093195
+    notes: City proper (not the whole Zhytomyr urban hromada).
+    notes_uk: Власне місто (без решти Житомирської міської громади).
+
+  - id: poltava
+    name: Poltava
+    name_local: Полтава
+    country: UA
+    boundary_relation: 1641691
+    territories: true
+    hromada_relation: 12186978
+    notes: City proper (not the whole Poltava urban hromada).
+    notes_uk: Власне місто (без решти Полтавської міської громади).
+
+  - id: sumy
+    name: Sumy
+    name_local: Суми
+    country: UA
+    boundary_relation: 3678531
+    territories: true
+    hromada_relation: 10553891
+    notes: City proper (not the whole Sumy urban hromada).
+    notes_uk: Власне місто (без решти Сумської міської громади).
+
+  - id: vinnytsia
+    name: Vinnytsia
+    name_local: Вінниця
+    country: UA
+    boundary_relation: 361818
+    territories: true
+    hromada_relation: 12411968
+    notes: City proper (not the whole Vinnytsia urban hromada).
+    notes_uk: Власне місто (без решти Вінницької міської громади).
+
+  - id: uzhhorod
+    name: Uzhhorod
+    name_local: Ужгород
+    country: UA
+    boundary_relation: 2692232
+    territories: true
+    hromada_relation: 11842502
+    notes: The Uzhhorod urban hromada consists of the city only.
+    notes_uk: Ужгородська міська громада складається лише з міста.
+
+  - id: cherkasy
+    name: Cherkasy
+    name_local: Черкаси
+    country: UA
+    boundary_relation: 2825507
+    territories: true
+    hromada_relation: 11896205
+    notes: City boundary as mapped in OSM (relation tagged admin_level 10); the hromada adds about 1.6 km².
+    notes_uk: Межа міста за OSM (відношення з admin_level 10); громада додає близько 1,6 км².
+
+  - id: rivne
+    name: Rivne
+    name_local: Рівне
+    country: UA
+    boundary_relation: 448930
+    territories: true
+    hromada_relation: 12234138
+    notes: City proper (not the whole Rivne urban hromada).
+    notes_uk: Власне місто (без решти Рівненської міської громади).
+
+  - id: mykolaiv
+    name: Mykolaiv
+    name_local: Миколаїв
+    country: UA
+    boundary_relation: 11622860
+    territories: true
+    hromada_relation: 11859916
+    notes: Mykolaiv in Mykolaiv Oblast (southern Ukraine). The urban hromada consists of the city only; the boundary includes river water areas.
+    notes_uk: Миколаїв у Миколаївській області (південь України). Міська громада складається лише з міста; межа охоплює водні простори річок.
+
+  - id: bila_tserkva
+    name: Bila Tserkva
+    name_local: Біла Церква
+    country: UA
+    boundary_relation: 2069683
+    territories: true
+    hromada_relation: 12719741
+    notes: City proper (not the whole Bila Tserkva urban hromada). Kyiv Oblast.
+    notes_uk: Власне місто (без решти Білоцерківської міської громади). Київська область.

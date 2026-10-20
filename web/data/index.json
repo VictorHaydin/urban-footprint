@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-16T13:25:24+00:00",
+ "generated_at": "2026-10-20T07:01:50+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -825,6 +825,376 @@
     "greater": {
      "status": "ok",
      "area_km2": 289.38
+    }
+   }
+  },
+  {
+   "id": "lutsk",
+   "name": "Lutsk",
+   "name_local": "Луцьк",
+   "country": "UA",
+   "area_km2": 40.725,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    25.339346,
+    50.746504
+   ],
+   "bounds": [
+    25.261963,
+    50.688998,
+    25.405802,
+    50.788883
+   ],
+   "osm_relation": 1951964,
+   "notes": "City proper (not the whole Lutsk urban hromada).",
+   "notes_uk": "Власне місто (без решти Луцької міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 40.725
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 384.216
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 135.486
+    }
+   }
+  },
+  {
+   "id": "zhytomyr",
+   "name": "Zhytomyr",
+   "name_local": "Житомир",
+   "country": "UA",
+   "area_km2": 60.462,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    28.672744,
+    50.264608
+   ],
+   "bounds": [
+    28.591076,
+    50.223373,
+    28.755968,
+    50.308506
+   ],
+   "osm_relation": 2692156,
+   "notes": "City proper (not the whole Zhytomyr urban hromada).",
+   "notes_uk": "Власне місто (без решти Житомирської міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 60.462
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 92.922
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 124.156
+    }
+   }
+  },
+  {
+   "id": "poltava",
+   "name": "Poltava",
+   "name_local": "Полтава",
+   "country": "UA",
+   "area_km2": 105.271,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.544929,
+    49.601526
+   ],
+   "bounds": [
+    34.446833,
+    49.547725,
+    34.660341,
+    49.657911
+   ],
+   "osm_relation": 1641691,
+   "notes": "City proper (not the whole Poltava urban hromada).",
+   "notes_uk": "Власне місто (без решти Полтавської міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 105.271
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 550.878
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 180.73
+    }
+   }
+  },
+  {
+   "id": "sumy",
+   "name": "Sumy",
+   "name_local": "Суми",
+   "country": "UA",
+   "area_km2": 105.704,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.810928,
+    50.90311
+   ],
+   "bounds": [
+    34.691057,
+    50.83685,
+    34.918078,
+    50.963795
+   ],
+   "osm_relation": 3678531,
+   "notes": "City proper (not the whole Sumy urban hromada).",
+   "notes_uk": "Власне місто (без решти Сумської міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 105.704
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 349.283
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 171.007
+    }
+   }
+  },
+  {
+   "id": "vinnytsia",
+   "name": "Vinnytsia",
+   "name_local": "Вінниця",
+   "country": "UA",
+   "area_km2": 113.204,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    28.482444,
+    49.237143
+   ],
+   "bounds": [
+    28.367976,
+    49.187343,
+    28.59204,
+    49.286595
+   ],
+   "osm_relation": 361818,
+   "notes": "City proper (not the whole Vinnytsia urban hromada).",
+   "notes_uk": "Власне місто (без решти Вінницької міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 113.204
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 256.183
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 210.558
+    }
+   }
+  },
+  {
+   "id": "uzhhorod",
+   "name": "Uzhhorod",
+   "name_local": "Ужгород",
+   "country": "UA",
+   "area_km2": 37.638,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    22.28424,
+    48.621996
+   ],
+   "bounds": [
+    22.209774,
+    48.576325,
+    22.341914,
+    48.661601
+   ],
+   "osm_relation": 2692232,
+   "notes": "The Uzhhorod urban hromada consists of the city only.",
+   "notes_uk": "Ужгородська міська громада складається лише з міста.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 37.638
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 37.638
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 119.984
+    }
+   }
+  },
+  {
+   "id": "cherkasy",
+   "name": "Cherkasy",
+   "name_local": "Черкаси",
+   "country": "UA",
+   "area_km2": 79.224,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.045504,
+    49.422875
+   ],
+   "bounds": [
+    31.958915,
+    49.364995,
+    32.124988,
+    49.497607
+   ],
+   "osm_relation": 2825507,
+   "notes": "City boundary as mapped in OSM (relation tagged admin_level 10); the hromada adds about 1.6 km².",
+   "notes_uk": "Межа міста за OSM (відношення з admin_level 10); громада додає близько 1,6 км².",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 79.224
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 80.83
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 117.364
+    }
+   }
+  },
+  {
+   "id": "rivne",
+   "name": "Rivne",
+   "name_local": "Рівне",
+   "country": "UA",
+   "area_km2": 58.22,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    26.245603,
+    50.613469
+   ],
+   "bounds": [
+    26.147599,
+    50.569322,
+    26.34091,
+    50.652308
+   ],
+   "osm_relation": 448930,
+   "notes": "City proper (not the whole Rivne urban hromada).",
+   "notes_uk": "Власне місто (без решти Рівненської міської громади).",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 58.22
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 62.693
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 155.239
+    }
+   }
+  },
+  {
+   "id": "mykolaiv",
+   "name": "Mykolaiv",
+   "name_local": "Миколаїв",
+   "country": "UA",
+   "area_km2": 251.132,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.001021,
+    46.943508
+   ],
+   "bounds": [
+    31.88048,
+    46.818256,
+    32.135193,
+    47.047507
+   ],
+   "osm_relation": 11622860,
+   "notes": "Mykolaiv in Mykolaiv Oblast (southern Ukraine). The urban hromada consists of the city only; the boundary includes river water areas.",
+   "notes_uk": "Миколаїв у Миколаївській області (південь України). Міська громада складається лише з міста; межа охоплює водні простори річок.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 251.132
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 251.132
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 281.912
+    }
+   }
+  },
+  {
+   "id": "bila_tserkva",
+   "name": "Bila Tserkva",
+   "name_local": "Біла Церква",
+   "country": "UA",
+   "area_km2": 68.006,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.117906,
+    49.803751
+   ],
+   "bounds": [
+    30.020939,
+    49.756867,
+    30.222466,
+    49.854332
+   ],
+   "osm_relation": 2069683,
+   "notes": "City proper (not the whole Bila Tserkva urban hromada). Kyiv Oblast.",
+   "notes_uk": "Власне місто (без решти Білоцерківської міської громади). Київська область.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 68.006
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 402.634
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 103.064
     }
    }
   }
