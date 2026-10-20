@@ -248,3 +248,13 @@ cities:
     hromada_relation: 12719741
     notes: City proper (not the whole Bila Tserkva urban hromada). Kyiv Oblast.
     notes_uk: Власне місто (без решти Білоцерківської міської громади). Київська область.
+
+  - id: kherson
+    name: Kherson
+    name_local: Херсон
+    country: UA
+    boundary_relation: 2175078
+    territories: true
+    hromada_relation: 12323074
+    notes: City proper (not the whole Kherson urban hromada). Occupied in March–November 2022; the left bank of the Dnipro opposite the city remains occupied. Drive times use the OSM road network as mapped, including river crossings that may be destroyed.
+    notes_uk: Власне місто (без решти Херсонської міської громади). Було окуповане з березня по листопад 2022 року; лівий берег Дніпра навпроти міста залишається окупованим. Час доїзду розраховано за дорожньою мережею OSM як вона нанесена, зокрема з переправами, які можуть бути зруйновані.

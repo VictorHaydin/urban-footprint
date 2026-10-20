@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-20T07:01:50+00:00",
+ "generated_at": "2026-10-20T17:32:41+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -1195,6 +1195,43 @@
     "greater": {
      "status": "ok",
      "area_km2": 103.064
+    }
+   }
+  },
+  {
+   "id": "kherson",
+   "name": "Kherson",
+   "name_local": "Херсон",
+   "country": "UA",
+   "area_km2": 77.94,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.616775,
+    46.657753
+   ],
+   "bounds": [
+    32.544726,
+    46.596799,
+    32.726272,
+    46.704908
+   ],
+   "osm_relation": 2175078,
+   "notes": "City proper (not the whole Kherson urban hromada). Occupied in March–November 2022; the left bank of the Dnipro opposite the city remains occupied. Drive times use the OSM road network as mapped, including river crossings that may be destroyed.",
+   "notes_uk": "Власне місто (без решти Херсонської міської громади). Було окуповане з березня по листопад 2022 року; лівий берег Дніпра навпроти міста залишається окупованим. Час доїзду розраховано за дорожньою мережею OSM як вона нанесена, зокрема з переправами, які можуть бути зруйновані.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 77.94
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 453.719
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 106.669
     }
    }
   }
