@@ -26,6 +26,7 @@
 
 groups:
   - {id: million, label: "Largest cities", label_uk: "Міста-мільйонники"}
+  - {id: regional, label: "Oblast centres", label_uk: "Обласні центри"}
   - {id: other,   label: "Other cities",   label_uk: "Інші міста"}
 
 defaults:
@@ -124,6 +125,7 @@ cities:
     name_local: Івано-Франківськ
     country: UA
     boundary_relation: 2362670
+    group: regional
     territories: true
     hromada_relation: 11890980
     notes: OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².
@@ -134,6 +136,7 @@ cities:
     name_local: Тернопіль
     country: UA
     boundary_relation: 3058686
+    group: regional
     territories: true
     hromada_relation: 12180839
     notes: City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.
@@ -144,6 +147,7 @@ cities:
     name_local: Чернівці
     country: UA
     boundary_relation: 1742393
+    group: regional
     territories: true
     hromada_relation: 12461821
     notes: City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.
@@ -154,6 +158,7 @@ cities:
     name_local: Луцьк
     country: UA
     boundary_relation: 1951964
+    group: regional
     territories: true
     hromada_relation: 12218757
     notes: City proper (not the whole Lutsk urban hromada).
@@ -164,6 +169,7 @@ cities:
     name_local: Житомир
     country: UA
     boundary_relation: 2692156
+    group: regional
     territories: true
     hromada_relation: 9093195
     notes: City proper (not the whole Zhytomyr urban hromada).
@@ -174,6 +180,7 @@ cities:
     name_local: Полтава
     country: UA
     boundary_relation: 1641691
+    group: regional
     territories: true
     hromada_relation: 12186978
     notes: City proper (not the whole Poltava urban hromada).
@@ -184,6 +191,7 @@ cities:
     name_local: Суми
     country: UA
     boundary_relation: 3678531
+    group: regional
     territories: true
     hromada_relation: 10553891
     notes: City proper (not the whole Sumy urban hromada).
@@ -194,6 +202,7 @@ cities:
     name_local: Вінниця
     country: UA
     boundary_relation: 361818
+    group: regional
     territories: true
     hromada_relation: 12411968
     notes: City proper (not the whole Vinnytsia urban hromada).
@@ -204,6 +213,7 @@ cities:
     name_local: Ужгород
     country: UA
     boundary_relation: 2692232
+    group: regional
     territories: true
     hromada_relation: 11842502
     notes: The Uzhhorod urban hromada consists of the city only.
@@ -214,6 +224,7 @@ cities:
     name_local: Черкаси
     country: UA
     boundary_relation: 2825507
+    group: regional
     territories: true
     hromada_relation: 11896205
     notes: City boundary as mapped in OSM (relation tagged admin_level 10); the hromada adds about 1.6 km².
@@ -224,6 +235,7 @@ cities:
     name_local: Рівне
     country: UA
     boundary_relation: 448930
+    group: regional
     territories: true
     hromada_relation: 12234138
     notes: City proper (not the whole Rivne urban hromada).
@@ -234,6 +246,7 @@ cities:
     name_local: Миколаїв
     country: UA
     boundary_relation: 11622860
+    group: regional
     territories: true
     hromada_relation: 11859916
     notes: Mykolaiv in Mykolaiv Oblast (southern Ukraine). The urban hromada consists of the city only; the boundary includes river water areas.
@@ -254,6 +267,7 @@ cities:
     name_local: Херсон
     country: UA
     boundary_relation: 2175078
+    group: regional
     territories: true
     hromada_relation: 12323074
     notes: City proper (not the whole Kherson urban hromada). Occupied in March–November 2022; the left bank of the Dnipro opposite the city remains occupied. Drive times use the OSM road network as mapped, including river crossings that may be destroyed.

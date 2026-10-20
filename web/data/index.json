@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-20T18:11:01+00:00",
+ "generated_at": "2026-10-20T18:19:44+00:00",
  "config_hash": "2dcbed6c559e7c72",
  "categories": [
   {
@@ -415,6 +415,11 @@
    "label_uk": "Міста-мільйонники"
   },
   {
+   "id": "regional",
+   "label": "Oblast centres",
+   "label_uk": "Обласні центри"
+  },
+  {
    "id": "other",
    "label": "Other cities",
    "label_uk": "Інші міста"
@@ -737,7 +742,7 @@
    "osm_relation": 2362670,
    "notes": "OSM settlement boundary of the city (~41 km², includes Uhornyky). Mykytyntsi and Khryplyn, incorporated into the city in 2006, are mapped in OSM as separate settlements and are not included; the official city area is ~84 km².",
    "notes_uk": "Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -774,7 +779,7 @@
    "osm_relation": 3058686,
    "notes": "City proper (not the whole Ternopil urban hromada). Includes Ternopil Pond, a large reservoir in the city centre.",
    "notes_uk": "Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -811,7 +816,7 @@
    "osm_relation": 1742393,
    "notes": "City proper (not the whole Chernivtsi urban hromada). Spans both banks of the Prut river.",
    "notes_uk": "Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -848,7 +853,7 @@
    "osm_relation": 1951964,
    "notes": "City proper (not the whole Lutsk urban hromada).",
    "notes_uk": "Власне місто (без решти Луцької міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -885,7 +890,7 @@
    "osm_relation": 2692156,
    "notes": "City proper (not the whole Zhytomyr urban hromada).",
    "notes_uk": "Власне місто (без решти Житомирської міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -922,7 +927,7 @@
    "osm_relation": 1641691,
    "notes": "City proper (not the whole Poltava urban hromada).",
    "notes_uk": "Власне місто (без решти Полтавської міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -959,7 +964,7 @@
    "osm_relation": 3678531,
    "notes": "City proper (not the whole Sumy urban hromada).",
    "notes_uk": "Власне місто (без решти Сумської міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -996,7 +1001,7 @@
    "osm_relation": 361818,
    "notes": "City proper (not the whole Vinnytsia urban hromada).",
    "notes_uk": "Власне місто (без решти Вінницької міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -1033,7 +1038,7 @@
    "osm_relation": 2692232,
    "notes": "The Uzhhorod urban hromada consists of the city only.",
    "notes_uk": "Ужгородська міська громада складається лише з міста.",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -1070,7 +1075,7 @@
    "osm_relation": 2825507,
    "notes": "City boundary as mapped in OSM (relation tagged admin_level 10); the hromada adds about 1.6 km².",
    "notes_uk": "Межа міста за OSM (відношення з admin_level 10); громада додає близько 1,6 км².",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -1107,7 +1112,7 @@
    "osm_relation": 448930,
    "notes": "City proper (not the whole Rivne urban hromada).",
    "notes_uk": "Власне місто (без решти Рівненської міської громади).",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -1144,7 +1149,7 @@
    "osm_relation": 11622860,
    "notes": "Mykolaiv in Mykolaiv Oblast (southern Ukraine). The urban hromada consists of the city only; the boundary includes river water areas.",
    "notes_uk": "Миколаїв у Миколаївській області (південь України). Міська громада складається лише з міста; межа охоплює водні простори річок.",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
@@ -1218,7 +1223,7 @@
    "osm_relation": 2175078,
    "notes": "City proper (not the whole Kherson urban hromada). Occupied in March–November 2022; the left bank of the Dnipro opposite the city remains occupied. Drive times use the OSM road network as mapped, including river crossings that may be destroyed.",
    "notes_uk": "Власне місто (без решти Херсонської міської громади). Було окуповане з березня по листопад 2022 року; лівий берег Дніпра навпроти міста залишається окупованим. Час доїзду розраховано за дорожньою мережею OSM як вона нанесена, зокрема з переправами, які можуть бути зруйновані.",
-   "group": "other",
+   "group": "regional",
    "occupied": false,
    "modes": {
     "city": {
