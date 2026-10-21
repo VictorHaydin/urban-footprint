@@ -75,6 +75,7 @@ categories:
     subcategories:
       - {id: river,          label: "Rivers, streams & canals", label_uk: "Річки, струмки та канали",        color: "#2a6fb0"}
       - {id: lake,           label: "Lakes, ponds & reservoirs", label_uk: "Озера, ставки та водосховища",       color: "#4a96d8"}
+      - {id: bay,            label: "Bays & sea",               label_uk: "Затоки та море",                    color: "#1f5f9e"}
       - {id: other,          label: "Other water (basins, pools...)", label_uk: "Інші водойми (басейни, фонтани…)",  color: "#7ab3e3"}
   - id: residential
     label: Residential land
@@ -228,6 +229,7 @@ rules:
   - {class: water/lake,  match: {water: [lake, pond, reservoir, lagoon, basin, lock]}, geom: area}
   - {class: water/lake,  match: {landuse: [reservoir]}, geom: area}
   - {class: water/other, match: {natural: [water]}, geom: area}
+  - {class: water/bay,   match: {natural: [bay]}, geom: area}   # sea bays inside a city boundary (Sevastopol)
   - {class: water/other, match: {landuse: [basin]}, geom: area}
   - {class: water/other, match: {amenity: [fountain]}, geom: area}
   - {class: water/other, match: {water: "*"}, geom: area}

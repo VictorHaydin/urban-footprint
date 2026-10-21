@@ -61,6 +61,13 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kherson | 2175078 | City proper. Occupied March–November 2022; the left bank opposite remains occupied and has no road link to the city in OSM. OSM boundary ≈ 77.9 km² |
 | Kovel | 2814537 | City proper, Volyn Oblast. OSM boundary ≈ 46.9 km² |
 | Mukachevo | 2283083 | City proper, Zakarpattia Oblast. OSM boundary ≈ 28.2 km² |
+| Kamianske | 2238215 | City proper, Dnipropetrovsk Oblast. OSM boundary ≈ 130.2 km² |
+| Mariupol | 1748539 | Temporarily occupied since 2022; heavily destroyed, OSM may not reflect the current state. Relation tagged admin_level 10. OSM boundary ≈ 192.5 km² |
+| Luhansk | 2171253 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 256.2 km² |
+| Kramatorsk | 3936275 | City proper, Donetsk Oblast. OSM boundary ≈ 59.7 km² |
+| Lysychansk | 3678529 | Temporarily occupied since 2022. OSM boundary ≈ 52.5 km² |
+| Sevastopol | 3030976 | Temporarily occupied since 2014. City with special status: the city proper is used, not the whole special-status territory (≈ 3,100 km² incl. sea); no hromada level. Includes Sevastopol Bay (counted as water, bays & sea). OSM boundary ≈ 154.7 km² |
+| Horlivka | 3862199 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 183.4 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
@@ -195,8 +202,9 @@ hidden by higher-priority classes.
 * **Water**: rivers mapped only as centre-lines get a default width (river 10 m, stream 2 m). Large rivers
   (Dnipro) are mapped as polygons.
 * **Sea**: if an admin boundary extends into the sea, that water is unclassified unless mapped as water.
-  OSM does not map the sea as polygons (it uses `natural=coastline`). Odesa's boundary follows the shore,
-  and `validation.md` shows the remaining unclassified share.
+  OSM does not map the sea as polygons (it uses `natural=coastline`), but named bays are often mapped as
+  `natural=bay` areas: these count as water, sub-category *bays & sea* (e.g. Sevastopol Bay). Odesa's
+  boundary follows the shore, and `validation.md` shows the remaining unclassified share.
 * **Agricultural land, wetlands, allotments**: assigned by tags; allotments ("dacha" cooperatives) are
   counted as green space, sub-category *allotments*. Change this in the config if needed.
 * **Temporal consistency**: all cities in one run use the same OSM snapshot.

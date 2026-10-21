@@ -292,3 +292,79 @@ cities:
     hromada_relation: 11855321
     notes: City proper (not the whole Mukachevo urban hromada). Zakarpattia Oblast.
     notes_uk: Власне місто (без решти Мукачівської міської громади). Закарпатська область.
+
+  - id: kamianske
+    name: Kamianske
+    name_local: Кам’янське
+    country: UA
+    boundary_relation: 2238215
+    territories: true
+    hromada_relation: 12425995
+    notes: City proper (not the whole Kamianske urban hromada). Dnipropetrovsk Oblast.
+    notes_uk: Власне місто (без решти Кам'янської міської громади). Дніпропетровська область.
+
+  - id: mariupol
+    name: Mariupol
+    name_local: Маріуполь
+    country: UA
+    boundary_relation: 1748539
+    territories: true
+    hromada_relation: 13285132
+    occupied: true
+    notes: Temporarily occupied since 2022; much of the city was destroyed, and OSM mapping may not reflect the current state. Boundary relation tagged admin_level 10.
+    notes_uk: Тимчасово окупований з 2022 року; значну частину міста зруйновано, дані OSM можуть не відображати поточний стан. Відношення межі має admin_level 10.
+
+  - id: luhansk
+    name: Luhansk
+    name_local: Луганськ
+    country: UA
+    boundary_relation: 2171253
+    group: regional
+    territories: true
+    hromada_relation: 17980367
+    occupied: true
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.
+
+  - id: kramatorsk
+    name: Kramatorsk
+    name_local: Краматорськ
+    country: UA
+    boundary_relation: 3936275
+    territories: true
+    hromada_relation: 13630989
+    notes: City proper (not the whole Kramatorsk urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти Краматорської міської громади). Донецька область.
+
+  - id: lysychansk
+    name: Lysychansk
+    name_local: Лисичанськ
+    country: UA
+    boundary_relation: 3678529
+    territories: true
+    hromada_relation: 13638668
+    occupied: true
+    notes: Temporarily occupied since 2022; OSM mapping may not reflect war damage. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть не відображати руйнувань. Луганська область.
+
+  - id: sevastopol
+    name: Sevastopol
+    name_local: Севастополь
+    country: UA
+    boundary_relation: 3030976
+    group: regional
+    territories: true
+    occupied: true
+    notes: Temporarily occupied since 2014. City with special status; the city proper is used (≈155 km²), not the whole special-status territory (≈3,100 km² incl. sea). No hromada level. OSM mapping may be less complete or current.
+    notes_uk: Тимчасово окупований з 2014 року. Місто зі спеціальним статусом; використано власне місто (≈155 км²), а не всю територію зі спецстатусом (≈3100 км² разом з морем). Рівня громади немає. Дані OSM можуть бути менш повними чи актуальними.
+
+  - id: horlivka
+    name: Horlivka
+    name_local: Горлівка
+    country: UA
+    boundary_relation: 3862199
+    territories: true
+    hromada_relation: 17963483
+    occupied: true
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.
+    notes_uk: Тимчасово окупована з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.

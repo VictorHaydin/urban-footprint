@@ -1,7 +1,7 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-20T18:19:44+00:00",
- "config_hash": "2dcbed6c559e7c72",
+ "generated_at": "2026-10-21T10:42:02+00:00",
+ "config_hash": "e5fb94079931896d",
  "categories": [
   {
    "id": "buildings",
@@ -210,6 +210,12 @@
      "label": "Lakes, ponds & reservoirs",
      "label_uk": "Озера, ставки та водосховища",
      "color": "#4a96d8"
+    },
+    {
+     "id": "bay",
+     "label": "Bays & sea",
+     "label_uk": "Затоки та море",
+     "color": "#1f5f9e"
     },
     {
      "id": "other",
@@ -1311,6 +1317,265 @@
     "greater": {
      "status": "ok",
      "area_km2": 150.843
+    }
+   }
+  },
+  {
+   "id": "kamianske",
+   "name": "Kamianske",
+   "name_local": "Кам’янське",
+   "country": "UA",
+   "area_km2": 130.215,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.613074,
+    48.519015
+   ],
+   "bounds": [
+    34.479837,
+    48.443264,
+    34.727474,
+    48.628419
+   ],
+   "osm_relation": 2238215,
+   "notes": "City proper (not the whole Kamianske urban hromada). Dnipropetrovsk Oblast.",
+   "notes_uk": "Власне місто (без решти Кам'янської міської громади). Дніпропетровська область.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 130.215
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 171.957
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 190.57
+    }
+   }
+  },
+  {
+   "id": "mariupol",
+   "name": "Mariupol",
+   "name_local": "Маріуполь",
+   "country": "UA",
+   "area_km2": 192.464,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.563559,
+    47.129363
+   ],
+   "bounds": [
+    37.465531,
+    47.027612,
+    37.755474,
+    47.229495
+   ],
+   "osm_relation": 1748539,
+   "notes": "Temporarily occupied since 2022; much of the city was destroyed, and OSM mapping may not reflect the current state. Boundary relation tagged admin_level 10.",
+   "notes_uk": "Тимчасово окупований з 2022 року; значну частину міста зруйновано, дані OSM можуть не відображати поточний стан. Відношення межі має admin_level 10.",
+   "group": "other",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 192.464
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 192.464
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 223.408
+    }
+   }
+  },
+  {
+   "id": "luhansk",
+   "name": "Luhansk",
+   "name_local": "Луганськ",
+   "country": "UA",
+   "area_km2": 256.223,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    39.353677,
+    48.581529
+   ],
+   "bounds": [
+    39.215291,
+    48.474604,
+    39.498392,
+    48.698067
+   ],
+   "osm_relation": 2171253,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.",
+   "group": "regional",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 256.223
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 256.223
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 301.201
+    }
+   }
+  },
+  {
+   "id": "kramatorsk",
+   "name": "Kramatorsk",
+   "name_local": "Краматорськ",
+   "country": "UA",
+   "area_km2": 59.706,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.565713,
+    48.725203
+   ],
+   "bounds": [
+    37.456975,
+    48.67073,
+    37.638346,
+    48.783837
+   ],
+   "osm_relation": 3936275,
+   "notes": "City proper (not the whole Kramatorsk urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти Краматорської міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 59.706
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 408.745
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 93.28
+    }
+   }
+  },
+  {
+   "id": "lysychansk",
+   "name": "Lysychansk",
+   "name_local": "Лисичанськ",
+   "country": "UA",
+   "area_km2": 52.491,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.429617,
+    48.899927
+   ],
+   "bounds": [
+    38.336079,
+    48.843921,
+    38.496766,
+    48.954943
+   ],
+   "osm_relation": 3678529,
+   "notes": "Temporarily occupied since 2022; OSM mapping may not reflect war damage. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть не відображати руйнувань. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 52.491
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 52.491
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 173.672
+    }
+   }
+  },
+  {
+   "id": "sevastopol",
+   "name": "Sevastopol",
+   "name_local": "Севастополь",
+   "country": "UA",
+   "area_km2": 154.717,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.514294,
+    44.595959
+   ],
+   "bounds": [
+    33.377957,
+    44.512253,
+    33.610622,
+    44.701402
+   ],
+   "osm_relation": 3030976,
+   "notes": "Temporarily occupied since 2014. City with special status; the city proper is used (≈155 km²), not the whole special-status territory (≈3,100 km² incl. sea). No hromada level. OSM mapping may be less complete or current.",
+   "notes_uk": "Тимчасово окупований з 2014 року. Місто зі спеціальним статусом; використано власне місто (≈155 км²), а не всю територію зі спецстатусом (≈3100 км² разом з морем). Рівня громади немає. Дані OSM можуть бути менш повними чи актуальними.",
+   "group": "regional",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 154.717
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 154.717
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 180.488
+    }
+   }
+  },
+  {
+   "id": "horlivka",
+   "name": "Horlivka",
+   "name_local": "Горлівка",
+   "country": "UA",
+   "area_km2": 183.427,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.053593,
+    48.326086
+   ],
+   "bounds": [
+    37.904699,
+    48.214959,
+    38.25388,
+    48.398527
+   ],
+   "osm_relation": 3862199,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.",
+   "notes_uk": "Тимчасово окупована з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.",
+   "group": "other",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 183.427
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 183.427
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 254.252
     }
    }
   }

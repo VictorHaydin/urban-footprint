@@ -105,7 +105,8 @@ def _load(city: City):
 def _select_settlements(sett_raw: gpd.GeoDataFrame, city_p, radius_m: float) -> tuple[gpd.GeoDataFrame, gpd.GeoDataFrame]:
     """Polygons (deduplicated) and place points within the radius, outside the city."""
     tags = sett_raw["tags"].map(json.loads)
-    sett_raw = sett_raw.assign(t=tags.values, name=tags.map(lambda t: t.get("name", "")).values,
+    # Ukrainian name first: in Crimea and parts of the occupied east the plain `name` tag is Russian
+    sett_raw = sett_raw.assign(t=tags.values, name=tags.map(lambda t: t.get("name:uk") or t.get("name", "")).values,
                                place=tags.map(lambda t: t.get("place") or "").values)
     polys = sett_raw[sett_raw["kind"] == "area"]
     # settlements only: place=city|town|village|hamlet, or an untagged admin_level 9 boundary. Excludes city
