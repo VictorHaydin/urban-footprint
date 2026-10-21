@@ -369,3 +369,25 @@ cities:
     occupied_since: 2014
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.
     notes_uk: Тимчасово окупована з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.
+
+  - id: khmelnytskyi
+    name: Khmelnytskyi
+    name_local: Хмельницький
+    country: UA
+    boundary_relation: 1792913
+    group: regional
+    territories: true
+    hromada_relation: 12340110
+    notes: City proper (not the whole Khmelnytskyi urban hromada).
+    notes_uk: Власне місто (без решти Хмельницької міської громади).
+
+  - id: kropyvnytskyi
+    name: Kropyvnytskyi
+    name_local: Кропивницький
+    country: UA
+    boundary_relation: 2825228
+    group: regional
+    territories: true
+    hromada_relation: 13461900
+    notes: City proper (not the whole Kropyvnytskyi urban hromada).
+    notes_uk: Власне місто (без решти Кропивницької міської громади).

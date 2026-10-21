@@ -68,6 +68,8 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Lysychansk | 3678529 | Temporarily occupied since 2022. OSM boundary ≈ 52.5 km² |
 | Sevastopol | 3030976 | Temporarily occupied since 2014. City with special status: the city proper is used, not the whole special-status territory (≈ 3,100 km² incl. sea); no hromada level. Includes Sevastopol Bay (counted as water, bays & sea). OSM boundary ≈ 154.7 km² |
 | Horlivka | 3862199 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 183.4 km² |
+| Khmelnytskyi | 1792913 | City proper. OSM boundary ≈ 98.3 km² |
+| Kropyvnytskyi | 2825228 | City proper. OSM boundary ≈ 96.4 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.

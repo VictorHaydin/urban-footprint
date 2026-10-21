@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-21T11:18:32+00:00",
+ "generated_at": "2026-10-21T15:38:54+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -1576,6 +1576,80 @@
     "greater": {
      "status": "ok",
      "area_km2": 254.252
+    }
+   }
+  },
+  {
+   "id": "khmelnytskyi",
+   "name": "Khmelnytskyi",
+   "name_local": "Хмельницький",
+   "country": "UA",
+   "area_km2": 98.271,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    26.998334,
+    49.412327
+   ],
+   "bounds": [
+    26.895032,
+    49.358884,
+    27.093415,
+    49.469104
+   ],
+   "osm_relation": 1792913,
+   "notes": "City proper (not the whole Khmelnytskyi urban hromada).",
+   "notes_uk": "Власне місто (без решти Хмельницької міської громади).",
+   "group": "regional",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 98.271
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 496.178
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 148.499
+    }
+   }
+  },
+  {
+   "id": "kropyvnytskyi",
+   "name": "Kropyvnytskyi",
+   "name_local": "Кропивницький",
+   "country": "UA",
+   "area_km2": 96.443,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.253077,
+    48.522451
+   ],
+   "bounds": [
+    32.103983,
+    48.460527,
+    32.352752,
+    48.581363
+   ],
+   "osm_relation": 2825228,
+   "notes": "City proper (not the whole Kropyvnytskyi urban hromada).",
+   "notes_uk": "Власне місто (без решти Кропивницької міської громади).",
+   "group": "regional",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 96.443
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 104.751
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 148.401
     }
    }
   }
