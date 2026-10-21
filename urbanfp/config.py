@@ -40,6 +40,9 @@ class Paths:
 
 # --------------------------------------------------------------------------- cities
 
+HROMADA_REFORM_YEAR = 2020  # hromadas formed across Ukraine (decentralisation reform)
+
+
 @dataclass
 class City:
     id: str
@@ -54,8 +57,18 @@ class City:
     group: str = ""
     territories: bool = False          # compute Hromada / Greater City modes (docs/SUBURBS.md)
     hromada_relation: int | None = None
-    occupied: bool = False
+    occupied_since: int | None = None  # year of (temporary) occupation, if occupied
     suburbs_radius_km: float = 25.0
+
+    @property
+    def occupied(self) -> bool:
+        return self.occupied_since is not None
+
+    @property
+    def hromada_formal_only(self) -> bool:
+        """Occupied before the 2020 hromada reform: the hromada exists on paper only, so Hromada mode
+        uses the city boundary. Cities occupied later (Mariupol, Lysychansk) keep their hromada."""
+        return self.occupied_since is not None and self.occupied_since < HROMADA_REFORM_YEAR
 
     @property
     def source_region(self) -> str:

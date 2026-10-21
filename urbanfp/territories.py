@@ -138,7 +138,7 @@ def _select_settlements(sett_raw: gpd.GeoDataFrame, city_p, radius_m: float) -> 
 def build_territories(city: City) -> dict:
     t0 = time.time()
     d, crs, city_p, hromada_p = _load(city)
-    if hromada_p is not None and city.occupied:
+    if hromada_p is not None and city.hromada_formal_only:
         hromada_status = "occupied"
     elif hromada_p is None:
         hromada_status = "no_hromada"

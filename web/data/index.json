@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-21T10:42:02+00:00",
+ "generated_at": "2026-10-21T11:18:32+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -1385,8 +1385,8 @@
      "area_km2": 192.464
     },
     "hromada": {
-     "status": "occupied",
-     "area_km2": 192.464
+     "status": "ok",
+     "area_km2": 381.084
     },
     "greater": {
      "status": "ok",
@@ -1496,8 +1496,8 @@
      "area_km2": 52.491
     },
     "hromada": {
-     "status": "occupied",
-     "area_km2": 52.491
+     "status": "ok",
+     "area_km2": 403.637
     },
     "greater": {
      "status": "ok",

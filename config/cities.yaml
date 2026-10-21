@@ -19,7 +19,8 @@
 #                       modes (see docs/SUBURBS.md). Extraction then covers the wider region.
 #   hromada_relation    OSM relation of the city's hromada (admin_level=7), for Hromada mode.
 #                       Omit when the city has no hromada level (Kyiv).
-#   occupied            (optional) temporarily occupied: Hromada mode falls back to the city boundary
+#   occupied_since      (optional) year of temporary occupation. Cities occupied before the 2020 hromada
+#                       reform use the city boundary in Hromada mode (their hromada exists on paper only)
 #   suburbs_radius_km   (optional, default 25) search radius for Greater City settlements
 #   group               id of a city group below (default: the last group). The web app lists cities
 #                       by group (in the order of `groups`), alphabetically by Ukrainian name within a group.
@@ -104,7 +105,7 @@ cities:
     country: UA
     boundary_relation: 1413957
     territories: true
-    occupied: true
+    occupied_since: 2014
     hromada_relation: 17963109
     group: million
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current than in other cities. OSM boundary (~401 km²) is larger than the official city area (~358 km²).
@@ -310,7 +311,7 @@ cities:
     boundary_relation: 1748539
     territories: true
     hromada_relation: 13285132
-    occupied: true
+    occupied_since: 2022
     notes: Temporarily occupied since 2022; much of the city was destroyed, and OSM mapping may not reflect the current state. Boundary relation tagged admin_level 10.
     notes_uk: Тимчасово окупований з 2022 року; значну частину міста зруйновано, дані OSM можуть не відображати поточний стан. Відношення межі має admin_level 10.
 
@@ -322,7 +323,7 @@ cities:
     group: regional
     territories: true
     hromada_relation: 17980367
-    occupied: true
+    occupied_since: 2014
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.
     notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.
 
@@ -343,7 +344,7 @@ cities:
     boundary_relation: 3678529
     territories: true
     hromada_relation: 13638668
-    occupied: true
+    occupied_since: 2022
     notes: Temporarily occupied since 2022; OSM mapping may not reflect war damage. Luhansk Oblast.
     notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть не відображати руйнувань. Луганська область.
 
@@ -354,7 +355,7 @@ cities:
     boundary_relation: 3030976
     group: regional
     territories: true
-    occupied: true
+    occupied_since: 2014
     notes: Temporarily occupied since 2014. City with special status; the city proper is used (≈155 km²), not the whole special-status territory (≈3,100 km² incl. sea). No hromada level. OSM mapping may be less complete or current.
     notes_uk: Тимчасово окупований з 2014 року. Місто зі спеціальним статусом; використано власне місто (≈155 км²), а не всю територію зі спецстатусом (≈3100 км² разом з морем). Рівня громади немає. Дані OSM можуть бути менш повними чи актуальними.
 
@@ -365,6 +366,6 @@ cities:
     boundary_relation: 3862199
     territories: true
     hromada_relation: 17963483
-    occupied: true
+    occupied_since: 2014
     notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Boundary relation tagged admin_level 10.
     notes_uk: Тимчасово окупована з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.

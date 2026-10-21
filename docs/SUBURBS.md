@@ -19,9 +19,10 @@ setting** with three territory modes:
 * **Kyiv** has no hromada level (a city with special status is itself the community), so its hromada
   territory equals the city.
 * Some hromadas consist of the city only (e.g. Kharkiv): the result equals City mode.
-* **Occupied cities** (`occupied: true` in the config; currently Donetsk) always use the city boundary in
-  this mode, even where OSM has a hromada boundary. They stay selectable; the UI marks them
-  («окуповане — показано межі міста»).
+* **Cities occupied before the 2020 hromada reform** (`occupied_since` < 2020 in the config: Donetsk,
+  Luhansk, Horlivka; Sevastopol has no hromada level) use the city boundary in this mode, even where OSM has
+  a hromada boundary, since those hromadas exist on paper only. They stay selectable; the UI marks them
+  («окуповане — показано межі міста»). Cities occupied later (Mariupol, Lysychansk) keep their hromada.
 
 ## Greater City mode
 
