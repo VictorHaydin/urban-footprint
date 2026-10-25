@@ -89,6 +89,25 @@ def compose_units(A, H=None, G=None) -> dict:
     return {k: v for k, v in units.items() if v is not None and not v.is_empty}
 
 
+def _clip_to_land(city: City, d, crs, units: dict) -> tuple[dict, float]:
+    """Remove open sea from the units (docs/METHODOLOGY.md); bays mapped as natural=bay areas stay (water)."""
+    from urbanfp.coast import sea_polygon
+    feats = pd.read_parquet(d / "osm_features.parquet", columns=["tags", "geometry"])
+    feats = feats[feats["tags"].str.contains('"natural": ?"bay"', regex=True)]
+    bays = gpd.GeoSeries.from_wkb(feats["geometry"], crs=4326).to_crs(crs) if len(feats) else gpd.GeoSeries([], crs=crs)
+    bays = bays[bays.geom_type.isin(["Polygon", "MultiPolygon"])]
+    sea = sea_polygon(shapely.union_all(list(units.values())), crs, city,
+                      shapely.union_all(bays.values) if len(bays) else None)
+    if sea is None:
+        return units, 0.0
+    before = sum(u.area for u in units.values())
+    units = {k: shapely.difference(v, sea, grid_size=0.01) for k, v in units.items()}
+    units = {k: v for k, v in units.items() if not v.is_empty}
+    sea_km2 = (before - sum(u.area for u in units.values())) / 1e6
+    log.info("[%s] clip_to_land: removed %.2f km² of sea", city.id, sea_km2)
+    return units, sea_km2
+
+
 def _load(city: City):
     d = Paths.interim(city.id)
     bnd = gpd.read_file(d / "boundary.geojson").geometry.iloc[0]
@@ -152,6 +171,9 @@ def build_territories(city: City) -> dict:
         settlements_out, greater_g = _greater_city(city, d, crs, city_p, hromada_p if hromada_status == "ok" else None)
 
     units = compose_units(city_p, hromada_p if hromada_status == "ok" else None, greater_g)
+    sea_km2 = 0.0
+    if city.clip_to_land:  # boundary extends into the sea: drop the sea side of the coastline
+        units, sea_km2 = _clip_to_land(city, d, crs, units)
 
     modes = {
         "city": {"units": ["A"], "status": "ok"},
@@ -179,6 +201,7 @@ def build_territories(city: City) -> dict:
         "suburbs_radius_km": city.suburbs_radius_km,
         "modes": modes,
         "units_km2": {k: round(v.area / 1e6, 3) for k, v in units.items()},
+        "sea_removed_km2": round(sea_km2, 3),
         "settlements_evaluated": int(len(settlements_out)),
         "settlements_in_greater": int(settlements_out["in_greater"].sum()) if len(settlements_out) else 0,
         "approx_outlines": int(settlements_out["approx"].sum()) if len(settlements_out) else 0,

@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-21T15:38:54+00:00",
+ "generated_at": "2026-10-25T08:55:49+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -511,7 +511,7 @@
    "name": "Odesa",
    "name_local": "Одеса",
    "country": "UA",
-   "area_km2": 163.151,
+   "area_km2": 163.115,
    "osm_timestamp": "2026-10-12T20:21:35Z",
    "center": [
     30.715016,
@@ -531,15 +531,15 @@
    "modes": {
     "city": {
      "status": "ok",
-     "area_km2": 163.151
+     "area_km2": 163.115
     },
     "hromada": {
      "status": "same_as_city",
-     "area_km2": 163.151
+     "area_km2": 163.115
     },
     "greater": {
      "status": "ok",
-     "area_km2": 282.317
+     "area_km2": 281.201
     }
    }
   },
@@ -1362,7 +1362,7 @@
    "name": "Mariupol",
    "name_local": "Маріуполь",
    "country": "UA",
-   "area_km2": 192.464,
+   "area_km2": 184.318,
    "osm_timestamp": "2026-10-12T20:21:35Z",
    "center": [
     37.563559,
@@ -1382,15 +1382,15 @@
    "modes": {
     "city": {
      "status": "ok",
-     "area_km2": 192.464
+     "area_km2": 184.318
     },
     "hromada": {
      "status": "ok",
-     "area_km2": 381.084
+     "area_km2": 372.738
     },
     "greater": {
      "status": "ok",
-     "area_km2": 223.408
+     "area_km2": 214.967
     }
    }
   },
@@ -1510,7 +1510,7 @@
    "name": "Sevastopol",
    "name_local": "Севастополь",
    "country": "UA",
-   "area_km2": 154.717,
+   "area_km2": 152.849,
    "osm_timestamp": "2026-10-12T20:21:35Z",
    "center": [
     33.514294,
@@ -1530,15 +1530,15 @@
    "modes": {
     "city": {
      "status": "ok",
-     "area_km2": 154.717
+     "area_km2": 152.849
     },
     "hromada": {
      "status": "no_hromada",
-     "area_km2": 154.717
+     "area_km2": 152.849
     },
     "greater": {
      "status": "ok",
-     "area_km2": 180.488
+     "area_km2": 178.37
     }
    }
   },
@@ -1650,6 +1650,80 @@
     "greater": {
      "status": "ok",
      "area_km2": 148.401
+    }
+   }
+  },
+  {
+   "id": "melitopol",
+   "name": "Melitopol",
+   "name_local": "Мелітополь",
+   "country": "UA",
+   "area_km2": 53.38,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    35.366144,
+    46.849508
+   ],
+   "bounds": [
+    35.292969,
+    46.790886,
+    35.433689,
+    46.89015
+   ],
+   "osm_relation": 2318317,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast. The OSM city boundary extends ~3.5 km² beyond the hromada boundary; Hromada mode includes the whole city.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область. Межа міста в OSM виходить за межу громади (~3,5 км²); режим громади охоплює все місто.",
+   "group": "other",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 53.38
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 53.401
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 84.889
+    }
+   }
+  },
+  {
+   "id": "berdiansk",
+   "name": "Berdiansk",
+   "name_local": "Бердянськ",
+   "country": "UA",
+   "area_km2": 85.358,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    36.800185,
+    46.748327
+   ],
+   "bounds": [
+    36.712144,
+    46.627356,
+    36.880586,
+    46.813652
+   ],
+   "osm_relation": 1280581,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast, on the Sea of Azov.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область, на узбережжі Азовського моря.",
+   "group": "other",
+   "occupied": true,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 85.358
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 249.561
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 99.211
     }
    }
   }

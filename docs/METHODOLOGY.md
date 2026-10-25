@@ -39,7 +39,7 @@ The city is the OSM administrative boundary relation configured in `config/citie
 |---|---|---|
 | Kyiv | 421866 | City with special status. Includes large forests and Dnipro floodplains |
 | Lviv | 2032280 | City proper, not the larger urban hromada |
-| Odesa | 1413934 | City proper. Boundary follows the coastline (see validation) |
+| Odesa | 1413934 | City proper. Boundary follows the coastline; ~0.04 km² of sea removed (≈ 1.1 km² in Greater City) |
 | Kharkiv | 3154746 | City proper |
 | Dnipro | 1017311 | City proper |
 | Zaporizhzhia | 1418311 | City proper. OSM boundary ≈ 314 km² vs official ≈ 331 km² |
@@ -62,14 +62,16 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kovel | 2814537 | City proper, Volyn Oblast. OSM boundary ≈ 46.9 km² |
 | Mukachevo | 2283083 | City proper, Zakarpattia Oblast. OSM boundary ≈ 28.2 km² |
 | Kamianske | 2238215 | City proper, Dnipropetrovsk Oblast. OSM boundary ≈ 130.2 km² |
-| Mariupol | 1748539 | Temporarily occupied since 2022; heavily destroyed, OSM may not reflect the current state. Relation tagged admin_level 10. OSM boundary ≈ 192.5 km² |
+| Mariupol | 1748539 | Temporarily occupied since 2022; heavily destroyed, OSM may not reflect the current state. Relation tagged admin_level 10. OSM boundary ≈ 192.5 km², land ≈ 184.3 km² (sea removed) |
 | Luhansk | 2171253 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 256.2 km² |
 | Kramatorsk | 3936275 | City proper, Donetsk Oblast. OSM boundary ≈ 59.7 km² |
 | Lysychansk | 3678529 | Temporarily occupied since 2022. OSM boundary ≈ 52.5 km² |
-| Sevastopol | 3030976 | Temporarily occupied since 2014. City with special status: the city proper is used, not the whole special-status territory (≈ 3,100 km² incl. sea); no hromada level. Includes Sevastopol Bay (counted as water, bays & sea). OSM boundary ≈ 154.7 km² |
+| Sevastopol | 3030976 | Temporarily occupied since 2014. City with special status: the city proper is used, not the whole special-status territory (≈ 3,100 km² incl. sea); no hromada level. Includes Sevastopol Bay (counted as water, bays & sea). OSM boundary ≈ 154.7 km², land and bays ≈ 152.8 km² (open sea removed) |
 | Horlivka | 3862199 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 183.4 km² |
 | Khmelnytskyi | 1792913 | City proper. OSM boundary ≈ 98.3 km² |
 | Kropyvnytskyi | 2825228 | City proper. OSM boundary ≈ 96.4 km² |
+| Melitopol | 2318317 | Temporarily occupied since 2022. City boundary extends ~3.5 km² beyond the hromada in OSM. OSM boundary ≈ 53.4 km² |
+| Berdiansk | 1280581 | Temporarily occupied since 2022. On the Sea of Azov. OSM boundary ≈ 109.6 km², of which ≈ 24.3 km² is sea (removed): land ≈ 85.4 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
@@ -203,10 +205,14 @@ hidden by higher-priority classes.
   "other".
 * **Water**: rivers mapped only as centre-lines get a default width (river 10 m, stream 2 m). Large rivers
   (Dnipro) are mapped as polygons.
-* **Sea**: if an admin boundary extends into the sea, that water is unclassified unless mapped as water.
-  OSM does not map the sea as polygons (it uses `natural=coastline`), but named bays are often mapped as
-  `natural=bay` areas: these count as water, sub-category *bays & sea* (e.g. Sevastopol Bay). Odesa's
-  boundary follows the shore, and `validation.md` shows the remaining unclassified share.
+* **Sea**: some administrative boundaries extend into the sea (Berdiansk, Mariupol, Sevastopol, slightly
+  Odesa). OSM maps the sea only as the shore line (`natural=coastline`, land on the left), so for cities
+  with `clip_to_land: true` the territory is cut along the coastline and **open sea is removed**: city area
+  and shares refer to land. The coastline is cut into land and sea faces within a rectangle around the
+  territory; a face is sea when nearly all probe points next to the shore inside it lie on the sea side.
+  **Bays mapped as `natural=bay` areas stay** in the territory and count as water, sub-category
+  *bays & sea* (e.g. Sevastopol Bay). Piers and breakwaters out at sea are removed with it (< 0.1 km²).
+  The administrative area including the sea is not reported.
 * **Agricultural land, wetlands, allotments**: assigned by tags; allotments ("dacha" cooperatives) are
   counted as green space, sub-category *allotments*. Change this in the config if needed.
 * **Temporal consistency**: all cities in one run use the same OSM snapshot.

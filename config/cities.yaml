@@ -10,8 +10,9 @@
 #   name / name_local   display names
 #   country             ISO 3166-1 alpha-2
 #   boundary_relation   OSM relation id of the administrative boundary
-#   clip_to_land        (optional, default false) subtract sea area using OSM coastline
-#                       -- only needed if the admin boundary extends into the sea
+#   clip_to_land        (optional, default false) remove open sea from the territory using the OSM
+#                       coastline (bays mapped as natural=bay stay, as water). For boundaries that extend
+#                       into the sea
 #   source              OSM source extract, "geofabrik:<region path>" as on download.geofabrik.de
 #                       (default from `defaults`). Cities sharing a source are extracted in one pass.
 #   notes / notes_uk    free text (English / Ukrainian), shown in reports and on the Method & data page
@@ -60,6 +61,7 @@ cities:
     name_local: Одеса
     country: UA
     boundary_relation: 1413934
+    clip_to_land: true
     territories: true
     hromada_relation: 12888405
     group: million
@@ -309,6 +311,7 @@ cities:
     name_local: Маріуполь
     country: UA
     boundary_relation: 1748539
+    clip_to_land: true
     territories: true
     hromada_relation: 13285132
     occupied_since: 2022
@@ -354,6 +357,7 @@ cities:
     country: UA
     boundary_relation: 3030976
     group: regional
+    clip_to_land: true
     territories: true
     occupied_since: 2014
     notes: Temporarily occupied since 2014. City with special status; the city proper is used (≈155 km²), not the whole special-status territory (≈3,100 km² incl. sea). No hromada level. OSM mapping may be less complete or current.
@@ -391,3 +395,26 @@ cities:
     hromada_relation: 13461900
     notes: City proper (not the whole Kropyvnytskyi urban hromada).
     notes_uk: Власне місто (без решти Кропивницької міської громади).
+
+  - id: melitopol
+    name: Melitopol
+    name_local: Мелітополь
+    country: UA
+    boundary_relation: 2318317
+    territories: true
+    hromada_relation: 12287604
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast. The OSM city boundary extends ~3.5 km² beyond the hromada boundary; Hromada mode includes the whole city.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область. Межа міста в OSM виходить за межу громади (~3,5 км²); режим громади охоплює все місто.
+
+  - id: berdiansk
+    name: Berdiansk
+    name_local: Бердянськ
+    country: UA
+    boundary_relation: 1280581
+    clip_to_land: true
+    territories: true
+    hromada_relation: 12313138
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast, on the Sea of Azov.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область, на узбережжі Азовського моря.
