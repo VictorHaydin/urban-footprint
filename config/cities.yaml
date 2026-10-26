@@ -418,3 +418,13 @@ cities:
     occupied_since: 2022
     notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast, on the Sea of Azov.
     notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область, на узбережжі Азовського моря.
+
+  - id: kremenchuk
+    name: Kremenchuk
+    name_local: Кременчук
+    country: UA
+    boundary_relation: 2320579
+    territories: true
+    hromada_relation: 12192260
+    notes: City proper (not the whole Kremenchuk urban hromada). Poltava Oblast, on both banks of the Dnipro.
+    notes_uk: Власне місто (без решти Кременчуцької міської громади). Полтавська область, на обох берегах Дніпра.

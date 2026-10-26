@@ -72,6 +72,7 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kropyvnytskyi | 2825228 | City proper. OSM boundary ≈ 96.4 km² |
 | Melitopol | 2318317 | Temporarily occupied since 2022. City boundary extends ~3.5 km² beyond the hromada in OSM. OSM boundary ≈ 53.4 km² |
 | Berdiansk | 1280581 | Temporarily occupied since 2022. On the Sea of Azov. OSM boundary ≈ 109.6 km², of which ≈ 24.3 km² is sea (removed): land ≈ 85.4 km² |
+| Kremenchuk | 2320579 | City proper, Poltava Oblast, on both banks of the Dnipro. OSM boundary ≈ 95.4 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.

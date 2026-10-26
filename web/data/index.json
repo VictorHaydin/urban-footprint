@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-25T08:55:49+00:00",
+ "generated_at": "2026-10-26T17:32:10+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -1724,6 +1724,43 @@
     "greater": {
      "status": "ok",
      "area_km2": 99.211
+    }
+   }
+  },
+  {
+   "id": "kremenchuk",
+   "name": "Kremenchuk",
+   "name_local": "Кременчук",
+   "country": "UA",
+   "area_km2": 95.39,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.441009,
+    49.091773
+   ],
+   "bounds": [
+    33.373229,
+    48.996556,
+    33.511108,
+    49.188987
+   ],
+   "osm_relation": 2320579,
+   "notes": "City proper (not the whole Kremenchuk urban hromada). Poltava Oblast, on both banks of the Dnipro.",
+   "notes_uk": "Власне місто (без решти Кременчуцької міської громади). Полтавська область, на обох берегах Дніпра.",
+   "group": "other",
+   "occupied": false,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 95.39
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 165.993
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 149.588
     }
    }
   }
