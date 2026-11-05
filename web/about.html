@@ -13,7 +13,7 @@
 </p>
 <div id="aboutCities"></div>
 
-<h2>Territory: City, Hromada, Greater City</h2>
+<h2 data-page="area">Territory: City, Hromada, Greater City</h2>
 <p>The "Territory" switch on the map and comparison pages sets which territory is measured:</p>
 <ul>
   <li><strong>City</strong>: the city's own administrative boundary.</li>
@@ -72,7 +72,68 @@
   <li><strong>Unclassified</strong>: no OSM data. A large share usually means incomplete mapping.</li>
 </ul>
 
-<h2>Using the site</h2>
+<h2 data-page="population">Population</h2>
+<p>
+  Population is shown on the map sidebar, in the "Population" breakdown of the comparison page and on the
+  "Agglomerations" page. Each of them has a source (year) switch.
+</p>
+<h3>Sources</h3>
+<ul>
+  <li><strong>as of 1 January 2022</strong> — State Statistics Service of Ukraine: de facto population (estimate)
+    by oblast, raion, hromada and settlement, with KATOTTG codes.</li>
+  <li><strong>2001 census</strong> — All-Ukrainian census of 5 December 2001: de facto population of every
+    settlement with its name, type, raion and council at the time, but no codes (compiled from the census
+    regional tables on Pop-stat).</li>
+</ul>
+<h3>How population is computed</h3>
+<ul>
+  <li><strong>City</strong> — the row of the city itself. <strong>Hromada</strong> — the hromada total (for 2001 the
+    sum of its settlements, as hromadas did not exist yet). Where there is no hromada (Kyiv, cities occupied before
+    2020), the population of the city is shown.</li>
+  <li><strong>Greater City</strong> — the city plus every suburb. Settlements are matched to the table by the
+    KATOTTG code from OpenStreetMap (<code>katotth</code> tag), otherwise by name and type in the surrounding
+    hromadas, raions or oblast. Settlements without data are listed in the sidebar, so the total is a lower bound.</li>
+  <li><strong>Density</strong> — population over the whole territory (including forests, water and fields), so it
+    depends strongly on where boundaries are drawn.</li>
+</ul>
+<h3>2001 census: matching to present-day settlements</h3>
+<p>
+  Census rows get the present-day KATOTTG code by name within the oblast. Candidates are Derzhstat settlements and
+  OpenStreetMap points (current name and former <code>old_name</code>, which covers most renamings). Namesakes are
+  told apart by the council at the time (the hromada its other villages went to), then by raion, then by the
+  closest type; a separate pass handles spelling variants (є/е, і/и). A few renamings OSM does not record and
+  settlements merged into cities since (Inhulets into Kryvyi Rih, Taromske into Dnipro) are set by hand. Where OSM
+  has no codes (most of Crimea), the OSM point itself is used. 98.9% of the census population is matched; the
+  city figure is the census figure for the city boundary at the time.
+</p>
+<h3>The "Agglomerations" page</h3>
+<ul>
+  <li>For each city the free-flow car drive time (OSM road network, typical speeds) is computed from any road
+    inside the city to every settlement of Ukraine within 3 hours.</li>
+  <li>For the chosen threshold (city only, 10, 20, 30, 45 min, 1, 1.5, 2, 2.5 or 3 h) cities are taken from the
+    largest down: a city joins the agglomeration of another only if it is within the threshold and the other is
+    more than <strong>twice</strong> its size. Cities of comparable size stay separate centres.</li>
+  <li>Every other settlement joins the centre it is reached from fastest, if within the threshold.</li>
+  <li>These two rules work independently. A city that joins a larger centre stops being a centre itself, and
+    the settlements around it do not follow it: they join the nearest <em>active</em> centre. An agglomeration can
+    therefore have outlying "islands". Example at 3 h: Mukachevo (86k) joins Lviv (717k, 176 min), because Lviv is
+    more than twice its size and Uzhhorod (115k, 27 min) is not. Svaliava, Berehove, Irshava and Khust are closest
+    to Mukachevo, but it is no longer a centre, and Uzhhorod is faster to reach from them than Lviv (from Khust
+    Lviv is beyond 3 h altogether), so they go to Uzhhorod. Mukachevo is in the Lviv agglomeration, the
+    settlements around it in the Uzhhorod one.</li>
+  <li>On the map, centre circles have an area proportional to the agglomeration population. Settlements over 50k
+    are circles on the same scale, 10–50k bright dots, 1–10k paler dots, under 1k faint dots.</li>
+  <li>The road network is the <strong>intact, pre-war</strong> one: destroyed bridges and roads count as intact,
+    closures of main roads are ignored, and roads cut in OSM along the front line are joined again. The Kakhovka
+    dam road is not restored.</li>
+</ul>
+<p class="callout">
+  Derzhstat does not cover Crimea and Sevastopol, so Simferopol and Sevastopol have 2001 census data only. For
+  territories occupied since 2014 the 2022 figures are estimates. Where the OSM city boundary differs from the
+  official one, the population refers to the official city and the density may be over-estimated.
+</p>
+
+<h2 data-page="usage">Using the site</h2>
 <h3>Map</h3>
 <ul>
   <li>At city scale the map shows anti-aliased coverage rasters (tiled, down to about 6&nbsp;m resolution). When you
@@ -99,7 +160,7 @@
     The data table below the chart is collapsed by default.</li>
 </ul>
 
-<h2>Data quality</h2>
+<h2 data-page="quality">Data quality</h2>
 <p>
   The map page shows a data-quality panel for every city. It runs these checks:
 </p>

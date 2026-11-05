@@ -101,6 +101,8 @@ def main(argv: list[str] | None = None) -> None:
     ap.add_argument("-v", "--verbose", action="store_true")
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list", help="list configured cities and their processing state")
+    sub.add_parser("demography", help="population per city and territory mode from data/demography (all years)")
+    sub.add_parser("agglomeration", help="drive times from every city to all settlements (Агломерації page)")
     sp = sub.add_parser("serve", help="preview the web app locally (with HTTP Range support)")
     sp.add_argument("--port", type=int, default=8000)
     for name in ["download", "run", *STAGES]:
@@ -128,6 +130,16 @@ def main(argv: list[str] | None = None) -> None:
             state = json.loads(sf.read_text()) if sf.exists() else {}
             print(f"{c.id:12s} {c.name:15s} relation {c.boundary_relation:<10d} source {c.source:28s} "
                   f"stages done: {', '.join(state) or '-'}")
+        return
+
+    if args.cmd == "demography":
+        from urbanfp.demography import build_demography
+        build_demography()
+        return
+
+    if args.cmd == "agglomeration":
+        from urbanfp.agglomeration import build_agglomeration
+        build_agglomeration()
         return
 
     if args.cmd == "serve":

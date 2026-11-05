@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-10-26T17:32:10+00:00",
+ "generated_at": "2026-11-03T14:06:55+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -454,6 +454,7 @@
    "notes_uk": "Місто зі спеціальним статусом. У межах міста — великі ліси та заплави Дніпра.",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -491,6 +492,7 @@
    "notes_uk": "Власне місто (без решти Львівської міської громади).",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -528,6 +530,7 @@
    "notes_uk": "Власне місто (без решти Одеської міської громади).",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -565,6 +568,7 @@
    "notes_uk": "Власне місто (без решти Харківської міської громади).",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -602,6 +606,7 @@
    "notes_uk": "Власне місто (без решти Дніпровської міської громади).",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -639,6 +644,7 @@
    "notes_uk": "Власне місто. Межа в OSM (~314 км²) дещо менша за офіційну площу (~331 км²).",
    "group": "million",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -676,6 +682,7 @@
    "notes_uk": "Тимчасово окуповане з 2014 року; дані OSM можуть бути менш повними чи актуальними, ніж в інших містах. Межа в OSM (~401 км²) більша за офіційну площу міста (~358 км²).",
    "group": "million",
    "occupied": true,
+   "occupied_since": 2014,
    "modes": {
     "city": {
      "status": "ok",
@@ -713,6 +720,7 @@
    "notes_uk": "Власне місто; простягається на ~60 км з півночі на південь уздовж залізорудного басейну, з великими гірничими та промисловими територіями. Межа в OSM (~462 км²) дещо більша за офіційну площу (~430 км²).",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -750,6 +758,7 @@
    "notes_uk": "Межа міста як населеного пункту в OSM (~41 км², включно з Угорниками). Микитинці та Хриплин, приєднані до міста у 2006 році, в OSM позначені як окремі населені пункти й не враховані; офіційна площа міста — ~84 км².",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -787,6 +796,7 @@
    "notes_uk": "Власне місто (без решти Тернопільської міської громади). Включає Тернопільський став — велике водосховище в центрі міста.",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -824,6 +834,7 @@
    "notes_uk": "Власне місто (без решти Чернівецької міської громади). Розташоване на обох берегах Пруту.",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -861,6 +872,7 @@
    "notes_uk": "Власне місто (без решти Луцької міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -898,6 +910,7 @@
    "notes_uk": "Власне місто (без решти Житомирської міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -935,6 +948,7 @@
    "notes_uk": "Власне місто (без решти Полтавської міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -972,6 +986,7 @@
    "notes_uk": "Власне місто (без решти Сумської міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1009,6 +1024,7 @@
    "notes_uk": "Власне місто (без решти Вінницької міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1046,6 +1062,7 @@
    "notes_uk": "Ужгородська міська громада складається лише з міста.",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1083,6 +1100,7 @@
    "notes_uk": "Межа міста за OSM (відношення з admin_level 10); громада додає близько 1,6 км².",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1120,6 +1138,7 @@
    "notes_uk": "Власне місто (без решти Рівненської міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1157,6 +1176,7 @@
    "notes_uk": "Миколаїв у Миколаївській області (південь України). Міська громада складається лише з міста; межа охоплює водні простори річок.",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1194,6 +1214,7 @@
    "notes_uk": "Власне місто (без решти Білоцерківської міської громади). Київська область.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1231,6 +1252,7 @@
    "notes_uk": "Власне місто (без решти Херсонської міської громади). Було окуповане з березня по листопад 2022 року; лівий берег Дніпра навпроти міста залишається окупованим. Час доїзду розраховано за дорожньою мережею OSM як вона нанесена, зокрема з переправами, які можуть бути зруйновані.",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1268,6 +1290,7 @@
    "notes_uk": "Власне місто (без решти Ковельської міської громади). Волинська область.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1305,6 +1328,7 @@
    "notes_uk": "Власне місто (без решти Мукачівської міської громади). Закарпатська область.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1342,6 +1366,7 @@
    "notes_uk": "Власне місто (без решти Кам'янської міської громади). Дніпропетровська область.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1379,6 +1404,7 @@
    "notes_uk": "Тимчасово окупований з 2022 року; значну частину міста зруйновано, дані OSM можуть не відображати поточний стан. Відношення межі має admin_level 10.",
    "group": "other",
    "occupied": true,
+   "occupied_since": 2022,
    "modes": {
     "city": {
      "status": "ok",
@@ -1416,6 +1442,7 @@
    "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.",
    "group": "regional",
    "occupied": true,
+   "occupied_since": 2014,
    "modes": {
     "city": {
      "status": "ok",
@@ -1453,6 +1480,7 @@
    "notes_uk": "Власне місто (без решти Краматорської міської громади). Донецька область.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1490,6 +1518,7 @@
    "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть не відображати руйнувань. Луганська область.",
    "group": "other",
    "occupied": true,
+   "occupied_since": 2022,
    "modes": {
     "city": {
      "status": "ok",
@@ -1527,6 +1556,7 @@
    "notes_uk": "Тимчасово окупований з 2014 року. Місто зі спеціальним статусом; використано власне місто (≈155 км²), а не всю територію зі спецстатусом (≈3100 км² разом з морем). Рівня громади немає. Дані OSM можуть бути менш повними чи актуальними.",
    "group": "regional",
    "occupied": true,
+   "occupied_since": 2014,
    "modes": {
     "city": {
      "status": "ok",
@@ -1539,6 +1569,44 @@
     "greater": {
      "status": "ok",
      "area_km2": 178.37
+    }
+   }
+  },
+  {
+   "id": "simferopol",
+   "name": "Simferopol",
+   "name_local": "Сімферополь",
+   "country": "UA",
+   "area_km2": 89.976,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.115161,
+    44.949122
+   ],
+   "bounds": [
+    34.028923,
+    44.890826,
+    34.198916,
+    45.00425
+   ],
+   "osm_relation": 3030295,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Capital of the Autonomous Republic of Crimea. No hromada level. OSM has no KATOTTG codes here, so census settlements are matched to OSM places by name.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Столиця Автономної Республіки Крим. Рівня громади немає. В OSM тут немає кодів КАТОТТГ, тож н.п. перепису зіставлено з місцями OSM за назвою.",
+   "group": "regional",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 89.976
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 89.976
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 166.691
     }
    }
   },
@@ -1564,6 +1632,7 @@
    "notes_uk": "Тимчасово окупована з 2014 року; дані OSM можуть бути менш повними чи актуальними. Відношення межі має admin_level 10.",
    "group": "other",
    "occupied": true,
+   "occupied_since": 2014,
    "modes": {
     "city": {
      "status": "ok",
@@ -1601,6 +1670,7 @@
    "notes_uk": "Власне місто (без решти Хмельницької міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1638,6 +1708,7 @@
    "notes_uk": "Власне місто (без решти Кропивницької міської громади).",
    "group": "regional",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1675,6 +1746,7 @@
    "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область. Межа міста в OSM виходить за межу громади (~3,5 км²); режим громади охоплює все місто.",
    "group": "other",
    "occupied": true,
+   "occupied_since": 2022,
    "modes": {
     "city": {
      "status": "ok",
@@ -1712,6 +1784,7 @@
    "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область, на узбережжі Азовського моря.",
    "group": "other",
    "occupied": true,
+   "occupied_since": 2022,
    "modes": {
     "city": {
      "status": "ok",
@@ -1749,6 +1822,7 @@
    "notes_uk": "Власне місто (без решти Кременчуцької міської громади). Полтавська область, на обох берегах Дніпра.",
    "group": "other",
    "occupied": false,
+   "occupied_since": null,
    "modes": {
     "city": {
      "status": "ok",
@@ -1761,6 +1835,82 @@
     "greater": {
      "status": "ok",
      "area_km2": 149.588
+    }
+   }
+  },
+  {
+   "id": "uman",
+   "name": "Uman",
+   "name_local": "Умань",
+   "country": "UA",
+   "area_km2": 44.572,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.219406,
+    48.75921
+   ],
+   "bounds": [
+    30.167088,
+    48.721224,
+    30.298544,
+    48.822831
+   ],
+   "osm_relation": 3058556,
+   "notes": "City proper (not the whole Uman urban hromada). Cherkasy Oblast.",
+   "notes_uk": "Власне місто (без решти Уманської міської громади). Черкаська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 44.572
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 68.151
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 82.947
+    }
+   }
+  },
+  {
+   "id": "chernihiv",
+   "name": "Chernihiv",
+   "name_local": "Чернігів",
+   "country": "UA",
+   "area_km2": 83.85,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    31.292737,
+    51.500121
+   ],
+   "bounds": [
+    31.207064,
+    51.436661,
+    31.382373,
+    51.549445
+   ],
+   "osm_relation": 1952636,
+   "notes": "City proper. The OSM city boundary extends ~2 km² beyond the hromada boundary; Hromada mode includes the whole city.",
+   "notes_uk": "Власне місто. Межа міста в OSM виходить за межу громади (~2 км²); режим громади охоплює все місто.",
+   "group": "regional",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 83.85
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 86.591
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 131.503
     }
    }
   }

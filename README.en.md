@@ -8,7 +8,7 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil, Chernivtsi, Lutsk, Zhytomyr, Poltava, Sumy, Vinnytsia, Uzhhorod, Cherkasy, Rivne, Mykolaiv, Bila Tserkva, Kherson, Kovel, Mukachevo, Kamianske, Mariupol, Luhansk, Kramatorsk, Lysychansk, Sevastopol, Horlivka, Khmelnytskyi, Kropyvnytskyi, Melitopol, Berdiansk, Kremenchuk**. More can be added in
+Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil, Chernivtsi, Lutsk, Zhytomyr, Poltava, Sumy, Vinnytsia, Uzhhorod, Cherkasy, Rivne, Mykolaiv, Bila Tserkva, Kherson, Kovel, Mukachevo, Kamianske, Mariupol, Luhansk, Kramatorsk, Lysychansk, Sevastopol, Simferopol, Horlivka, Khmelnytskyi, Kropyvnytskyi, Melitopol, Berdiansk, Kremenchuk, Uman, Chernihiv**. More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |
@@ -41,6 +41,13 @@ Documentation (in English):
   together and panning independently. The sidebar compares the two cities category by category.
 * **City comparison:** stacked bars (% or km²) for a chosen set of cities (multi-select filter). Click a category
   to focus on it and rank the cities by it. Breakdown by sub-category; collapsible data table.
+* **Population:** de facto population from the State Statistics Service of Ukraine (1 January 2022) or the 2001 census for the city,
+  hromada and Greater City, population density and the population of each suburb; a "Population" breakdown on
+  the comparison screen (count or density). A switch selects the source (year).
+* **Agglomerations:** a separate page with a bar chart and a map of population circles for each city
+  together with settlements within a drive time (city only, 10, 20, 30, 45 min, 1, 1.5, 2, 2.5 or 3 h). When two
+  centres fall within one range, the larger absorbs the smaller only if it is more than twice its size;
+  otherwise both stay centres and the settlements between them join the one reached faster.
 * **Languages:** Ukrainian (default) and English, remembered in a cookie.
 * **Mobile:** tiled rasters and vector tiles. Kyiv needs ~14 MB of GPU memory at city scale.
 * Shareable links: city, second city, view and selected cities are kept in the URL.
@@ -68,6 +75,15 @@ python -m urbanfp run --all --refresh  # re-download the latest OSM extract firs
 python -m urbanfp run kyiv --force     # ignore caches, recompute everything
 python -m urbanfp run --all --from overlay   # restart from a given stage
 python -m urbanfp serve                # preview the web app at http://localhost:8000
+```
+
+Population (separate command, after the cities are processed): State Statistics workbooks live in
+`data/demography/raw/` (`population_<YYYY-MM-DD>_derzhstat.xlsx`: Derzhstat with KATOTTG codes;
+`population_<YYYY-MM-DD>_census.xlsx`: a census, matched to the codes by name); each file becomes a year in the app:
+
+```bash
+python -m urbanfp demography           # writes web/data/demography.json for all cities and years
+python -m urbanfp agglomeration        # drive times from the cities to all settlements ("Agglomerations" page)
 ```
 
 Each stage can also be run on its own: `download`, `extract`, `classify`, `overlay`, `stats`, `export`.

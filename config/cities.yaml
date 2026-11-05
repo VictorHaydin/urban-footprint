@@ -20,6 +20,8 @@
 #                       modes (see docs/SUBURBS.md). Extraction then covers the wider region.
 #   hromada_relation    OSM relation of the city's hromada (admin_level=7), for Hromada mode.
 #                       Omit when the city has no hromada level (Kyiv).
+#   katottg             (optional) KATOTTG code of the city for population data (data/demography); found
+#                       by name when empty. Needed where the name is ambiguous (Mykolaiv) or for Kyiv
 #   occupied_since      (optional) year of temporary occupation. Cities occupied before the 2020 hromada
 #                       reform use the city boundary in Hromada mode (their hromada exists on paper only)
 #   suburbs_radius_km   (optional, default 25) search radius for Greater City settlements
@@ -40,6 +42,7 @@ cities:
     name_local: Київ
     country: UA
     boundary_relation: 421866
+    katottg: UA80000000000093317
     territories: true
     group: million
     notes: City with special status (admin_level=4). Boundary includes large forest and floodplain areas.
@@ -249,6 +252,7 @@ cities:
     name_local: Миколаїв
     country: UA
     boundary_relation: 11622860
+    katottg: UA48060150010035747
     group: regional
     territories: true
     hromada_relation: 11859916
@@ -363,6 +367,17 @@ cities:
     notes: Temporarily occupied since 2014. City with special status; the city proper is used (≈155 km²), not the whole special-status territory (≈3,100 km² incl. sea). No hromada level. OSM mapping may be less complete or current.
     notes_uk: Тимчасово окупований з 2014 року. Місто зі спеціальним статусом; використано власне місто (≈155 км²), а не всю територію зі спецстатусом (≈3100 км² разом з морем). Рівня громади немає. Дані OSM можуть бути менш повними чи актуальними.
 
+  - id: simferopol
+    name: Simferopol
+    name_local: Сімферополь
+    country: UA
+    boundary_relation: 3030295
+    group: regional
+    territories: true
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Capital of the Autonomous Republic of Crimea. No hromada level. OSM has no KATOTTG codes here, so census settlements are matched to OSM places by name.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Столиця Автономної Республіки Крим. Рівня громади немає. В OSM тут немає кодів КАТОТТГ, тож н.п. перепису зіставлено з місцями OSM за назвою.
+
   - id: horlivka
     name: Horlivka
     name_local: Горлівка
@@ -428,3 +443,24 @@ cities:
     hromada_relation: 12192260
     notes: City proper (not the whole Kremenchuk urban hromada). Poltava Oblast, on both banks of the Dnipro.
     notes_uk: Власне місто (без решти Кременчуцької міської громади). Полтавська область, на обох берегах Дніпра.
+
+  - id: uman
+    name: Uman
+    name_local: Умань
+    country: UA
+    boundary_relation: 3058556
+    territories: true
+    hromada_relation: 13631774
+    notes: City proper (not the whole Uman urban hromada). Cherkasy Oblast.
+    notes_uk: Власне місто (без решти Уманської міської громади). Черкаська область.
+
+  - id: chernihiv
+    name: Chernihiv
+    name_local: Чернігів
+    country: UA
+    boundary_relation: 1952636
+    group: regional
+    territories: true
+    hromada_relation: 12092168
+    notes: City proper. The OSM city boundary extends ~2 km² beyond the hromada boundary; Hromada mode includes the whole city.
+    notes_uk: Власне місто. Межа міста в OSM виходить за межу громади (~2 км²); режим громади охоплює все місто.

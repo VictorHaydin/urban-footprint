@@ -67,12 +67,15 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kramatorsk | 3936275 | City proper, Donetsk Oblast. OSM boundary ≈ 59.7 km² |
 | Lysychansk | 3678529 | Temporarily occupied since 2022. OSM boundary ≈ 52.5 km² |
 | Sevastopol | 3030976 | Temporarily occupied since 2014. City with special status: the city proper is used, not the whole special-status territory (≈ 3,100 km² incl. sea); no hromada level. Includes Sevastopol Bay (counted as water, bays & sea). OSM boundary ≈ 154.7 km², land and bays ≈ 152.8 km² (open sea removed) |
+| Simferopol | 3030295 | Temporarily occupied since 2014; capital of the Autonomous Republic of Crimea; no hromada level. City outline is the OSM `place=city` relation. No population data from Derzhstat; 2001 census only. |
 | Horlivka | 3862199 | Temporarily occupied since 2014. Relation tagged admin_level 10. OSM boundary ≈ 183.4 km² |
 | Khmelnytskyi | 1792913 | City proper. OSM boundary ≈ 98.3 km² |
 | Kropyvnytskyi | 2825228 | City proper. OSM boundary ≈ 96.4 km² |
 | Melitopol | 2318317 | Temporarily occupied since 2022. City boundary extends ~3.5 km² beyond the hromada in OSM. OSM boundary ≈ 53.4 km² |
 | Berdiansk | 1280581 | Temporarily occupied since 2022. On the Sea of Azov. OSM boundary ≈ 109.6 km², of which ≈ 24.3 km² is sea (removed): land ≈ 85.4 km² |
 | Kremenchuk | 2320579 | City proper, Poltava Oblast, on both banks of the Dnipro. OSM boundary ≈ 95.4 km² |
+| Uman | 3058556 | City proper, Cherkasy Oblast. OSM boundary ≈ 44.6 km² |
+| Chernihiv | 1952636 | City proper. City boundary extends ~2 km² beyond the hromada in OSM. OSM boundary ≈ 83.9 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
@@ -191,7 +194,85 @@ hidden by higher-priority classes.
 | `unmatched_features` | OSM objects with relevant keys that no rule matched (listed by tag, with example ids) |
 | `invalid_geometries`, `geometry_failures` | repaired or failed geometries |
 
-## 6. Assumptions, data gaps and known inaccuracies
+## 6. Population
+
+Sources (the year switch in the app chooses one):
+* **2022**: State Statistics Service of Ukraine (Держстат), *de facto population (estimate)* by region,
+  district, hromada and settlement on 1 January, with KATOTTG codes (`population_2022-01-01_derzhstat.xlsx`).
+* **2001**: the All-Ukrainian census of 5 December 2001, de facto population of every settlement, with its 2001
+  name, type, oblast, raion and council but no codes (`population_2001-12-05_census.xlsx`, compiled from the
+  Pop-stat regional tables of the census results).
+
+The original workbooks are kept in `data/demography/raw/`; `python -m urbanfp demography` parses them
+(`data/demography/population_<year>.csv`) and writes `web/data/demography.json`.
+
+**Census matching.** Census rows are given today's KATOTTG code by name within the oblast, with candidates from
+the Derzhstat table and from OSM `place` points (`katotth`, current name and `old_name`, which covers most
+decommunisation renamings). Namesakes are told apart by the 2001 council (the hromada most other settlements of
+the same council went to), then by the 2001 raion, then by the type closest to the 2001 one; a second pass
+ignores spelling variants (є/е, і/и). A few renamings OSM does not record and settlements merged into a city
+since 2001 (Inhulets → Kryvyi Rih, Taromske → Dnipro) are listed in `CENSUS_RENAMES`. Settlements merged into
+one are summed. Where OSM has no code (most of Crimea), a place point is used instead, identified by its OSM id
+(`OSM<id>`) and assigned to the oblast of the nearest coded point; it is only used when no coded settlement has
+that name. 28,998 of 29,962 settlements (98.9% of the population) are matched; the unmatched are mostly small
+villages that no longer exist or have been renamed. Hromada totals for 2001
+are sums of their matched settlements; the city row is the city's own census figure (the 2001 city, which
+may differ from today's boundary).
+
+* **City**: the settlement row of the city ("місто Х"), found by name or by `katottg` in the config (Kyiv,
+  Mykolaiv).
+* **Hromada**: the hromada total. Where Hromada mode shows the city (no hromada level; occupied before 2020),
+  the city's population is used.
+* **Greater City**: the city plus every included settlement. Settlements are matched by KATOTTG code from the
+  OSM `katotth` tag (on the settlement outline, or on its `place` point inside it), otherwise by name (same
+  type, unique in the surrounding hromadas, raions or oblasts). On 2022 data 837 of 856 included settlements
+  are matched (833 by code); the rest are mostly unnamed places or not registered as settlements, so the
+  total is a slight lower bound.
+* **Density** = population / territory area (land, incl. forests, water and fields), so it depends on where
+  boundaries are drawn.
+* Known gaps: Crimea and Sevastopol are not covered by Derzhstat (Simferopol and Sevastopol have 2001 census data only). For territories occupied in 2014 figures
+  are estimates. Where the OSM city boundary differs from the official one (Ivano-Frankivsk excludes
+  Mykytyntsi, Khryplyn and Uhornyky, which are officially part of the city), the population refers to the
+  official city and the density is over-estimated.
+
+### Agglomerations: city population with surroundings by drive time ("Агломерації" page)
+
+`python -m urbanfp agglomeration` builds a national car road graph from the OSM extract (all `highway` classes
+except service roads, tracks and paths; same free-flow speeds as Greater City mode) and locates every
+settlement of every year (Derzhstat, and census rows matched as above) at the OSM `place` point with the
+same KATOTTG code (28,580 of 28,657 Derzhstat settlements; 100% of the population). For every configured city it computes the drive time from any road inside the city boundary to
+every settlement within 3 h (settlement point snapped to the nearest road, at most 3 km away).
+
+The graph is the **intact road network**, as before the full-scale war, consistent with the free-flow
+assumption:
+* roads mapped as destroyed or out of use are kept: lifecycle tags (`ruined:`, `destroyed:`, `damaged:`,
+  `disused:highway=*`, also with `highway=destroyed`) and destroyed bridges retagged `highway=proposed` +
+  `destroyed`/`ruins` (the M-18 bridge south of Zaporizhzhia, the Antonivskyi bridge in Kherson);
+* `access=no` on main roads (motorway to tertiary) is ignored (front-line closures, checkpoints);
+* along the front line OSM roads are cut by moving way ends a few metres apart without a shared node. Every
+  dead end is joined to the nearest road vertex ahead of it within 30 m, or within 150 m of another main road
+  for main-road dead ends (cut dual carriageways), driven at 20 km/h. This also closes ordinary mapping gaps.
+Without this, Zaporizhzhia → Melitopol took 307 min (detour via Huliaipole) instead of 96 min, and Kherson →
+Melitopol 401 min instead of 167 min. The Kakhovka dam road (mapped as proposed, without destroyed tags) is
+not restored.
+
+The page joins settlements for a threshold of 0 (city only), 10, 20, 30, 45, 60, 90, 120, 150 or 180 min:
+* centres are taken from the largest city (own population) down; a centre within the threshold of an active
+  centre more than twice its size becomes inactive and joins it (the fastest reached one; e.g. Kamianske →
+  Dnipro at 20 min). Centres of comparable size (ratio ≤ 2, e.g. Dnipro with Zaporizhzhia and Kryvyi Rih) both stay
+  active and compete for the settlements between them;
+* every other settlement joins the active centre it is reached from fastest, if within the threshold.
+* the two rules are independent: an absorbed centre's surroundings do not follow it but join the nearest
+  active centre, so an agglomeration can have outlying islands. At 3 h Mukachevo joins Lviv (176 min; Lviv is
+  more than twice its size, Uzhhorod at 27 min is not), while Svaliava, Berehove, Irshava and Khust, closest to
+  Mukachevo, join Uzhhorod, which they reach faster than Lviv.
+
+At 10 min the result is close to, but not the same as, Greater City mode: there the drive time is the median
+over a settlement's built-up road points and the whole settlement territory is added; here it is the time to
+the settlement point. No traffic, ferries or border crossings are modelled; destroyed bridges may still be in
+OSM.
+
+## 7. Assumptions, data gaps and known inaccuracies
 
 * **Mapping completeness differs between cities.** A lower "green" share can mean less detailed mapping.
   Check the `unclassified` share and the "residential land" and "other mapped land" remainders before comparing. Kyiv, Lviv and Odesa

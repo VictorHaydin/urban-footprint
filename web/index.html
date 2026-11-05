@@ -19,6 +19,7 @@
     <nav class="tabs" role="tablist">
       <button class="tab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
       <button class="tab" data-view="compare" role="tab" data-i18n="tab.compare">Порівняння міст</button>
+      <button class="tab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
       <button class="tab" data-view="about" role="tab" data-i18n="tab.about">Методика та дані</button>
     </nav>
     <div class="spacer"></div>
@@ -41,6 +42,7 @@
         </label>
         <div class="territory" id="territoryMap"></div>
         <div id="cityHeader"></div>
+        <div id="demographyPanel"></div>
         <div class="map-controls">
           <label><input type="checkbox" id="basemapToggle" checked> <span data-i18n="map.basemap">Базова мапа</span></label>
           <label><input type="checkbox" id="boundaryToggle" checked> <span data-i18n="map.boundary">Межа</span></label>
@@ -97,6 +99,24 @@
           <div id="compareTable" class="table-wrap"></div>
         </details>
       </div>
+    </section>
+
+    <!-- POPULATION VIEW: cities with their surroundings by drive time -->
+    <section id="view-population" class="view">
+      <aside class="sidebar pop-sidebar">
+        <h2 class="pop-title" data-i18n="pop.title">Агломерації</h2>
+        <div class="pop-controls">
+          <span class="terr-label" data-i18n="pop.threshold">Разом із населеними пунктами в межах доїзду</span>
+          <div class="unit-toggle pop-threshold" id="popThreshold" role="group"></div>
+          <div id="popYear" class="small"></div>
+        </div>
+        <p class="hint" id="popHint"></p>
+        <div class="pop-legend" id="popLegend"></div>
+        <div id="popChart" class="pop-chart"></div>
+        <div id="popInactive" class="pop-inactive"></div>
+        <p class="compare-note" id="popNote"></p>
+      </aside>
+      <div class="map-wrap"><div class="map pop-map" id="popMap"></div></div>
     </section>
 
     <!-- ABOUT VIEW -->

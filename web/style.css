@@ -311,3 +311,58 @@ details.panel > summary h3 { font-size: 14px; }
 .terr-mark { color: var(--warn); cursor: help; font-weight: 400; }
 .settlements .set-list { list-style: none; padding: 0; margin: 0; columns: 2; column-gap: 16px; font-size: 13px; }
 .settlements .set-list li { display: flex; justify-content: space-between; gap: 6px; break-inside: avoid; padding: 1px 0; }
+
+/* ---- demography ---- */
+.demo-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.demo-head h3 { margin: 0; }
+.demo-big { font-size: 22px; font-weight: 600; margin: 4px 0 2px; }
+.demo-note { color: var(--muted); margin-top: 4px; }
+.year-select { font: inherit; font-size: 12px; padding: 1px 4px; }
+.demo-year { font-size: 13px; color: var(--muted); }
+
+/* ---- population view (cities with their surroundings by drive time) ---- */
+.pop-sidebar { width: 460px; }
+.pop-title { font-size: 18px; margin: 2px 0 8px; }
+.pop-controls { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.pop-controls .terr-label { color: var(--muted); font-size: 13px; }
+.pop-threshold { flex-wrap: wrap; margin: 0; }
+.pop-threshold button { padding: 4px 8px; }
+.pop-map { position: absolute; inset: 0; }
+.pop-chart { display: flex; flex-direction: column; gap: 3px; }
+.pop-row { display: grid; grid-template-columns: 112px 1fr 78px; gap: 8px; align-items: center; cursor: pointer;
+  border-radius: 4px; padding: 1px 2px; }
+.pop-row:hover, .pop-row.sel { background: var(--bar-bg); }
+.pop-row .name { font-size: 13px; text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pop-row .val { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.pop-row .bar { display: flex; height: 16px; border-radius: 3px; overflow: hidden; transition: width .35s ease; }
+.pop-row .bar i { display: block; height: 100%; transition: width .35s ease; }
+.pop-row.dim { opacity: .35; }
+.pop-inactive { margin-top: 10px; font-size: 12px; color: var(--muted); }
+.pop-inactive b { color: var(--text); font-weight: 600; }
+@media (max-width: 760px) {
+  .view.active#view-population { flex-direction: column-reverse; }
+  .pop-sidebar { width: 100%; border-right: none; border-top: 1px solid var(--border); max-height: 50vh; }
+  .pop-row { grid-template-columns: 90px 1fr 66px; }
+}
+
+/* population map: settlement size classes (see popClass in app.js) */
+.pop-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; margin: -4px 0 10px; font-size: 12px; color: var(--muted); }
+.pop-legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.pop-legend-item i { display: inline-block; border-radius: 50%; background: #3b6fb6; }
+.pop-legend-item.cls3 i { width: 12px; height: 12px; background: rgba(59, 111, 182, 0.45); border: 1.2px solid #3b6fb6; box-sizing: border-box; }
+.pop-legend-item.cls2 i { width: 7px; height: 7px; }
+.pop-legend-item.cls1 i { width: 5px; height: 5px; opacity: 0.6; }
+.pop-legend-item.cls0 i { width: 4px; height: 4px; opacity: 0.25; }
+.pop-legend-item.outside i { width: 6px; height: 6px; background: #8d9299; }
+
+/* Method & data: sub-pages */
+.about-nav { position: sticky; top: -16px; z-index: 1; display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 0 10px;
+  margin-bottom: 4px; background: var(--bg); border-bottom: 1px solid var(--border); }
+.about-nav button, .about-pager button { font: inherit; font-size: 13px; padding: 5px 12px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel); color: inherit; cursor: pointer; }
+.about-nav button.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.about-page[hidden] { display: none; }
+.about-page > h2:first-child { margin-top: 16px; }
+.about-pager { display: flex; justify-content: space-between; gap: 8px; margin-top: 32px; padding-top: 12px;
+  border-top: 1px solid var(--border); }
+.about-pager button { background: none; }

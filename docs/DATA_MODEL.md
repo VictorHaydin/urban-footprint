@@ -41,6 +41,9 @@ web/data/
                               z6–13 ≈ 6 m/px; alpha = share of the pixel covered by the category).
                               Tiled so browsers only load visible tiles; full-size images exhausted
                               mobile GPU memory
+    demography.json           population per city, year and territory mode (python -m urbanfp demography)
+    agglomeration.json        settlements of Ukraine (code, name, point, population per year) and drive times
+                              from every city within 3 h, tenths of a minute (python -m urbanfp agglomeration)
     <city>/territories.geojson  outline per territory mode (city / hromada / greater)
     <city>/settlements.geojson  Greater City settlements (territorial cities)
     <city>/features.pmtiles   vector tiles z14, layer "features"

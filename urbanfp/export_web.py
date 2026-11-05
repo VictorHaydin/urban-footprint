@@ -355,7 +355,7 @@ def export_index(cls: Classification) -> None:
                        "area_km2": s["area"]["boundary_km2"], "osm_timestamp": s["osm_timestamp"],
                        "center": s["map"]["center"], "bounds": s["map"]["bounds"],
                        "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk,
-                       "group": c.group, "occupied": c.occupied,
+                       "group": c.group, "occupied": c.occupied, "occupied_since": c.occupied_since,
                        "modes": {m: {"status": d.get("status"), "area_km2": d["area"]["boundary_km2"]}
                                  for m, d in (s.get("modes") or {}).items()}})
     index = {

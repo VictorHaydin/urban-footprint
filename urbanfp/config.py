@@ -57,6 +57,7 @@ class City:
     group: str = ""
     territories: bool = False          # compute Hromada / Greater City modes (docs/SUBURBS.md)
     hromada_relation: int | None = None
+    katottg: str = ""                  # KATOTTG code of the city (demography); found by name if empty
     occupied_since: int | None = None  # year of (temporary) occupation, if occupied
     suburbs_radius_km: float = 25.0
 

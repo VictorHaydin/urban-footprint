@@ -23,6 +23,11 @@ const state = {
   subPctOfCat: true,      // map sidebar: sub-category % relative to its category (true) or to the city (false)
   territory: 'city',      // territory mode: city | hromada | greater (docs/SUBURBS.md); compare screen + map pane 0
   territory2: 'city',     // territory mode of map pane 1 (split screen), so a city can be compared with itself
+  aboutPage: 'overview',   // sub-page of the Method & data view
+  demoYear: null,         // population (demography) reference year; null = latest available
+  popMetric: 'pop',       // compare screen, population breakdown: pop | density
+  popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
+  popSelected: null,      // population page: highlighted centre
 };
 const TERRITORIES = ['city', 'hromada', 'greater'];
 
@@ -142,6 +147,66 @@ function territoryNote(s) {
   if (s._status === 'ok' || s._want === 'city') return null;
   return t(`terr.note.${s._status}`, { mode: t(`terr.${s._want}`) });
 }
+// ------------------------------------------------------------------ demography
+/*
+ * data/demography.json (python -m urbanfp demography): population per city, year and territory mode from
+ * Derzhstat (de facto population on 1 January) or a census (sources[year].kind). Optional: the app works without it.
+ */
+let demography = null;
+async function loadDemography() {
+  if (demography !== null) return demography;
+  try { demography = await getJSON(`${DATA}/demography.json`); } catch { demography = { years: [], cities: {} }; }
+  const years = demography.years || [];
+  if (!years.includes(state.demoYear)) state.demoYear = years.length ? years[years.length - 1] : null;
+  return demography;
+}
+const demoYears = () => demography?.years || [];
+const isCensus = (y = state.demoYear) => demography?.sources?.[y]?.kind === 'census';
+/** "on 1 January 2022" / "2001 census". */
+const yearLabel = (y) => t(isCensus(y) ? 'demo.census' : 'demo.asOf', { year: y });
+/** Source line of the selected year. */
+const demoSource = () => t(isCensus() ? 'demo.sourceCensus' : 'demo.source', { year: state.demoYear });
+
+/** Population of the territory shown by stats view `s` in the selected year, or null (no data). */
+function popOf(s, year = state.demoYear) {
+  const d = demography?.cities?.[s.city.id]?.[year];
+  if (!d?.available) return null;
+  const m = d.modes[s._mode] || d.modes.city;
+  const area = s.area.boundary_km2;
+  return {
+    pop: m.population, cityPop: d.modes.city.population, density: m.population / Math.max(area, 1e-9),
+    settlements: m.settlements || [], unmatched: m.unmatched || [],
+  };
+}
+/** Population of a Greater City settlement (by OSM id) in the selected year, or undefined. */
+function settlementPop(cityId, osm) {
+  const g = demography?.cities?.[cityId]?.[state.demoYear]?.modes?.greater;
+  return g?.settlements?.find((x) => x.osm === osm)?.population;
+}
+/** Year label, or a year switch when several years are available. */
+function demoYearControl() {
+  const years = demoYears();
+  if (years.length < 2) return el('span', { class: 'small' }, yearLabel(state.demoYear));
+  const sel = el('select', { class: 'year-select', 'aria-label': t('demo.year') },
+    years.map((y) => el('option', { value: y }, yearLabel(y))));
+  sel.value = state.demoYear;
+  sel.addEventListener('change', () => setDemoYear(+sel.value));
+  return sel;
+}
+function setDemoYear(year) {
+  if (!demoYears().includes(year) || year === state.demoYear) return;
+  state.demoYear = year;
+  try { localStorage.setItem('demoYear', String(year)); } catch { /* storage unavailable */ }
+  writeHash();
+  renderAll();
+}
+/** "rest" label for the population outside the city: rest of hromada / suburbs. */
+const restLabel = (mode) => t(mode === 'greater' ? 'demo.restGreater' : 'demo.restHromada');
+/** Note on Derzhstat estimates for territories occupied before the reference year. */
+function demoEstimateNote(c) {
+  return c.occupied_since && c.occupied_since < state.demoYear ? t('demo.estimate', { year: c.occupied_since }) : null;
+}
+
 const catDef = (id) => state.index.categories.find((c) => c.id === id);
 const subDef = (cat, sub) => catDef(cat)?.subcategories.find((s) => s.id === sub);
 
@@ -150,6 +215,9 @@ function readHash() {
   const p = new URLSearchParams(location.hash.slice(1));
   return {
     city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'), territory2: p.get('t2'),
+    year: p.get('y') ? +p.get('y') : null,
+    threshold: p.get('th') != null ? +p.get('th') : null,
+    aboutPage: p.get('p'),
     cities: p.get('cities') ? p.get('cities').split(',') : null,
   };
 }
@@ -158,7 +226,11 @@ function writeHash() {
   if (state.city2) p.set('city2', state.city2);
   if (state.territory !== 'city') p.set('t', state.territory);
   if (state.city2) p.set('t2', state.territory2);
+  const years = demoYears();
+  if (state.demoYear && years.length && state.demoYear !== years[years.length - 1]) p.set('y', state.demoYear);
   if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
+  if (state.view === 'population') p.set('th', state.popThreshold);
+  if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
 }
 
@@ -580,6 +652,7 @@ function renderSidebar() {
     const note = territoryNote(x);
     if (note) head.append(el('div', { class: 'mode-note' }, s2 ? `${names[i]}: ${note}` : note));
   });
+  renderPopulationPanel(list, names);
   renderSettlements(list, names);
   renderUnitToggle($('#unitToggleMap'), [['pct', t('unit.pctArea')], ['km2', t('unit.km2')]]);
   $('#subPctToggle').hidden = state.unit === 'km2'; // only meaningful for percentages
@@ -800,12 +873,15 @@ function initCityFilter() {
 async function renderCompare() {
   const ids = compareCityIds();
   const all = await Promise.all(ids.map(loadStats));
+  await loadDemography();
+  if (state.breakdown === 'population' && !demoYears().length) state.breakdown = 'categories';
   const unitOpts = [['pct', t('unit.pctCity')], ['km2', t('unit.km2abs')]];
-  if (state.breakdown !== 'categories') {
+  if (state.breakdown !== 'categories' && state.breakdown !== 'population') {
     unitOpts.push(['pctcat', t('unit.pctOf', { what: label(catDef(state.breakdown)).toLowerCase() })]);
   }
   if (state.unit === 'pctcat' && state.breakdown === 'categories') state.unit = 'pct';
-  renderUnitToggle($('#unitToggleCompare'), unitOpts);
+  if (state.breakdown === 'population') renderPopMetricToggle();
+  else renderUnitToggle($('#unitToggleCompare'), unitOpts);
   renderTerritoryToggles();
   renderCityFilter();
 
@@ -813,6 +889,7 @@ async function renderCompare() {
   if (sel.dataset.lang !== getLang()) {
     sel.innerHTML = '';
     sel.append(el('option', { value: 'categories' }, t('cmp.all')));
+    if (demoYears().length) sel.append(el('option', { value: 'population' }, t('cmp.population')));
     for (const c of state.index.categories) {
       if (c.subcategories.length > 1) sel.append(el('option', { value: c.id }, t('cmp.byType', { cat: label(c) })));
     }
@@ -823,6 +900,10 @@ async function renderCompare() {
     sel.dataset.bound = '1';
   }
   sel.value = state.breakdown;
+  if (state.breakdown === 'population') {
+    renderPopulationCompare(all);
+    return;
+  }
 
   const defs = breakdownDefs();
   if (state.focus && !defs.some((d) => d.id === state.focus)) state.focus = null;
@@ -939,8 +1020,98 @@ async function renderCompare() {
   else $('#compareTable').innerHTML = '';
 }
 
+function renderPopMetricToggle() {
+  const box = $('#unitToggleCompare');
+  box.innerHTML = '';
+  for (const [id, text] of [['pop', t('demo.population')], ['density', `${t('demo.density')}, ${t('demo.perKm2')}`]]) {
+    box.append(el('button', {
+      class: state.popMetric === id ? 'active' : '',
+      onclick: () => { state.popMetric = id; renderCompare(); },
+    }, text));
+  }
+}
+
+/** Compare screen, "Population" breakdown: one bar per city (city + rest of the territory), or density. */
+function renderPopulationCompare(all) {
+  const density = state.popMetric === 'density';
+  $('#compareFocus').innerHTML = '';
+  $('#compareFocus').append(el('span', { class: 'demo-year' }, `${t('demo.title')}: `, demoYearControl()));
+  $('#compareHint').textContent = t(density ? 'cmp.hint.density' : 'cmp.hint.pop');
+  const chart = $('#compareChart');
+  chart.innerHTML = '';
+  if (!all.length) {
+    chart.append(el('p', { class: 'hint' }, t('cmp.noCities')));
+    $('#compareLegend').innerHTML = '';
+    $('#compareTable').innerHTML = '';
+    return;
+  }
+  const rows = all.map((s) => ({ s, p: popOf(s) }));
+  const value = (r) => (r.p ? (density ? r.p.density : r.p.pop) : -1);
+  rows.sort((a, b) => value(b) - value(a));
+  const max = Math.max(...rows.map(value), 1);
+  const CITY = '#4a5a6a', REST = '#a9b4bf';
+  for (const r of rows) {
+    const { s, p } = r;
+    const stack = el('div', { class: 'stack' });
+    if (p) {
+      stack.style.width = `${(100 * value(r)) / max}%`;
+      const parts = density ? [[p.pop, CITY, t('demo.density')]]
+        : [[p.cityPop, CITY, t('demo.cityOnly')], [p.pop - p.cityPop, REST, restLabel(s._mode)]];
+      const sum = parts.reduce((a, x) => a + x[0], 0);
+      for (const [v, color, name] of parts) {
+        if (v <= 0) continue;
+        const seg = el('div', { class: 'seg', style: `width:${(100 * v) / Math.max(sum, 1)}%;background:${color}` });
+        seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(s.city)}</b><br>` + (density
+          ? `${fmtInt(p.density)} ${t('demo.perKm2')}<br>${fmtInt(p.pop)} ${t('demo.people')} / ${num(s.area.boundary_km2, 1)} ${t('units.km2')}`
+          : `${name}: ${fmtInt(v)} ${t('demo.people')}<br>${t('demo.population')}: ${fmtInt(p.pop)}`)));
+        seg.addEventListener('mouseleave', hideTip);
+        stack.append(seg);
+      }
+    }
+    const note = territoryNote(s) || (p ? demoEstimateNote(cityById(s.city.id)) : t('demo.noData'));
+    chart.append(el('div', { class: 'chart-row' },
+      el('button', {
+        type: 'button', class: 'city link', title: t('cmp.openMap', { city: cityName(s.city) }),
+        onclick: () => { state.city = s.city.id; if (state.city2 === s.city.id) state.city2 = null; switchView('map'); },
+      }, cityName(s.city), note ? el('span', { class: 'terr-mark', title: note }, ' ⓘ') : null),
+      el('div', {}, stack),
+      el('div', { class: 'total' }, p ? (density ? `${fmtInt(p.density)} ${t('demo.perKm2')}` : fmtInt(p.pop)) : '—')));
+  }
+  const lg = $('#compareLegend');
+  lg.innerHTML = '';
+  if (!density) {
+    const modes = new Set(all.map((s) => s._mode).filter((m) => m !== 'city'));
+    lg.append(el('span', { class: 'legend-item' }, el('i', { style: `background:${CITY}` }), t('demo.cityOnly')));
+    for (const m of modes) lg.append(el('span', { class: 'legend-item' }, el('i', { style: `background:${REST}` }), restLabel(m)));
+  }
+  $('#compareNote').textContent = `${demoSource()}. ${t('cmp.popNote')}`;
+  const details = $('#compareTableDetails');
+  if (!details.dataset.bound) {
+    details.addEventListener('toggle', () => { if (details.open) renderCompareTable(); });
+    details.dataset.bound = '1';
+  }
+  if (details.open) renderCompareTable(all);
+  else $('#compareTable').innerHTML = '';
+}
+
+function renderPopulationTable(all) {
+  const head = el('tr', {}, ['cmp.city', 'demo.population', 'demo.cityOnly', 'about.area', 'demo.density'].map((k) => el('th', {}, t(k))));
+  const body = all.map((s) => {
+    const p = popOf(s);
+    return el('tr', {}, el('td', {}, cityName(s.city)),
+      el('td', {}, p ? fmtInt(p.pop) : '—'), el('td', {}, p ? fmtInt(p.cityPop) : '—'),
+      el('td', {}, num(s.area.boundary_km2, 1)), el('td', {}, p ? fmtInt(p.density) : '—'));
+  });
+  $('#compareTable').innerHTML = '';
+  $('#compareTable').append(el('table', {}, el('thead', {}, head), el('tbody', {}, body)));
+}
+
 async function renderCompareTable(statsList) {
   const all = statsList || await Promise.all(compareCityIds().map(loadStats));
+  if (state.breakdown === 'population') {
+    renderPopulationTable(all);
+    return;
+  }
   const head = el('tr', {}, el('th', {}, state.breakdown === 'categories' ? t('cmp.category') : label(catDef(state.breakdown))),
     ...all.flatMap((s) => [el('th', {}, `${cityName(s.city)}, ${t('units.km2')}`), el('th', {}, '%')]));
   const body = [];
@@ -967,17 +1138,61 @@ async function renderCompareTable(statsList) {
 }
 
 // ------------------------------------------------------------------ about
+/** Sub-pages of the Method & data page: an <h2 data-page="id"> in about*.html starts a new one. */
+const ABOUT_PAGES = ['overview', 'area', 'population', 'usage', 'quality'];
+
 async function renderAbout() {
   const a = $('#aboutContent');
   const lang = getLang();
-  if (a.dataset.loaded === lang) return;
-  try {
-    const r = await fetch(lang === 'uk' ? 'about.uk.html' : 'about.html');
-    if (!r.ok) throw new Error(String(r.status));
-    a.innerHTML = await r.text();
-    a.dataset.loaded = lang;
-    fillAboutCities();
-  } catch { a.textContent = t('about.error'); }
+  if (a.dataset.loaded !== lang) {
+    try {
+      const r = await fetch(lang === 'uk' ? 'about.uk.html' : 'about.html');
+      if (!r.ok) throw new Error(String(r.status));
+      a.innerHTML = await r.text();
+      a.dataset.loaded = lang;
+      paginateAbout(a);
+      fillAboutCities();
+    } catch { a.textContent = t('about.error'); return; }
+  }
+  showAboutPage(state.aboutPage);
+}
+
+/** Wrap the loaded page into one <section> per sub-page, with a navigation bar under the title. */
+function paginateAbout(a) {
+  const h1 = a.querySelector('h1');
+  const sections = {};
+  let page = ABOUT_PAGES[0];
+  for (const node of [...a.childNodes]) {
+    if (node === h1) continue;
+    if (node.nodeType === 1 && node.dataset.page) page = node.dataset.page;
+    sections[page] ??= el('section', { class: 'about-page', 'data-page': page });
+    sections[page].append(node);
+  }
+  const ids = ABOUT_PAGES.filter((p) => sections[p]);
+  const nav = el('nav', { class: 'about-nav', 'aria-label': t('about.nav') },
+    ids.map((p) => el('button', { type: 'button', 'data-page': p, onclick: () => showAboutPage(p) }, t(`about.page.${p}`))));
+  // previous / next links at the bottom of every sub-page
+  ids.forEach((p, i) => {
+    const pager = el('div', { class: 'about-pager' },
+      i > 0 ? el('button', { type: 'button', onclick: () => showAboutPage(ids[i - 1]) }, `← ${t(`about.page.${ids[i - 1]}`)}`) : el('span'),
+      i < ids.length - 1 ? el('button', { type: 'button', onclick: () => showAboutPage(ids[i + 1]) }, `${t(`about.page.${ids[i + 1]}`)} →`) : el('span'));
+    sections[p].append(pager);
+  });
+  a.innerHTML = '';
+  a.append(...[h1, nav, ...ids.map((p) => sections[p])].filter(Boolean));
+}
+
+function showAboutPage(page) {
+  const a = $('#aboutContent');
+  const pages = [...a.querySelectorAll('.about-page')];
+  if (!pages.length) return;
+  if (!pages.some((s) => s.dataset.page === page)) page = pages[0].dataset.page;
+  const changed = page !== state.aboutPage;
+  state.aboutPage = page;
+  for (const s of pages) s.hidden = s.dataset.page !== page;
+  a.querySelectorAll('.about-nav button').forEach((b) => b.classList.toggle('active', b.dataset.page === page));
+  if (changed) a.scrollTop = 0;
+  writeHash();
 }
 
 /** City table on the Method & data page, generated from index.json so it never goes stale. */
@@ -1009,6 +1224,253 @@ function fillAboutCities() {
     el('tbody', {}, rows))));
 }
 
+// ------------------------------------------------------------------ population of cities (by drive time)
+/*
+ * data/agglomeration.json (python -m urbanfp agglomeration): drive times (tenths of a minute) from every city
+ * to every settlement within 3 h, plus the settlements' population per year. Joining is done here so the
+ * threshold and the year switch instantly.
+ */
+let agg = null;
+let aggReach = null;   // centre id -> Map(settlement index -> tenths of a minute)
+const popView = { map: null, ready: null, result: null };
+const POP_COLORS = ['#2f6db5', '#d1495b', '#2e9d6a', '#e08a1e', '#7b52ae', '#1c9aa8', '#b5527f', '#6c8a1f',
+  '#c2632f', '#4a5fc1', '#8c6d3f', '#2b7f8f'];
+
+async function loadAgglomeration() {
+  if (agg) return agg;
+  agg = await getJSON(`${DATA}/agglomeration.json`);
+  aggReach = {};
+  for (const [id, list] of Object.entries(agg.reach)) aggReach[id] = new Map(list);
+  if (!agg.thresholds_min.includes(state.popThreshold)) state.popThreshold = 30;
+  return agg;
+}
+
+const fmtThreshold = (m) => (m === 0 ? t('pop.cityOnly')
+  : m < 60 ? `${m} ${t('set.min')}` : `${num(m / 60, m % 60 ? 1 : 0)} ${t('pop.hour')}`);
+
+/** A centre joins a larger one only if the larger city is more than this many times bigger. */
+const ABSORB_RATIO = 2;
+/**
+ * Join settlements to centres for threshold `T` (minutes) and `year`. Centres from the largest city down;
+ * a centre within T of an active centre more than ABSORB_RATIO times its size becomes inactive and joins it
+ * (the fastest reached such centre). Centres of comparable size both stay active. Each settlement joins the
+ * active centre it is reached from fastest (ties: the larger one).
+ */
+function computeAgglomeration(T, year) {
+  const S = agg.settlements;
+  const pop = S.pop[year] || [];
+  const lim = T * 10;
+  const centres = agg.centres.map((c) => {
+    const cityPop = c.settlement != null ? pop[c.settlement] : null;
+    return { ...c, city: cityById(c.id), cityPop, total: cityPop || 0, n: 0, active: false, absorbedBy: null, time: null };
+  });
+  const ranked = centres.filter((c) => c.cityPop != null).sort((a, b) => b.cityPop - a.cityPop);
+  const active = [];
+  for (const c of ranked) {
+    let host = null;
+    for (const a of T > 0 ? active : []) {
+      const tt = aggReach[a.id]?.get(c.settlement) ?? Infinity;
+      if (tt <= lim && a.cityPop > ABSORB_RATIO * c.cityPop && (!host || tt < aggReach[host.id].get(c.settlement))) host = a;
+    }
+    if (host) { c.absorbedBy = host.id; c.time = aggReach[host.id].get(c.settlement) / 10; } else { c.active = true; active.push(c); }
+  }
+  const owner = new Int16Array(S.code.length).fill(-1);
+  const best = new Float32Array(S.code.length).fill(Infinity);
+  active.forEach((a, i) => { a.color = POP_COLORS[i % POP_COLORS.length]; a.idx = i; });
+  for (const a of active) { owner[a.settlement] = a.idx; best[a.settlement] = -1; }  // a city belongs to itself
+  if (T > 0) {
+    for (const a of active) {
+      for (const [i, tt] of aggReach[a.id] || []) {
+        if (tt <= lim && tt < best[i]) { best[i] = tt; owner[i] = a.idx; }
+      }
+    }
+    // an absorbed city belongs to the centre that absorbed it, even if another active centre is closer
+    const byId = Object.fromEntries(active.map((a) => [a.id, a]));
+    for (const c of centres) if (c.absorbedBy) owner[c.settlement] = byId[c.absorbedBy].idx;
+    for (let i = 0; i < owner.length; i++) {
+      const o = owner[i];
+      if (o < 0 || best[i] < 0) continue;
+      active[o].total += pop[i] || 0;
+      active[o].n += 1;
+    }
+  }
+  return { centres, active, owner, pop };
+}
+
+async function renderPopulationView() {
+  try { await loadAgglomeration(); } catch {
+    $('#popChart').innerHTML = '';
+    $('#popChart').append(el('p', { class: 'hint' }, t('pop.noFile')));
+    return;
+  }
+  const year = state.demoYear;
+  const res = computeAgglomeration(state.popThreshold, year);
+  popView.result = res;
+
+  // controls
+  const th = $('#popThreshold');
+  th.innerHTML = '';
+  for (const m of agg.thresholds_min) {
+    th.append(el('button', {
+      type: 'button', class: state.popThreshold === m ? 'active' : '', 'aria-pressed': state.popThreshold === m,
+      onclick: () => { state.popThreshold = m; writeHash(); renderPopulationView(); },
+    }, fmtThreshold(m)));
+  }
+  const yb = $('#popYear');
+  yb.innerHTML = '';
+  yb.append(`${t('demo.title')}: `, demoYearControl());
+  $('#popHint').textContent = state.popThreshold === 0 ? t('pop.hint.city') : t('pop.hint', { t: fmtThreshold(state.popThreshold) });
+  const legend = $('#popLegend');
+  legend.innerHTML = '';
+  legend.append(...['pop.legend.3', 'pop.legend.2', 'pop.legend.1', 'pop.legend.0'].map((k, i) =>
+    el('span', { class: `pop-legend-item cls${3 - i}` }, el('i'), t(k))));
+  legend.append(el('span', { class: 'pop-legend-item outside' }, el('i'), t('pop.outsideLegend')));
+
+  // bar chart: active centres by total population
+  const rows = [...res.active].sort((a, b) => b.total - a.total);
+  const max = Math.max(...rows.map((c) => c.total), 1);
+  const chart = $('#popChart');
+  chart.innerHTML = '';
+  for (const c of rows) {
+    const row = el('div', { class: 'pop-row' + (state.popSelected === c.id ? ' sel' : '') + (state.popSelected && state.popSelected !== c.id ? ' dim' : ''), 'data-id': c.id },
+      el('div', { class: 'name', title: cityName(c.city) }, cityName(c.city)),
+      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * c.total) / max}%` },
+        el('i', { style: `width:${(100 * c.cityPop) / c.total}%;background:${c.color}` }),
+        el('i', { style: `width:${(100 * (c.total - c.cityPop)) / c.total}%;background:${c.color};opacity:.45` }))),
+      el('div', { class: 'val' }, fmtInt(c.total)));
+    const absorbed = res.centres.filter((x) => x.absorbedBy === c.id);
+    row.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(c.city)}</b><br>${t('demo.population')}: ${fmtInt(c.total)}`
+      + `<br>${t('demo.cityOnly')}: ${fmtInt(c.cityPop)}`
+      + (state.popThreshold ? `<br>${t('pop.around', { t: fmtThreshold(state.popThreshold) })}: ${fmtInt(c.total - c.cityPop)} (${t('pop.nSett', { n: fmtInt(c.n) })})` : '')
+      + (absorbed.length ? `<br>${t('pop.includes')}: ${absorbed.map((x) => cityName(x.city)).join(', ')}` : '')));
+    row.addEventListener('mouseleave', hideTip);
+    row.addEventListener('click', () => selectPopCentre(c.id));
+    chart.append(row);
+  }
+  const inactive = res.centres.filter((c) => c.absorbedBy);
+  const nodata = res.centres.filter((c) => c.cityPop == null);
+  const ib = $('#popInactive');
+  ib.innerHTML = '';
+  if (inactive.length) {
+    ib.append(el('div', {}, el('b', {}, t('pop.inactive')), ' ',
+      inactive.sort((a, b) => b.cityPop - a.cityPop).map((c) => `${cityName(c.city)} → ${cityName(cityById(c.absorbedBy))} (${num(c.time, 0)} ${t('set.min')})`).join('; ')));
+  }
+  if (nodata.length) ib.append(el('div', {}, el('b', {}, t('pop.noDataTitle')), ' ', nodata.map((c) => cityName(c.city)).join(', ')));
+  $('#popNote').textContent = t('pop.note', { max: fmtThreshold(agg.max_min) }) + ' ' + demoSource() + '.';
+  await ensurePopMap();
+  updatePopMap();
+}
+
+function selectPopCentre(id) {
+  state.popSelected = state.popSelected === id ? null : id;
+  renderPopulationView();
+}
+
+async function ensurePopMap() {
+  if (popView.map) { popView.map.resize(); return popView.ready; }
+  const map = new maplibregl.Map({
+    container: 'popMap', style: BASE_STYLE(), center: [31.2, 48.6], zoom: 5.3,
+    attributionControl: { compact: true }, locale: { ...MAP_LOCALE[getLang()] },
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 2), dragRotate: false, pitchWithRotate: false,
+  });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+  popView.map = map;
+  popView.ready = new Promise((res) => map.once('load', () => {
+    const S = agg.settlements;
+    map.addSource('pop-sett', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('pop-centres', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    // settlements by size class (POP_CLASSES): towns as circles like the centres, smaller places as dots
+    const big = ['==', ['get', 'cls'], 3];
+    const bySize = (town, c2, c1, c0) => ['case', big, town, ['match', ['get', 'cls'], 2, c2, 1, c1, c0]];
+    map.addLayer({
+      id: 'pop-sett', type: 'circle', source: 'pop-sett',
+      // dots over circles, agglomeration settlements over the grey ones
+      layout: { 'circle-sort-key': ['+', ['case', ['get', 'in'], 0, -1000], ['case', big, ['-', 0, ['get', 'r']], ['get', 'cls']]] },
+      paint: {
+        'circle-color': ['get', 'color'],
+        'circle-radius': ['interpolate', ['exponential', 1.6], ['zoom'],
+          5, bySize(['get', 'r'], 2.2, 1.4, 0.9),
+          9, bySize(['*', ['get', 'r'], 6.5], 4.5, 3, 2),
+          12, bySize(['*', ['get', 'r'], 6.5], 6.5, 4.5, 3)],
+        'circle-opacity': ['*', ['case', ['get', 'dim'], 0.2, 1], bySize(0.45, 1, 0.6, 0.25)],
+        'circle-stroke-color': ['get', 'color'],
+        'circle-stroke-width': bySize(1.2, 0, 0, 0),
+        'circle-stroke-opacity': ['case', ['get', 'dim'], 0.3, 1],
+      },
+    });
+    map.addLayer({
+      id: 'pop-centres', type: 'circle', source: 'pop-centres',
+      paint: {
+        'circle-color': ['get', 'color'],
+        'circle-opacity': ['case', ['get', 'dim'], 0.15, 0.55],
+        'circle-stroke-color': ['get', 'color'],
+        'circle-stroke-width': ['case', ['get', 'sel'], 3, 1.5],
+        'circle-stroke-opacity': ['case', ['get', 'dim'], 0.3, 1],
+        // area proportional to population; grows with zoom
+        'circle-radius': ['interpolate', ['exponential', 1.6], ['zoom'], 5, ['get', 'r'], 9, ['*', ['get', 'r'], 6.5]],
+      },
+    });
+    map.on('mousemove', 'pop-centres', (e) => {
+      map.getCanvas().style.cursor = 'pointer';
+      const p = e.features[0].properties;
+      const city = `${t('demo.cityOnly')}: ${fmtInt(p.cityPop)}`;
+      showTip(e.originalEvent, `<b>${p.name}</b><br>${state.popThreshold > 0 ? `${t('pop.agglomeration')}: ${fmtInt(p.total)}<br>` : ''}${city}`);
+    });
+    map.on('mouseleave', 'pop-centres', () => { map.getCanvas().style.cursor = ''; hideTip(); });
+    map.on('click', 'pop-centres', (e) => selectPopCentre(e.features[0].properties.id));
+    map.on('mousemove', 'pop-sett', (e) => {
+      if (map.queryRenderedFeatures(e.point, { layers: ['pop-centres'] }).length) return;
+      const f = e.features[0].properties;
+      const where = f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}` : t('pop.outside');
+      showTip(e.originalEvent, `<b>${S.name[f.i]}</b><br>${f.pop ? `${fmtInt(f.pop)} ${t('demo.people')}` : t('pop.noPop')} · ${where}`);
+    });
+    map.on('mouseleave', 'pop-sett', hideTip);
+    res();
+  }));
+  return popView.ready;
+}
+
+/** Size class of a settlement on the population map: 3 = 50k+ (circle), 2 = 10–50k, 1 = 1–10k, 0 = under 1k. */
+const POP_CLASSES = [1000, 10000, 50000];
+const POP_OUTSIDE = '#8d9299';  // settlements outside every agglomeration
+const popClass = (n) => POP_CLASSES.filter((x) => n >= x).length;
+
+function updatePopMap() {
+  const map = popView.map;
+  if (!map || !map.getSource('pop-centres')) return;
+  const { active, owner, pop } = popView.result;
+  const S = agg.settlements;
+  const sel = state.popSelected;
+  const maxTotal = Math.max(...active.map((c) => c.total), 1);
+  const centres = active.map((c) => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: [S.lon[c.settlement], S.lat[c.settlement]] },
+    properties: {
+      id: c.id, name: cityName(c.city), total: c.total, cityPop: c.cityPop, color: c.color,
+      r: 34 * Math.sqrt(c.total / maxTotal), sel: sel === c.id, dim: !!sel && sel !== c.id,
+    },
+  })).sort((a, b) => b.properties.total - a.properties.total);  // small circles on top
+  // every settlement: coloured by the centre it joined, grey when it belongs to no agglomeration
+  const sett = [];
+  for (let i = 0; i < owner.length; i++) {
+    const o = owner[i];
+    const c = o >= 0 ? active[o] : null;
+    if (c?.settlement === i) continue;  // the centre's own circle
+    const n = pop[i] || 0;
+    sett.push({
+      type: 'Feature', geometry: { type: 'Point', coordinates: [S.lon[i], S.lat[i]] },
+      properties: {
+        i, pop: n, cls: popClass(n), r: 34 * Math.sqrt(n / maxTotal), in: !!c,
+        color: c ? c.color : POP_OUTSIDE, t: c ? (aggReach[c.id].get(i) || 0) / 10 : null,
+        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id,
+      },
+    });
+  }
+  map.getSource('pop-centres').setData({ type: 'FeatureCollection', features: centres });
+  map.getSource('pop-sett').setData({ type: 'FeatureCollection', features: sett });
+}
+
 // ------------------------------------------------------------------ views
 function switchView(view) {
   state.view = view;
@@ -1020,6 +1482,7 @@ function switchView(view) {
   }
   if (view === 'compare') renderCompare();
   if (view === 'about') renderAbout();
+  if (view === 'population') renderPopulationView();
   hideTip();
   writeHash();
 }
@@ -1051,6 +1514,7 @@ async function selectCities(city, city2, fit = true) {
 function renderAll() {
   if (state.view === 'map') renderSidebar();
   if (state.view === 'compare') renderCompare();
+  if (state.view === 'population') renderPopulationView();
 }
 
 // ------------------------------------------------------------------ territory modes
@@ -1105,6 +1569,44 @@ async function setTerritory(mode, idx = 0) {
   writeHash();
 }
 
+/** Map sidebar: population of the shown territory (one column per pane in split screen). */
+function renderPopulationPanel(list, names) {
+  const box = $('#demographyPanel');
+  box.innerHTML = '';
+  if (!demoYears().length) return;
+  const pops = list.map((x) => popOf(x));
+  const head = el('div', { class: 'demo-head' }, el('h3', {}, t('demo.title')), demoYearControl());
+  const notes = list.map((x, i) => {
+    const c = cityById(x.city.id);
+    const n = !pops[i] ? t('demo.noData') : demoEstimateNote(c);
+    return n ? el('div', { class: 'small demo-note' }, list.length > 1 ? `${names[i]}: ${n}` : n) : null;
+  });
+  if (list.length === 1) {
+    const x = list[0], p = pops[0];
+    const body = p ? [
+      el('div', { class: 'demo-big' }, fmtInt(p.pop), el('span', { class: 'small' }, ` ${t('demo.people')}`)),
+      el('div', { class: 'small' }, `${t('demo.density')}: ${fmtInt(p.density)} ${t('demo.perKm2')}`),
+      x._mode !== 'city' && p.pop !== p.cityPop ? el('div', { class: 'small' }, t('demo.ofWhich', {
+        city: fmtInt(p.cityPop), rest: restLabel(x._mode), restPop: fmtInt(p.pop - p.cityPop),
+      })) : null,
+    ] : [];
+    box.append(el('div', { class: 'panel demo' }, head, ...body, ...notes,
+      p && x._mode === 'greater' && p.unmatched.length
+        ? el('div', { class: 'small demo-note' }, t('demo.unmatched', { n: p.unmatched.length, names: p.unmatched.map((n) => (n === '—' ? t('demo.unnamed') : n)).join(', ') })) : null));
+    return;
+  }
+  const rows = [
+    [t('demo.population'), (p) => fmtInt(p.pop)],
+    [t('demo.density'), (p) => `${fmtInt(p.density)} ${t('demo.perKm2')}`],
+    [t('demo.cityOnly'), (p) => fmtInt(p.cityPop)],
+  ];
+  box.append(el('div', { class: 'panel demo' }, head,
+    el('div', { class: 'kv kv3' },
+      el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), names[i])),
+      rows.flatMap(([k, f]) => [el('span', {}, k), ...pops.map((p) => el('span', { class: 'v' }, p ? f(p) : '—'))])),
+    ...notes));
+}
+
 const settlementsCache = {};
 let settlementsToken = 0;
 /** Greater City mode: list of included settlements with drive times (one block per city). */
@@ -1126,9 +1628,13 @@ async function renderSettlements(list, names = list.map((x) => cityName(x.city))
       el('summary', {}, el('h3', { style: 'display:inline' },
         t('set.title', { city: list.length > 1 ? names[i] + ': ' : '' }) + ` (${inc.length})`)),
       el('div', { class: 'small', style: 'margin:4px 0 6px' }, t('set.rule', { d: num(d, 0) })),
-      el('ul', { class: 'set-list' }, inc.map((p) => el('li', {},
-        el('span', {}, p.name || '—', p.approx ? el('span', { class: 'small', title: t('set.approx') }, ' *') : null),
-        el('span', { class: 'small' }, `${num(p.drive_min, 1)} ${t('set.min')}`)))),
+      el('ul', { class: 'set-list' }, inc.map((p) => {
+        const pop = settlementPop(id, p.osm);
+        return el('li', {},
+          el('span', {}, p.name || '—', p.approx ? el('span', { class: 'small', title: t('set.approx') }, ' *') : null),
+          el('span', { class: 'small' }, `${num(p.drive_min, 1)} ${t('set.min')}`
+            + (pop != null ? ` · ${fmtInt(pop)} ${t('demo.peopleShort')}` : '')));
+      })),
       inc.some((p) => p.approx) ? el('div', { class: 'small' }, `* ${t('set.approx')}`) : null));
   }
 }
@@ -1164,6 +1670,7 @@ function changeLanguage(lang) {
   renderSidebar();
   if (state.view === 'compare') renderCompare();
   if (state.view === 'about') renderAbout();
+  if (state.view === 'population') renderPopulationView();
   hideTip();
 }
 
@@ -1191,6 +1698,11 @@ async function main() {
     state.territory2 = h.territory2;
     state.city2 = city2; // keep t2 from the URL (selectCities resets it when entering split screen)
   }
+  await loadDemography();
+  let savedYear = null;
+  try { savedYear = +localStorage.getItem('demoYear') || null; } catch { /* storage unavailable */ }
+  for (const y of [h.year, savedYear]) if (y && demoYears().includes(y)) { state.demoYear = y; break; }
+  if (h.threshold != null && !Number.isNaN(h.threshold)) state.popThreshold = h.threshold;
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();
@@ -1201,7 +1713,7 @@ async function main() {
   const protocol = new pmtiles.Protocol();
   maplibregl.addProtocol('pmtiles', protocol.tile);
   createPane(0, 'map');
-  window.app = { panes, state }; // handy for debugging in the console
+  window.app = { panes, state, popView }; // handy for debugging in the console
 
   $('#basemapToggle').addEventListener('change', (e) => {
     for (const p of activePanes()) p.map.setLayoutProperty('osm', 'visibility', e.target.checked ? 'visible' : 'none');
@@ -1224,6 +1736,7 @@ async function main() {
 
   // open the requested view right away; the map keeps loading in the background
   const mapReady = selectCities(state.city, city2);
+  if (h.aboutPage) state.aboutPage = h.aboutPage;
   if (h.view && h.view !== 'map') switchView(h.view);
   await mapReady;
 }
