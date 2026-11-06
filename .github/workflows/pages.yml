@@ -33,3 +33,6 @@ jobs:
           path: web
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # the published dataset is large (~650 MB); Pages needs more than the default 10 min to process it
+          timeout: 1800000
