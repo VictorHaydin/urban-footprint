@@ -8,7 +8,7 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: **Kyiv, Kharkiv, Odesa, Dnipro, Donetsk, Zaporizhzhia, Lviv, Kryvyi Rih, Ivano-Frankivsk, Ternopil, Chernivtsi, Lutsk, Zhytomyr, Poltava, Sumy, Vinnytsia, Uzhhorod, Cherkasy, Rivne, Mykolaiv, Bila Tserkva, Kherson, Kovel, Mukachevo, Kamianske, Mariupol, Luhansk, Kramatorsk, Lysychansk, Sevastopol, Simferopol, Horlivka, Khmelnytskyi, Kropyvnytskyi, Melitopol, Berdiansk, Kremenchuk, Uman, Chernihiv**. More can be added in
+Cities: 39 on the map and in the comparison; on the Agglomerations page **every Ukrainian city of over 50,000 people in the 2001 census** (101) is a centre. More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |

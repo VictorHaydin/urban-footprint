@@ -108,6 +108,8 @@
 </p>
 <h3>The "Agglomerations" page</h3>
 <ul>
+  <li>Agglomeration centres are all cities of over 50,000 people in the 2001 census (101). Some of them are on this
+    page only so far: only their OSM city boundary is used.</li>
   <li>For each city the free-flow car drive time (OSM road network, typical speeds) is computed from any road
     inside the city to every settlement of Ukraine within 3 hours.</li>
   <li>For the chosen threshold (city only, 10, 20, 30, 45 min, 1, 1.5, 2, 2.5 or 3 h) cities are taken from the
@@ -121,6 +123,10 @@
     to Mukachevo, but it is no longer a centre, and Uzhhorod is faster to reach from them than Lviv (from Khust
     Lviv is beyond 3 h altogether), so they go to Uzhhorod. Mukachevo is in the Lviv agglomeration, the
     settlements around it in the Uzhhorod one.</li>
+  <li>The agglomeration outline is a line through its outermost points (a concave hull). The points are its
+    settlements and the boundaries of the cities in it (the centre and absorbed cities). They are triangulated, and a
+    triangle is kept when no side is longer than 15 km. Detached parts (e.g. Mukachevo in the Lviv agglomeration at
+    3 h) are left out, only the contiguous part around the centre is outlined, and holes are not shown.</li>
   <li>On the map, centre circles have an area proportional to the agglomeration population. Settlements over 50k
     are circles on the same scale, 10–50k bright dots, 1–10k paler dots, under 1k faint dots.</li>
   <li>The road network is the <strong>intact, pre-war</strong> one: destroyed bridges and roads count as intact,

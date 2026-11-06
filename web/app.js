@@ -1233,8 +1233,9 @@ function fillAboutCities() {
 let agg = null;
 let aggReach = null;   // centre id -> Map(settlement index -> tenths of a minute)
 const popView = { map: null, ready: null, result: null };
-const POP_COLORS = ['#2f6db5', '#d1495b', '#2e9d6a', '#e08a1e', '#7b52ae', '#1c9aa8', '#b5527f', '#6c8a1f',
-  '#c2632f', '#4a5fc1', '#8c6d3f', '#2b7f8f'];
+// clearly distinct hues only: neighbouring agglomerations get different ones (assignAggColors)
+const POP_COLORS = ['#2f6db5', '#d1495b', '#2e9d6a', '#e08a1e', '#7b52ae', '#1c9aa8', '#6c8a1f', '#8c6d3f'];
+const AGG_ADJ_KM = 30;  // agglomerations whose settlements come this close count as neighbours
 
 async function loadAgglomeration() {
   if (agg) return agg;
@@ -1262,7 +1263,9 @@ function computeAgglomeration(T, year) {
   const lim = T * 10;
   const centres = agg.centres.map((c) => {
     const cityPop = c.settlement != null ? pop[c.settlement] : null;
-    return { ...c, city: cityById(c.id), cityPop, total: cityPop || 0, n: 0, active: false, absorbedBy: null, time: null };
+    // cities not processed yet for the map (map_only) are known to the Агломерації page only
+    const city = cityById(c.id) || { id: c.id, name: c.name, name_local: c.name_local };
+    return { ...c, city, cityPop, total: cityPop || 0, n: 0, active: false, absorbedBy: null, time: null };
   });
   const ranked = centres.filter((c) => c.cityPop != null).sort((a, b) => b.cityPop - a.cityPop);
   const active = [];
@@ -1276,7 +1279,7 @@ function computeAgglomeration(T, year) {
   }
   const owner = new Int16Array(S.code.length).fill(-1);
   const best = new Float32Array(S.code.length).fill(Infinity);
-  active.forEach((a, i) => { a.color = POP_COLORS[i % POP_COLORS.length]; a.idx = i; });
+  active.forEach((a, i) => { a.idx = i; });
   for (const a of active) { owner[a.settlement] = a.idx; best[a.settlement] = -1; }  // a city belongs to itself
   if (T > 0) {
     for (const a of active) {
@@ -1294,7 +1297,61 @@ function computeAgglomeration(T, year) {
       active[o].n += 1;
     }
   }
+  assignAggColors(active, owner, T);
   return { centres, active, owner, pop };
+}
+
+/**
+ * Colours so that neighbouring agglomerations differ: two agglomerations are neighbours when any of their
+ * settlements are within AGG_ADJ_KM of each other (their centres within twice that when only cities are shown).
+ * Largest first, each takes the first palette colour no neighbour has (the least used among neighbours if all
+ * are taken).
+ */
+function assignAggColors(active, owner, T) {
+  const S = agg.settlements;
+  const adj = active.map(() => new Set());
+  const maxKm = T > 0 ? AGG_ADJ_KM : 2 * AGG_ADJ_KM;
+  // points on a grid of maxKm cells, grouped by agglomeration: cell -> Map(agglomeration -> [x, y, ...])
+  const grid = new Map();
+  const put = (i, o) => {
+    const x = S.lon[i] * HULL_KX, y = S.lat[i] * HULL_KY;
+    const key = `${Math.floor(x / maxKm)},${Math.floor(y / maxKm)}`;
+    if (!grid.has(key)) grid.set(key, new Map());
+    const c = grid.get(key);
+    if (!c.has(o)) c.set(o, []);
+    c.get(o).push(x, y);
+  };
+  if (T > 0) { for (let i = 0; i < owner.length; i++) if (owner[i] >= 0) put(i, owner[i]); }
+  else active.forEach((a, o) => put(a.settlement, o));
+  const near = (p, q) => {
+    for (let i = 0; i < p.length; i += 2) {
+      for (let j = 0; j < q.length; j += 2) if (Math.hypot(p[i] - q[j], p[i + 1] - q[j + 1]) <= maxKm) return true;
+    }
+    return false;
+  };
+  for (const [key, cell] of grid) {
+    const [cx, cy] = key.split(',').map(Number);
+    for (let dx = -1; dx <= 1; dx++) {
+      for (let dy = -1; dy <= 1; dy++) {
+        const other = grid.get(`${cx + dx},${cy + dy}`);
+        if (!other) continue;
+        for (const [a, pa] of cell) {
+          for (const [b, pb] of other) {
+            if (a < b && !adj[a].has(b) && near(pa, pb)) { adj[a].add(b); adj[b].add(a); }
+          }
+        }
+      }
+    }
+  }
+  const color = new Array(active.length).fill(-1);
+  const order = active.map((_, i) => i).sort((x, y) => (active[y].total - active[x].total) || (active[y].cityPop - active[x].cityPop));
+  for (const o of order) {
+    const used = POP_COLORS.map(() => 0);
+    for (const n of adj[o]) if (color[n] >= 0) used[color[n]] += 1;
+    const free = used.indexOf(0);
+    color[o] = free >= 0 ? free : used.indexOf(Math.min(...used));
+    active[o].color = POP_COLORS[color[o]];
+  }
 }
 
 async function renderPopulationView() {
@@ -1353,7 +1410,7 @@ async function renderPopulationView() {
   ib.innerHTML = '';
   if (inactive.length) {
     ib.append(el('div', {}, el('b', {}, t('pop.inactive')), ' ',
-      inactive.sort((a, b) => b.cityPop - a.cityPop).map((c) => `${cityName(c.city)} → ${cityName(cityById(c.absorbedBy))} (${num(c.time, 0)} ${t('set.min')})`).join('; ')));
+      inactive.sort((a, b) => b.cityPop - a.cityPop).map((c) => `${cityName(c.city)} → ${cityName(res.centres.find((x) => x.id === c.absorbedBy).city)} (${num(c.time, 0)} ${t('set.min')})`).join('; ')));
   }
   if (nodata.length) ib.append(el('div', {}, el('b', {}, t('pop.noDataTitle')), ' ', nodata.map((c) => cityName(c.city)).join(', ')));
   $('#popNote').textContent = t('pop.note', { max: fmtThreshold(agg.max_min) }) + ' ' + demoSource() + '.';
@@ -1381,6 +1438,16 @@ async function ensurePopMap() {
     const S = agg.settlements;
     map.addSource('pop-sett', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
     map.addSource('pop-centres', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addSource('pop-hull', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+    map.addLayer({
+      id: 'pop-hull', type: 'line', source: 'pop-hull',
+      layout: { 'line-join': 'round', 'line-cap': 'round' },
+      paint: {
+        'line-color': ['get', 'color'],
+        'line-width': ['interpolate', ['linear'], ['zoom'], 5, ['case', ['get', 'sel'], 2.5, 1.6], 9, ['case', ['get', 'sel'], 4, 2.5]],
+        'line-opacity': ['case', ['get', 'dim'], 0.2, 0.9],
+      },
+    });
     // settlements by size class (POP_CLASSES): towns as circles like the centres, smaller places as dots
     const big = ['==', ['get', 'cls'], 3];
     const bySize = (town, c2, c1, c0) => ['case', big, town, ['match', ['get', 'cls'], 2, c2, 1, c1, c0]];
@@ -1468,7 +1535,138 @@ function updatePopMap() {
     });
   }
   map.getSource('pop-centres').setData({ type: 'FeatureCollection', features: centres });
+  map.getSource('pop-hull').setData({ type: 'FeatureCollection', features: aggHulls(popView.result, sel) });
   map.getSource('pop-sett').setData({ type: 'FeatureCollection', features: sett });
+}
+
+/**
+ * Outline of every agglomeration: a concave hull through its outermost points.
+ * The points of an agglomeration are its settlements plus the outlines of the cities in it (the centre and the
+ * cities it absorbed). They are triangulated (Delaunay); a triangle is kept when no side is longer than
+ * HULL_MAX_EDGE_KM, or when all three corners lie on the outline of one city. Of the kept triangles only the
+ * connected part around the centre is drawn, so detached members (a city absorbed into a distant centre, with its
+ * surroundings in another agglomeration) do not stretch the outline. Holes are dropped.
+ */
+const HULL_MAX_EDGE_KM = 15;
+const HULL_KX = Math.cos((48.5 * Math.PI) / 180) * 111.32;  // km per degree of longitude / latitude
+const HULL_KY = 111.32;
+
+function aggHulls(res, sel) {
+  if (!res || state.popThreshold === 0 || typeof Delaunator === 'undefined') return [];
+  const S = agg.settlements;
+  const groups = res.active.map(() => ({ lon: [], lat: [], city: [] }));  // city: centre index for outline points, else -1
+  for (let i = 0; i < res.owner.length; i++) {
+    const g = groups[res.owner[i]];
+    if (g) { g.lon.push(S.lon[i]); g.lat.push(S.lat[i]); g.city.push(-1); }
+  }
+  const byId = Object.fromEntries(res.active.map((a) => [a.id, a]));
+  res.centres.forEach((c, ci) => {
+    const host = c.active ? c : byId[c.absorbedBy];
+    if (!host || !c.outline) return;
+    const g = groups[host.idx];
+    for (const [x, y] of c.outline) { g.lon.push(x); g.lat.push(y); g.city.push(ci); }
+  });
+  const centreIdx = Object.fromEntries(res.centres.map((c, ci) => [c.id, ci]));
+  const feats = [];
+  res.active.forEach((a, o) => {
+    const g = groups[o];
+    const n = g.lon.length;
+    if (n < 3) return;
+    const xy = new Float64Array(2 * n);
+    for (let i = 0; i < n; i++) { xy[2 * i] = g.lon[i] * HULL_KX; xy[2 * i + 1] = g.lat[i] * HULL_KY; }
+    let d;
+    try { d = new Delaunator(xy); } catch { return; }
+    const V = d.triangles, H = d.halfedges, nT = V.length / 3;
+    if (!nT) return;
+    const len = (u, v) => Math.hypot(xy[2 * u] - xy[2 * v], xy[2 * u + 1] - xy[2 * v + 1]);
+    const keep = new Uint8Array(nT);
+    for (let t = 0; t < nT; t++) {
+      const [p, q, r] = [V[3 * t], V[3 * t + 1], V[3 * t + 2]];
+      const sameCity = g.city[p] >= 0 && g.city[p] === g.city[q] && g.city[p] === g.city[r];
+      keep[t] = sameCity || Math.max(len(p, q), len(q, r), len(r, p)) <= HULL_MAX_EDGE_KM ? 1 : 0;
+    }
+    // the connected part touching the centre (its outline or its own settlement)
+    const ci = centreIdx[a.id];
+    const isCentre = (v) => g.city[v] === ci || (g.city[v] < 0 && g.lon[v] === S.lon[a.settlement] && g.lat[v] === S.lat[a.settlement]);
+    const comp = new Int32Array(nT).fill(-1);
+    let best = null;
+    for (let t0 = 0; t0 < nT; t0++) {
+      if (!keep[t0] || comp[t0] >= 0) continue;
+      const tris = [t0];
+      comp[t0] = t0;
+      let centre = false;
+      for (let k = 0; k < tris.length; k++) {
+        const t = tris[k];
+        for (let j = 0; j < 3; j++) {
+          if (isCentre(V[3 * t + j])) centre = true;
+          const h = H[3 * t + j];
+          if (h < 0) continue;
+          const u = Math.floor(h / 3);
+          if (keep[u] && comp[u] < 0) { comp[u] = t0; tris.push(u); }
+        }
+      }
+      const score = (centre ? 1e9 : 0) + tris.length;
+      if (!best || score > best.score) best = { id: t0, tris, score };
+    }
+    if (!best) return;
+    // boundary sides of that part, oriented as in their triangles
+    const out = new Map();
+    for (const t of best.tris) {
+      for (let j = 0; j < 3; j++) {
+        const e = 3 * t + j, h = H[e];
+        if (h >= 0 && comp[Math.floor(h / 3)] === best.id) continue;
+        const from = V[e], to = V[3 * t + ((j + 1) % 3)];
+        if (!out.has(from)) out.set(from, []);
+        out.get(from).push(to);
+      }
+    }
+    // triangle orientation: interior on the left of every side when positive
+    const t0 = best.tris[0];
+    const [p0, p1, p2] = [V[3 * t0], V[3 * t0 + 1], V[3 * t0 + 2]];
+    const sgn = Math.sign((xy[2 * p1] - xy[2 * p0]) * (xy[2 * p2 + 1] - xy[2 * p0 + 1]) - (xy[2 * p2] - xy[2 * p0]) * (xy[2 * p1 + 1] - xy[2 * p0 + 1]));
+    const ang = (u, v) => Math.atan2(xy[2 * v + 1] - xy[2 * u + 1], xy[2 * v] - xy[2 * u]);
+    const TAU = 2 * Math.PI;
+    // at a vertex shared by several boundary sides, continue along the side bounding the same piece of area
+    const nextOf = (prev, cur) => {
+      const outs = out.get(cur);
+      if (!outs?.length) return -1;
+      const base = ang(cur, prev);
+      let bi = 0, bd = Infinity;
+      outs.forEach((w, i) => {
+        let dd = sgn > 0 ? ang(cur, w) - base : base - ang(cur, w);
+        dd = ((dd % TAU) + TAU) % TAU || TAU;
+        if (dd < bd) { bd = dd; bi = i; }
+      });
+      return outs.splice(bi, 1)[0];
+    };
+    const lines = [];
+    for (const [a0, outs] of out) {
+      while (outs.length) {
+        const ring = [a0];
+        let prev = a0, cur = outs.pop();
+        while (cur !== a0 && cur >= 0 && ring.length <= 2 * n) {
+          ring.push(cur);
+          const nx = nextOf(prev, cur);
+          prev = cur; cur = nx;
+        }
+        if (cur !== a0 || ring.length < 3) continue;
+        // outer rings run the same way as the triangles; holes the other way
+        let area = 0;
+        for (let i = 0; i < ring.length; i++) {
+          const u = ring[i], v = ring[(i + 1) % ring.length];
+          area += xy[2 * u] * xy[2 * v + 1] - xy[2 * v] * xy[2 * u + 1];
+        }
+        if (Math.sign(area) === sgn) lines.push([...ring, a0].map((v) => [g.lon[v], g.lat[v]]));
+      }
+    }
+    if (lines.length) {
+      feats.push({
+        type: 'Feature', geometry: { type: 'MultiLineString', coordinates: lines },
+        properties: { id: a.id, color: a.color, sel: sel === a.id, dim: !!sel && sel !== a.id },
+      });
+    }
+  });
+  return feats;
 }
 
 // ------------------------------------------------------------------ views

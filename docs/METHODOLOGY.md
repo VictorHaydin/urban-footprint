@@ -243,6 +243,10 @@ settlement of every year (Derzhstat, and census rows matched as above) at the OS
 same KATOTTG code (28,580 of 28,657 Derzhstat settlements; 100% of the population). For every configured city it computes the drive time from any road inside the city boundary to
 every settlement within 3 h (settlement point snapped to the nearest road, at most 3 km away).
 
+Centres are all 101 cities of over 50,000 people in the 2001 census. A city needs only its extracted OSM boundary
+to be a centre: cities not yet processed further (`map_only` in `agglomeration.json`) appear on the Агломерації
+page only, named from `config/cities.yaml` and linked to their census / Derzhstat row by `katottg` or by name.
+
 The graph is the **intact road network**, as before the full-scale war, consistent with the free-flow
 assumption:
 * roads mapped as destroyed or out of use are kept: lifecycle tags (`ruined:`, `destroyed:`, `damaged:`,
@@ -262,6 +266,10 @@ The page joins settlements for a threshold of 0 (city only), 10, 20, 30, 45, 60,
   Dnipro at 20 min). Centres of comparable size (ratio ≤ 2, e.g. Dnipro with Zaporizhzhia and Kryvyi Rih) both stay
   active and compete for the settlements between them;
 * every other settlement joins the active centre it is reached from fastest, if within the threshold.
+* the map outlines each agglomeration with a concave hull: its settlements and the (simplified) boundaries of
+  its cities, the centre and the absorbed ones, are triangulated (Delaunay) and triangles with a side over 15 km
+  are dropped; only the contiguous part around the centre is drawn, so detached members (an absorbed city far away)
+  do not stretch the outline, and holes are not shown;
 * the two rules are independent: an absorbed centre's surroundings do not follow it but join the nearest
   active centre, so an agglomeration can have outlying islands. At 3 h Mukachevo joins Lviv (176 min; Lviv is
   more than twice its size, Uzhhorod at 27 min is not), while Svaliava, Berehove, Irshava and Khust, closest to

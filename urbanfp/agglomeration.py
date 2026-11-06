@@ -31,13 +31,14 @@ from scipy.sparse.csgraph import dijkstra
 from scipy.spatial import cKDTree
 
 from urbanfp.config import Paths, load_cities
-from urbanfp.demography import available_years, load_year
+from urbanfp.demography import available_years, city_row, load_year
 from urbanfp.sources import pbf_path
 from urbanfp.territories import SPEED
 
 log = logging.getLogger(__name__)
 
 AGGLOMERATION_VERSION = 4
+OUTLINE_TOLERANCE_DEG = 0.002  # city outline simplification for the map (~200 m)
 THRESHOLDS_MIN = [0, 10, 20, 30, 45, 60, 90, 120, 150, 180]
 MAX_MIN = 180
 # national graph: no service roads, tracks or paths (they matter for the last metres only)
@@ -224,7 +225,9 @@ def build_agglomeration() -> dict:
     years = available_years()
     if not years:
         raise FileNotFoundError("No Derzhstat workbooks in data/demography/raw")
+    # every city with an extracted boundary; those not yet processed further appear on the Агломерації page only
     cities = [c for c in load_cities() if (Paths.interim(c.id) / "boundary.geojson").exists()]
+    published = {c.id for c in cities if (Paths.web_city(c.id) / "stats.json").exists()}
     region = cities[0].source_region
     demo = json.loads((Paths.web_data() / "demography.json").read_text(encoding="utf-8"))
 
@@ -259,9 +262,20 @@ def build_agglomeration() -> dict:
         src = cand[shapely.contains_xy(bnd, vlon[cand], vlat[cand])]
         d = demo["cities"].get(c.id, {})
         code = next((v.get("city_code") for v in d.values() if v.get("available")), None)
-        ctr = shapely.Point(*json.loads((Paths.web_city(c.id) / "stats.json").read_text(encoding="utf-8"))["map"]["center"])
-        centres.append({"id": c.id, "code": code, "settlement": code_index.get(code),
-                        "lon": round(ctr.x, 5), "lat": round(ctr.y, 5)})
+        if code is None:  # not in demography.json yet: the city's row in the latest table that has it
+            code = next((row["code"] for _, df in sorted(tables.items(), reverse=True)
+                         if (row := city_row(c, df)) is not None and row["code"] in code_index), None)
+        if c.id in published:
+            ctr = shapely.Point(*json.loads((Paths.web_city(c.id) / "stats.json").read_text(encoding="utf-8"))["map"]["center"])
+        else:
+            ctr = bnd.representative_point()
+        # simplified outline (exterior rings, ~200 m), drawn into the agglomeration outline on the map
+        simple = bnd.simplify(OUTLINE_TOLERANCE_DEG)
+        rings = [g.exterior for g in getattr(simple, "geoms", [simple]) if not g.is_empty]
+        outline = [[round(x, 4), round(y, 4)] for r in rings for x, y in r.coords[:-1]]
+        centres.append({"id": c.id, "name": c.name, "name_local": c.name_local, "map_only": c.id not in published,
+                        "code": code, "settlement": code_index.get(code),
+                        "lon": round(ctr.x, 5), "lat": round(ctr.y, 5), "outline": outline})
         if not len(src):
             log.warning("[%s] no road vertices inside the boundary", c.id)
             reach[c.id] = []
@@ -280,7 +294,7 @@ def build_agglomeration() -> dict:
     out = {
         "schema_version": 1, "version": AGGLOMERATION_VERSION, "thresholds_min": THRESHOLDS_MIN,
         "max_min": MAX_MIN, "years": years_sorted,
-        "osm_timestamp": json.loads((Paths.web_city(cities[0].id) / "stats.json").read_text(encoding="utf-8")).get("osm_timestamp"),
+        "osm_timestamp": json.loads((Paths.web_city(cities[0].id) / "stats.json").read_text(encoding="utf-8")).get("osm_timestamp"),  # Kyiv
         "settlements": {
             "code": sett["code"].tolist(), "name": sett["name"].tolist(),
             "lon": sett["lon"].round(4).tolist(), "lat": sett["lat"].round(4).tolist(),

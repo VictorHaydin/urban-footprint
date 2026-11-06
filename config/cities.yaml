@@ -464,3 +464,709 @@ cities:
     hromada_relation: 12092168
     notes: City proper. The OSM city boundary extends ~2 km² beyond the hromada boundary; Hromada mode includes the whole city.
     notes_uk: Власне місто. Межа міста в OSM виходить за межу громади (~2 км²); режим громади охоплює все місто.
+
+  - id: makiivka
+    name: Makiivka
+    name_local: Макіївка
+    country: UA
+    boundary_relation: 2224013
+    katottg: UA14080070010078220
+    territories: true
+    hromada_relation: 17963198
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: kerch
+    name: Kerch
+    name_local: Керч
+    country: UA
+    boundary_relation: 2865045
+    clip_to_land: true
+    katottg: UA01100210010057785
+    territories: true
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.
+
+  - id: nikopol
+    name: Nikopol
+    name_local: Нікополь
+    country: UA
+    boundary_relation: 2318332
+    katottg: UA12080050010010114
+    territories: true
+    hromada_relation: 2865470
+    notes: City proper (not the whole urban hromada). Dnipropetrovsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Дніпропетровська область.
+
+  - id: sloviansk
+    name: Sloviansk
+    name_local: "Слов'янськ"
+    country: UA
+    boundary_relation: 3940400
+    katottg: UA14120210010032554
+    territories: true
+    hromada_relation: 13630809
+    notes: City proper (not the whole urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Донецька область.
+
+  - id: siverskodonetsk
+    name: Siverskodonetsk
+    name_local: Сіверськодонецьк
+    country: UA
+    boundary_relation: 4089182
+    katottg: UA44120110010072887
+    territories: true
+    hromada_relation: 13639201
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: alchevsk
+    name: Alchevsk
+    name_local: Алчевськ
+    country: UA
+    boundary_relation: 2383892
+    katottg: UA44020010010037242
+    territories: true
+    hromada_relation: 17981167
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: pavlohrad
+    name: Pavlohrad
+    name_local: Павлоград
+    country: UA
+    boundary_relation: 1746879
+    katottg: UA12120070010055676
+    territories: true
+    hromada_relation: 12813443
+    notes: City proper (not the whole urban hromada). Dnipropetrovsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Дніпропетровська область.
+
+  - id: yevpatoria
+    name: Yevpatoria
+    name_local: Євпаторія
+    country: UA
+    boundary_relation: 2175059
+    clip_to_land: true
+    katottg: UA01080150010090810
+    territories: true
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.
+
+  - id: yenakiieve
+    name: Yenakiieve
+    name_local: Єнакієве
+    country: UA
+    boundary_relation: 3936114
+    katottg: UA14060070010013898
+    territories: true
+    hromada_relation: 17963646
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: kamianets_podilskyi
+    name: Kamianets-Podilskyi
+    name_local: "Кам'янець-Подільський"
+    country: UA
+    boundary_relation: 2202756
+    katottg: UA68020110010097898
+    territories: true
+    hromada_relation: 12284593
+    notes: City proper (not the whole urban hromada). Khmelnytskyi Oblast.
+    notes_uk: Власне місто (без решти міської громади). Хмельницька область.
+
+  - id: kostiantynivka
+    name: Kostiantynivka
+    name_local: Костянтинівка
+    country: UA
+    boundary_relation: 3940146
+    katottg: UA14120070010085843
+    territories: true
+    hromada_relation: 13631487
+    notes: City proper (not the whole urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Донецька область.
+
+  - id: khrustalnyi
+    name: Khrustalnyi
+    name_local: Хрустальний
+    country: UA
+    boundary_relation: 2910703
+    katottg: UA44080050010029178
+    territories: true
+    hromada_relation: 17969490
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: oleksandriia
+    name: Oleksandriia
+    name_local: Олександрія
+    country: UA
+    boundary_relation: 2320570
+    katottg: UA35080050010051027
+    territories: true
+    hromada_relation: 13352920
+    notes: City proper (not the whole urban hromada). Kirovohrad Oblast.
+    notes_uk: Власне місто (без решти міської громади). Кіровоградська область.
+
+  - id: konotop
+    name: Konotop
+    name_local: Конотоп
+    country: UA
+    boundary_relation: 2822403
+    katottg: UA59020070010054283
+    territories: true
+    hromada_relation: 2822407
+    notes: City proper (not the whole urban hromada). Sumy Oblast.
+    notes_uk: Власне місто (без решти міської громади). Сумська область.
+
+  - id: kadiivka
+    name: Kadiivka
+    name_local: Кадіївка
+    country: UA
+    boundary_relation: 2521434
+    katottg: UA44020050010070086
+    territories: true
+    hromada_relation: 17981169
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: berdychiv
+    name: Berdychiv
+    name_local: Бердичів
+    country: UA
+    boundary_relation: 2069556
+    katottg: UA18020030010047029
+    territories: true
+    hromada_relation: 12030421
+    notes: City proper (not the whole urban hromada). Zhytomyr Oblast.
+    notes_uk: Власне місто (без решти міської громади). Житомирська область.
+
+  - id: shostka
+    name: Shostka
+    name_local: Шостка
+    country: UA
+    boundary_relation: 2776723
+    katottg: UA59100170010017917
+    territories: true
+    hromada_relation: 11999972
+    notes: City proper (not the whole urban hromada). Sumy Oblast.
+    notes_uk: Власне місто (без решти міської громади). Сумська область.
+
+  - id: brovary
+    name: Brovary
+    name_local: Бровари
+    country: UA
+    boundary_relation: 1929810
+    katottg: UA32060050010081797
+    territories: true
+    hromada_relation: 12345377
+    notes: City proper (not the whole urban hromada). Kyiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Київська область.
+
+  - id: izmail
+    name: Izmail
+    name_local: Ізмаїл
+    country: UA
+    boundary_relation: 17731704
+    katottg: UA51080030010072039
+    territories: true
+    hromada_relation: 11804408
+    notes: City proper (not the whole urban hromada). Odesa Oblast.
+    notes_uk: Власне місто (без решти міської громади). Одеська область.
+
+  - id: bakhmut
+    name: Bakhmut
+    name_local: Бахмут
+    country: UA
+    boundary_relation: 3313703
+    katottg: UA14020010010059145
+    territories: true
+    hromada_relation: 13630428
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: yalta
+    name: Yalta
+    name_local: Ялта
+    country: UA
+    boundary_relation: 3005461
+    clip_to_land: true
+    katottg: UA01200310010053783
+    territories: true
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.
+
+  - id: drohobych
+    name: Drohobych
+    name_local: Дрогобич
+    country: UA
+    boundary_relation: 2122758
+    katottg: UA46020030010069501
+    territories: true
+    hromada_relation: 11797541
+    notes: City proper (not the whole urban hromada). Lviv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Львівська область.
+
+  - id: nizhyn
+    name: Nizhyn
+    name_local: Ніжин
+    country: UA
+    boundary_relation: 5162189
+    katottg: UA74040250010023991
+    territories: true
+    hromada_relation: 12148494
+    notes: City proper (not the whole urban hromada). Chernihiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Чернігівська область.
+
+  - id: feodosia
+    name: Feodosia
+    name_local: Феодосія
+    country: UA
+    boundary_relation: 2997809
+    clip_to_land: true
+    katottg: UA01180710010062019
+    territories: true
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.
+
+  - id: dovzhansk
+    name: Dovzhansk
+    name_local: Довжанськ
+    country: UA
+    boundary_relation: 2878463
+    katottg: UA44040010010080356
+    territories: true
+    hromada_relation: 17966979
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: samar
+    name: Samar
+    name_local: Самар
+    country: UA
+    boundary_relation: 3505757
+    katottg: UA12100070010038698
+    territories: true
+    hromada_relation: 12875051
+    notes: City proper (not the whole urban hromada). Dnipropetrovsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Дніпропетровська область.
+
+  - id: chystiakove
+    name: Chystiakove
+    name_local: Чистякове
+    country: UA
+    boundary_relation: 2263374
+    katottg: UA14060150010042613
+    territories: true
+    hromada_relation: 17963711
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: sheptytskyi
+    name: Sheptytskyi
+    name_local: Шептицький
+    country: UA
+    boundary_relation: 2819236
+    katottg: UA46120130010071117
+    territories: true
+    hromada_relation: 12229650
+    notes: City proper (not the whole urban hromada). Lviv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Львівська область.
+
+  - id: pervomaisk
+    name: Pervomaisk
+    name_local: Первомайськ
+    country: UA
+    boundary_relation: 2318311
+    katottg: UA48080130010068596
+    territories: true
+    hromada_relation: 11839291
+    notes: City proper (not the whole urban hromada). Mykolaiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Миколаївська область.
+
+  - id: smila
+    name: Smila
+    name_local: Сміла
+    country: UA
+    boundary_relation: 9245942
+    katottg: UA71080390010069946
+    territories: true
+    hromada_relation: 13299913
+    notes: City proper (not the whole urban hromada). Cherkasy Oblast.
+    notes_uk: Власне місто (без решти міської громади). Черкаська область.
+
+  - id: pokrovsk
+    name: Pokrovsk
+    name_local: Покровськ
+    country: UA
+    boundary_relation: 2506125
+    katottg: UA14160210010099403
+    territories: true
+    hromada_relation: 13285838
+    notes: City proper (not the whole urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Донецька область.
+
+  - id: kalush
+    name: Kalush
+    name_local: Калуш
+    country: UA
+    boundary_relation: 2190422
+    katottg: UA26060170010082672
+    territories: true
+    hromada_relation: 11857111
+    notes: City proper (not the whole urban hromada). Ivano-Frankivsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Івано-Франківська область.
+
+  - id: korosten
+    name: Korosten
+    name_local: Коростень
+    country: UA
+    boundary_relation: 2296668
+    katottg: UA18060090010074365
+    territories: true
+    hromada_relation: 12043128
+    notes: City proper (not the whole urban hromada). Zhytomyr Oblast.
+    notes_uk: Власне місто (без решти міської громади). Житомирська область.
+
+  - id: rubizhne
+    name: Rubizhne
+    name_local: Рубіжне
+    country: UA
+    boundary_relation: 2521435
+    katottg: UA44120090010096548
+    territories: true
+    hromada_relation: 13639202
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: pryluky
+    name: Pryluky
+    name_local: Прилуки
+    country: UA
+    boundary_relation: 18281344
+    katottg: UA74080130010045104
+    territories: true
+    hromada_relation: 12160340
+    notes: City proper (not the whole urban hromada). Chernihiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Чернігівська область.
+
+  - id: druzhkivka
+    name: Druzhkivka
+    name_local: Дружківка
+    country: UA
+    boundary_relation: 2900261
+    katottg: UA14120030010055241
+    territories: true
+    hromada_relation: 13631377
+    notes: City proper (not the whole urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Донецька область.
+
+  - id: khartsyzk
+    name: Khartsyzk
+    name_local: Харцизьк
+    country: UA
+    boundary_relation: 2228485
+    katottg: UA14080090010025582
+    territories: true
+    hromada_relation: 17963411
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: lozova
+    name: Lozova
+    name_local: Лозова
+    country: UA
+    boundary_relation: 2580458
+    katottg: UA63100050010081626
+    territories: true
+    hromada_relation: 11814666
+    notes: City proper (not the whole urban hromada). Kharkiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Харківська область.
+
+  - id: antratsyt
+    name: Antratsyt
+    name_local: Антрацит
+    country: UA
+    boundary_relation: 2383939
+    katottg: UA44080010010047352
+    territories: true
+    hromada_relation: 17967540
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: stryi
+    name: Stryi
+    name_local: Стрий
+    country: UA
+    boundary_relation: 7986302
+    katottg: UA46100230010074173
+    territories: true
+    hromada_relation: 12108799
+    notes: City proper (not the whole urban hromada). Lviv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Львівська область.
+
+  - id: kolomyia
+    name: Kolomyia
+    name_local: Коломия
+    country: UA
+    boundary_relation: 2697552
+    katottg: UA26080070010075786
+    territories: true
+    hromada_relation: 11889950
+    notes: City proper (not the whole urban hromada). Ivano-Frankivsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Івано-Франківська область.
+
+  - id: shakhtarsk
+    name: Shakhtarsk
+    name_local: Шахтарськ
+    country: UA
+    boundary_relation: 2381773
+    katottg: UA14060170010074240
+    territories: true
+    hromada_relation: 17963715
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: snizhne
+    name: Snizhne
+    name_local: Сніжне
+    country: UA
+    boundary_relation: 2068203
+    katottg: UA14060110010087700
+    territories: true
+    hromada_relation: 17963718
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.
+
+  - id: sorokyne
+    name: Sorokyne
+    name_local: Сорокине
+    country: UA
+    boundary_relation: 4116163
+    katottg: UA44040030010012509
+    territories: true
+    hromada_relation: 17966963
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: zviahel
+    name: Zviahel
+    name_local: Звягель
+    country: UA
+    boundary_relation: 2313420
+    katottg: UA18080150010017476
+    territories: true
+    hromada_relation: 9635366
+    notes: City proper (not the whole urban hromada). Zhytomyr Oblast.
+    notes_uk: Власне місто (без решти міської громади). Житомирська область.
+
+  - id: enerhodar
+    name: Enerhodar
+    name_local: Енергодар
+    country: UA
+    boundary_relation: 1989799
+    katottg: UA23040110010044100
+    territories: true
+    hromada_relation: 12207507
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область.
+
+  - id: izium
+    name: Izium
+    name_local: Ізюм
+    country: UA
+    boundary_relation: 11179426
+    katottg: UA63040090010029555
+    territories: true
+    hromada_relation: 11815198
+    notes: City proper (not the whole urban hromada). Kharkiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Харківська область.
+
+  - id: myrnohrad
+    name: Myrnohrad
+    name_local: Мирноград
+    country: UA
+    boundary_relation: 2910227
+    katottg: UA14160150010065527
+    territories: true
+    hromada_relation: 13285837
+    notes: City proper (not the whole urban hromada). Donetsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Донецька область.
+
+  - id: brianka
+    name: Brianka
+    name_local: Брянка
+    country: UA
+    boundary_relation: 4716256
+    katottg: UA44020050030024674
+    territories: true
+    hromada_relation: 17981169
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: chornomorsk
+    name: Chornomorsk
+    name_local: Чорноморськ
+    country: UA
+    boundary_relation: 3606771
+    clip_to_land: true
+    katottg: UA51100370010020298
+    territories: true
+    hromada_relation: 12889090
+    notes: City proper (not the whole urban hromada). Odesa Oblast.
+    notes_uk: Власне місто (без решти міської громади). Одеська область.
+
+  - id: boryspil
+    name: Boryspil
+    name_local: Бориспіль
+    country: UA
+    boundary_relation: 1934961
+    katottg: UA32040010010093209
+    territories: true
+    hromada_relation: 12341622
+    notes: City proper (not the whole urban hromada). Kyiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Київська область.
+
+  - id: novovolynsk
+    name: Novovolynsk
+    name_local: Нововолинськ
+    country: UA
+    boundary_relation: 1951965
+    katottg: UA07020130010041880
+    territories: true
+    hromada_relation: 12211774
+    notes: City proper (not the whole urban hromada). Volyn Oblast.
+    notes_uk: Власне місто (без решти міської громади). Волинська область.
+
+  - id: rovenky
+    name: Rovenky
+    name_local: Ровеньки
+    country: UA
+    boundary_relation: 2878522
+    katottg: UA44080030010061353
+    territories: true
+    hromada_relation: 17967341
+    occupied_since: 2014
+    notes: Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.
+    notes_uk: Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.
+
+  - id: zhovti_vody
+    name: Zhovti Vody
+    name_local: Жовті Води
+    country: UA
+    boundary_relation: 2693667
+    katottg: UA12040110010051141
+    territories: true
+    hromada_relation: 12496907
+    notes: City proper (not the whole urban hromada). Dnipropetrovsk Oblast.
+    notes_uk: Власне місто (без решти міської громади). Дніпропетровська область.
+
+  - id: lubny
+    name: Lubny
+    name_local: Лубни
+    country: UA
+    boundary_relation: 18281343
+    katottg: UA53040030010081016
+    territories: true
+    hromada_relation: 12191420
+    notes: City proper (not the whole urban hromada). Poltava Oblast.
+    notes_uk: Власне місто (без решти міської громади). Полтавська область.
+
+  - id: nova_kakhovka
+    name: Nova Kakhovka
+    name_local: Нова Каховка
+    country: UA
+    boundary_relation: 2516278
+    katottg: UA65060170010075325
+    territories: true
+    hromada_relation: 12429839
+    occupied_since: 2022
+    notes: Temporarily occupied since 2022; OSM mapping may be less complete or current. Kherson Oblast.
+    notes_uk: Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Херсонська область.
+
+  - id: fastiv
+    name: Fastiv
+    name_local: Фастів
+    country: UA
+    boundary_relation: 2533207
+    katottg: UA32140150010091295
+    territories: true
+    hromada_relation: 12544244
+    notes: City proper (not the whole urban hromada). Kyiv Oblast.
+    notes_uk: Власне місто (без решти міської громади). Київська область.
+
+  - id: bilhorod_dnistrovskyi
+    name: Bilhorod-Dnistrovskyi
+    name_local: Білгород-Дністровський
+    country: UA
+    boundary_relation: 3200259
+    katottg: UA51040010010048834
+    territories: true
+    hromada_relation: 13184690
+    notes: City proper (not the whole urban hromada). Odesa Oblast.
+    notes_uk: Власне місто (без решти міської громади). Одеська область.
+
+  - id: horishni_plavni
+    name: Horishni Plavni
+    name_local: Горішні Плавні
+    country: UA
+    boundary_relation: 4097647
+    katottg: UA53020030010087471
+    territories: true
+    hromada_relation: 12192261
+    notes: City proper (not the whole urban hromada). Poltava Oblast.
+    notes_uk: Власне місто (без решти міської громади). Полтавська область.
+
+  - id: romny
+    name: Romny
+    name_local: Ромни
+    country: UA
+    boundary_relation: 2696092
+    katottg: UA59060110010062596
+    territories: true
+    hromada_relation: 11960308
+    notes: City proper (not the whole urban hromada). Sumy Oblast.
+    notes_uk: Власне місто (без решти міської громади). Сумська область.
+
+  - id: okhtyrka
+    name: Okhtyrka
+    name_local: Охтирка
+    country: UA
+    boundary_relation: 3589658
+    katottg: UA59040110010017443
+    territories: true
+    hromada_relation: 10534168
+    notes: City proper (not the whole urban hromada). Sumy Oblast.
+    notes_uk: Власне місто (без решти міської громади). Сумська область.
+
+  - id: svitlovodsk
+    name: Svitlovodsk
+    name_local: Світловодськ
+    country: UA
+    boundary_relation: 18298365
+    katottg: UA35080170010073614
+    territories: true
+    hromada_relation: 13259969
+    notes: City proper (not the whole urban hromada). Kirovohrad Oblast.
+    notes_uk: Власне місто (без решти міської громади). Кіровоградська область.
