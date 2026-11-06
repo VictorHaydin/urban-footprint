@@ -76,6 +76,68 @@ The city is the OSM administrative boundary relation configured in `config/citie
 | Kremenchuk | 2320579 | City proper, Poltava Oblast, on both banks of the Dnipro. OSM boundary ≈ 95.4 km² |
 | Uman | 3058556 | City proper, Cherkasy Oblast. OSM boundary ≈ 44.6 km² |
 | Chernihiv | 1952636 | City proper. City boundary extends ~2 km² beyond the hromada in OSM. OSM boundary ≈ 83.9 km² |
+| Makiivka | 2224013 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 180.9 km² |
+| Kerch | 2865045 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here. OSM boundary ≈ 108.4 km² |
+| Nikopol | 2318332 | City proper. Dnipropetrovsk Oblast. OSM boundary ≈ 44.3 km² |
+| Sloviansk | 3940400 | City proper. Donetsk Oblast. OSM boundary ≈ 71.0 km² |
+| Siverskodonetsk | 4089182 | Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 93.8 km² |
+| Alchevsk | 2383892 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 40.0 km² |
+| Pavlohrad | 1746879 | City proper. Dnipropetrovsk Oblast. OSM boundary ≈ 60.0 km² |
+| Yevpatoria | 2175059 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here. OSM boundary ≈ 43.0 km² |
+| Yenakiieve | 3936114 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 49.3 km² |
+| Kamianets-Podilskyi | 2202756 | City proper. Khmelnytskyi Oblast. OSM boundary ≈ 28.0 km² |
+| Kostiantynivka | 3940146 | City proper. Donetsk Oblast. OSM boundary ≈ 61.0 km² |
+| Khrustalnyi | 2910703 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 46.0 km² |
+| Oleksandriia | 2320570 | City proper. Kirovohrad Oblast. OSM boundary ≈ 55.5 km² |
+| Konotop | 2822403 | City proper. Sumy Oblast. OSM boundary ≈ 43.9 km² |
+| Kadiivka | 2521434 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 57.5 km² |
+| Berdychiv | 2069556 | City proper. Zhytomyr Oblast. OSM boundary ≈ 35.5 km² |
+| Shostka | 2776723 | City proper. Sumy Oblast. OSM boundary ≈ 43.7 km² |
+| Brovary | 1929810 | City proper. Kyiv Oblast. OSM boundary ≈ 33.8 km² |
+| Izmail | 17731704 | City proper. Odesa Oblast. OSM boundary ≈ 38.0 km² |
+| Bakhmut | 3313703 | Temporarily occupied since 2022; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 37.2 km² |
+| Yalta | 3005461 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here. OSM boundary ≈ 14.9 km² |
+| Drohobych | 2122758 | City proper. Lviv Oblast. OSM boundary ≈ 32.3 km² |
+| Nizhyn | 5162189 | City proper. Chernihiv Oblast. OSM boundary ≈ 43.5 km² |
+| Feodosia | 2997809 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here. OSM boundary ≈ 37.8 km² |
+| Dovzhansk | 2878463 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 42.2 km² |
+| Samar | 3505757 | City proper. Dnipropetrovsk Oblast. OSM boundary ≈ 36.1 km² |
+| Chystiakove | 2263374 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 63.6 km² |
+| Sheptytskyi | 2819236 | City proper. Lviv Oblast. OSM boundary ≈ 15.4 km² |
+| Pervomaisk | 2318311 | City proper. Mykolaiv Oblast. OSM boundary ≈ 42.6 km² |
+| Smila | 9245942 | City proper. Cherkasy Oblast. OSM boundary ≈ 35.7 km² |
+| Pokrovsk | 2506125 | City proper. Donetsk Oblast. OSM boundary ≈ 31.2 km² |
+| Kalush | 2190422 | City proper. Ivano-Frankivsk Oblast. OSM boundary ≈ 67.1 km² |
+| Korosten | 2296668 | City proper. Zhytomyr Oblast. OSM boundary ≈ 43.2 km² |
+| Rubizhne | 2521435 | Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 34.7 km² |
+| Pryluky | 18281344 | City proper. Chernihiv Oblast. OSM boundary ≈ 42.1 km² |
+| Druzhkivka | 2900261 | City proper. Donetsk Oblast. OSM boundary ≈ 33.5 km² |
+| Khartsyzk | 2228485 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 20.5 km² |
+| Lozova | 2580458 | City proper. Kharkiv Oblast. OSM boundary ≈ 22.8 km² |
+| Antratsyt | 2383939 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 34.3 km² |
+| Stryi | 7986302 | City proper. Lviv Oblast. OSM boundary ≈ 17.1 km² |
+| Kolomyia | 2697552 | City proper. Ivano-Frankivsk Oblast. OSM boundary ≈ 40.6 km² |
+| Shakhtarsk | 2381773 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 40.6 km² |
+| Snizhne | 2068203 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast. OSM boundary ≈ 46.3 km² |
+| Sorokyne | 4116163 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 38.7 km² |
+| Zviahel | 2313420 | City proper. Zhytomyr Oblast. OSM boundary ≈ 28.0 km² |
+| Enerhodar | 1989799 | Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast. OSM boundary ≈ 18.0 km² |
+| Izium | 11179426 | City proper. Kharkiv Oblast. OSM boundary ≈ 47.6 km² |
+| Myrnohrad | 2910227 | City proper. Donetsk Oblast. OSM boundary ≈ 22.9 km² |
+| Brianka | 4716256 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 42.1 km² |
+| Chornomorsk | 3606771 | City proper. Odesa Oblast. OSM boundary ≈ 7.0 km² |
+| Boryspil | 1934961 | City proper. Kyiv Oblast. OSM boundary ≈ 38.1 km² |
+| Novovolynsk | 1951965 | City proper. Volyn Oblast. OSM boundary ≈ 13.4 km² |
+| Rovenky | 2878522 | Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast. OSM boundary ≈ 42.1 km² |
+| Zhovti Vody | 2693667 | City proper. Dnipropetrovsk Oblast. OSM boundary ≈ 35.4 km² |
+| Lubny | 18281343 | City proper. Poltava Oblast. OSM boundary ≈ 31.5 km² |
+| Nova Kakhovka | 2516278 | Temporarily occupied since 2022; OSM mapping may be less complete or current. Kherson Oblast. OSM boundary ≈ 22.4 km² |
+| Fastiv | 2533207 | City proper. Kyiv Oblast. OSM boundary ≈ 50.9 km² |
+| Bilhorod-Dnistrovskyi | 3200259 | City proper. Odesa Oblast. OSM boundary ≈ 19.6 km² |
+| Horishni Plavni | 4097647 | City proper. Poltava Oblast. OSM boundary ≈ 114.1 km² |
+| Romny | 2696092 | City proper. Sumy Oblast. OSM boundary ≈ 32.2 km² |
+| Okhtyrka | 3589658 | City proper. Sumy Oblast. OSM boundary ≈ 33.5 km² |
+| Svitlovodsk | 18298365 | City proper. Kirovohrad Oblast. OSM boundary ≈ 23.2 km² |
 
 Areas are computed in a city-centred **Lambert Azimuthal Equal-Area** projection, so area error from the
 projection is zero.
@@ -244,8 +306,8 @@ same KATOTTG code (28,580 of 28,657 Derzhstat settlements; 100% of the populatio
 every settlement within 3 h (settlement point snapped to the nearest road, at most 3 km away).
 
 Centres are all 101 cities of over 50,000 people in the 2001 census. A city needs only its extracted OSM boundary
-to be a centre: cities not yet processed further (`map_only` in `agglomeration.json`) appear on the Агломерації
-page only, named from `config/cities.yaml` and linked to their census / Derzhstat row by `katottg` or by name.
+to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the
+Агломерації page only, named from `config/cities.yaml` and linked to its census / Derzhstat row by `katottg` or by name.
 
 The graph is the **intact road network**, as before the full-scale war, consistent with the free-flow
 assumption:

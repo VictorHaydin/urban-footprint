@@ -8,7 +8,7 @@ OpenStreetMap (OSM) data and shows it in a static web app (Ukrainian by default,
 
 **Web app:** <https://victorhaydin.github.io/urban-footprint/>
 
-Cities: 39 on the map and in the comparison; on the Agglomerations page **every Ukrainian city of over 50,000 people in the 2001 census** (101) is a centre. More can be added in
+Cities: **every Ukrainian city of over 50,000 people in the 2001 census** (101). More can be added in
 [`config/cities.yaml`](config/cities.yaml).
 
 | Part | Where | What |

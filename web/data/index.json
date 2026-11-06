@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-11-03T14:06:55+00:00",
+ "generated_at": "2026-11-06T17:03:09+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -1911,6 +1911,2362 @@
     "greater": {
      "status": "ok",
      "area_km2": 131.503
+    }
+   }
+  },
+  {
+   "id": "makiivka",
+   "name": "Makiivka",
+   "name_local": "Макіївка",
+   "country": "UA",
+   "area_km2": 180.884,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.966568,
+    48.057682
+   ],
+   "bounds": [
+    37.81396,
+    47.970765,
+    38.10891,
+    48.142693
+   ],
+   "osm_relation": 2224013,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 180.884
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 180.884
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 246.52
+    }
+   }
+  },
+  {
+   "id": "kerch",
+   "name": "Kerch",
+   "name_local": "Керч",
+   "country": "UA",
+   "area_km2": 108.441,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    36.459232,
+    45.329194
+   ],
+   "bounds": [
+    36.349572,
+    45.213044,
+    36.63794,
+    45.395001
+   ],
+   "osm_relation": 2865045,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 108.441
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 108.441
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 122.788
+    }
+   }
+  },
+  {
+   "id": "nikopol",
+   "name": "Nikopol",
+   "name_local": "Нікополь",
+   "country": "UA",
+   "area_km2": 44.304,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.374239,
+    47.580488
+   ],
+   "bounds": [
+    34.284561,
+    47.546741,
+    34.465715,
+    47.605714
+   ],
+   "osm_relation": 2318332,
+   "notes": "City proper (not the whole urban hromada). Dnipropetrovsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Дніпропетровська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 44.304
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 51.524
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 53.602
+    }
+   }
+  },
+  {
+   "id": "sloviansk",
+   "name": "Sloviansk",
+   "name_local": "Слов'янськ",
+   "country": "UA",
+   "area_km2": 71.041,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.609991,
+    48.849091
+   ],
+   "bounds": [
+    37.508896,
+    48.805668,
+    37.719272,
+    48.895515
+   ],
+   "osm_relation": 3940400,
+   "notes": "City proper (not the whole urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 71.041
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 126.067
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 95.854
+    }
+   }
+  },
+  {
+   "id": "siverskodonetsk",
+   "name": "Siverskodonetsk",
+   "name_local": "Сіверськодонецьк",
+   "country": "UA",
+   "area_km2": 93.763,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.480152,
+    48.952921
+   ],
+   "bounds": [
+    38.378002,
+    48.883414,
+    38.566625,
+    49.00305
+   ],
+   "osm_relation": 4089182,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2022,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 93.763
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 720.521
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 208.435
+    }
+   }
+  },
+  {
+   "id": "alchevsk",
+   "name": "Alchevsk",
+   "name_local": "Алчевськ",
+   "country": "UA",
+   "area_km2": 39.972,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.797421,
+    48.473294
+   ],
+   "bounds": [
+    38.741054,
+    48.441274,
+    38.863428,
+    48.511224
+   ],
+   "osm_relation": 2383892,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 39.972
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 39.972
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 74.782
+    }
+   }
+  },
+  {
+   "id": "pavlohrad",
+   "name": "Pavlohrad",
+   "name_local": "Павлоград",
+   "country": "UA",
+   "area_km2": 60.012,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    35.876498,
+    48.534831
+   ],
+   "bounds": [
+    35.776665,
+    48.475034,
+    35.974241,
+    48.585765
+   ],
+   "osm_relation": 1746879,
+   "notes": "City proper (not the whole urban hromada). Dnipropetrovsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Дніпропетровська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 60.012
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 60.179
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 87.118
+    }
+   }
+  },
+  {
+   "id": "yevpatoria",
+   "name": "Yevpatoria",
+   "name_local": "Євпаторія",
+   "country": "UA",
+   "area_km2": 42.988,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.366704,
+    45.207428
+   ],
+   "bounds": [
+    33.309368,
+    45.151445,
+    33.492535,
+    45.250155
+   ],
+   "osm_relation": 2175059,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.988
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 42.988
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 72.291
+    }
+   }
+  },
+  {
+   "id": "yenakiieve",
+   "name": "Yenakiieve",
+   "name_local": "Єнакієве",
+   "country": "UA",
+   "area_km2": 49.273,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.215258,
+    48.233457
+   ],
+   "bounds": [
+    38.158811,
+    48.179938,
+    38.259815,
+    48.286355
+   ],
+   "osm_relation": 3936114,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 49.273
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 49.273
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 99.119
+    }
+   }
+  },
+  {
+   "id": "kamianets_podilskyi",
+   "name": "Kamianets-Podilskyi",
+   "name_local": "Кам'янець-Подільський",
+   "country": "UA",
+   "area_km2": 27.998,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    26.583314,
+    48.690497
+   ],
+   "bounds": [
+    26.543304,
+    48.647847,
+    26.616325,
+    48.734385
+   ],
+   "osm_relation": 2202756,
+   "notes": "City proper (not the whole urban hromada). Khmelnytskyi Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Хмельницька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 27.998
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 175.101
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 75.209
+    }
+   }
+  },
+  {
+   "id": "kostiantynivka",
+   "name": "Kostiantynivka",
+   "name_local": "Костянтинівка",
+   "country": "UA",
+   "area_km2": 61.045,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.71244,
+    48.525876
+   ],
+   "bounds": [
+    37.626941,
+    48.48678,
+    37.796195,
+    48.574017
+   ],
+   "osm_relation": 3940146,
+   "notes": "City proper (not the whole urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 61.045
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 461.297
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 78.632
+    }
+   }
+  },
+  {
+   "id": "khrustalnyi",
+   "name": "Khrustalnyi",
+   "name_local": "Хрустальний",
+   "country": "UA",
+   "area_km2": 46.046,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.927528,
+    48.139257
+   ],
+   "bounds": [
+    38.864866,
+    48.072057,
+    38.97507,
+    48.191142
+   ],
+   "osm_relation": 2910703,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 46.046
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 46.046
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 111.49
+    }
+   }
+  },
+  {
+   "id": "oleksandriia",
+   "name": "Oleksandriia",
+   "name_local": "Олександрія",
+   "country": "UA",
+   "area_km2": 55.537,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.100387,
+    48.663594
+   ],
+   "bounds": [
+    33.005765,
+    48.615589,
+    33.205907,
+    48.716012
+   ],
+   "osm_relation": 2320570,
+   "notes": "City proper (not the whole urban hromada). Kirovohrad Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Кіровоградська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 55.537
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 260.406
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 67.646
+    }
+   }
+  },
+  {
+   "id": "konotop",
+   "name": "Konotop",
+   "name_local": "Конотоп",
+   "country": "UA",
+   "area_km2": 43.906,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.202011,
+    51.235249
+   ],
+   "bounds": [
+    33.135369,
+    51.197439,
+    33.27656,
+    51.274315
+   ],
+   "osm_relation": 2822403,
+   "notes": "City proper (not the whole urban hromada). Sumy Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Сумська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 43.906
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 99.147
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 48.987
+    }
+   }
+  },
+  {
+   "id": "kadiivka",
+   "name": "Kadiivka",
+   "name_local": "Кадіївка",
+   "country": "UA",
+   "area_km2": 57.46,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.645907,
+    48.562943
+   ],
+   "bounds": [
+    38.562445,
+    48.51818,
+    38.734996,
+    48.605846
+   ],
+   "osm_relation": 2521434,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 57.46
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 57.46
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 169.004
+    }
+   }
+  },
+  {
+   "id": "berdychiv",
+   "name": "Berdychiv",
+   "name_local": "Бердичів",
+   "country": "UA",
+   "area_km2": 35.54,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    28.594386,
+    49.89403
+   ],
+   "bounds": [
+    28.549308,
+    49.85004,
+    28.639482,
+    49.931878
+   ],
+   "osm_relation": 2069556,
+   "notes": "City proper (not the whole urban hromada). Zhytomyr Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Житомирська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 35.54
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 82.457
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 56.861
+    }
+   }
+  },
+  {
+   "id": "shostka",
+   "name": "Shostka",
+   "name_local": "Шостка",
+   "country": "UA",
+   "area_km2": 43.675,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.484963,
+    51.871652
+   ],
+   "bounds": [
+    33.416988,
+    51.833506,
+    33.548402,
+    51.919596
+   ],
+   "osm_relation": 2776723,
+   "notes": "City proper (not the whole urban hromada). Sumy Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Сумська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 43.675
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 1260.509
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 54.03
+    }
+   }
+  },
+  {
+   "id": "brovary",
+   "name": "Brovary",
+   "name_local": "Бровари",
+   "country": "UA",
+   "area_km2": 33.846,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.80095,
+    50.506655
+   ],
+   "bounds": [
+    30.737605,
+    50.482308,
+    30.864076,
+    50.537087
+   ],
+   "osm_relation": 1929810,
+   "notes": "City proper (not the whole urban hromada). Kyiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Київська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 33.846
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 125.232
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 94.045
+    }
+   }
+  },
+  {
+   "id": "izmail",
+   "name": "Izmail",
+   "name_local": "Ізмаїл",
+   "country": "UA",
+   "area_km2": 38.049,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    28.843556,
+    45.349837
+   ],
+   "bounds": [
+    28.794651,
+    45.302244,
+    28.901304,
+    45.394246
+   ],
+   "osm_relation": 17731704,
+   "notes": "City proper (not the whole urban hromada). Odesa Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Одеська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 38.049
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 52.377
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 57.251
+    }
+   }
+  },
+  {
+   "id": "bakhmut",
+   "name": "Bakhmut",
+   "name_local": "Бахмут",
+   "country": "UA",
+   "area_km2": 37.24,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.002731,
+    48.595857
+   ],
+   "bounds": [
+    37.952033,
+    48.554067,
+    38.071035,
+    48.647459
+   ],
+   "osm_relation": 3313703,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2022,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 37.24
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 430.438
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 61.617
+    }
+   }
+  },
+  {
+   "id": "yalta",
+   "name": "Yalta",
+   "name_local": "Ялта",
+   "country": "UA",
+   "area_km2": 14.873,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.156287,
+    44.501047
+   ],
+   "bounds": [
+    34.109404,
+    44.477022,
+    34.194072,
+    44.527116
+   ],
+   "osm_relation": 3005461,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 14.873
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 14.873
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 36.589
+    }
+   }
+  },
+  {
+   "id": "drohobych",
+   "name": "Drohobych",
+   "name_local": "Дрогобич",
+   "country": "UA",
+   "area_km2": 32.28,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    23.511906,
+    49.351173
+   ],
+   "bounds": [
+    23.463965,
+    49.316225,
+    23.565677,
+    49.379551
+   ],
+   "osm_relation": 2122758,
+   "notes": "City proper (not the whole urban hromada). Lviv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Львівська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 32.28
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 426.149
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 112.811
+    }
+   }
+  },
+  {
+   "id": "nizhyn",
+   "name": "Nizhyn",
+   "name_local": "Ніжин",
+   "country": "UA",
+   "area_km2": 43.473,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    31.87754,
+    51.044959
+   ],
+   "bounds": [
+    31.80276,
+    50.986932,
+    31.944317,
+    51.096327
+   ],
+   "osm_relation": 5162189,
+   "notes": "City proper (not the whole urban hromada). Chernihiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Чернігівська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 43.473
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 131.209
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 75.708
+    }
+   }
+  },
+  {
+   "id": "feodosia",
+   "name": "Feodosia",
+   "name_local": "Феодосія",
+   "country": "UA",
+   "area_km2": 37.782,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    35.371873,
+    45.041413
+   ],
+   "bounds": [
+    35.313275,
+    44.998533,
+    35.425466,
+    45.101589
+   ],
+   "osm_relation": 2997809,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Autonomous Republic of Crimea. No hromada level; OSM has no KATOTTG codes here.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Автономна Республіка Крим. Рівня громади немає; в OSM тут немає кодів КАТОТТГ.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 37.782
+    },
+    "hromada": {
+     "status": "no_hromada",
+     "area_km2": 37.782
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 71.476
+    }
+   }
+  },
+  {
+   "id": "dovzhansk",
+   "name": "Dovzhansk",
+   "name_local": "Довжанськ",
+   "country": "UA",
+   "area_km2": 42.21,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    39.652189,
+    48.074268
+   ],
+   "bounds": [
+    39.586766,
+    48.007663,
+    39.73081,
+    48.108702
+   ],
+   "osm_relation": 2878463,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.21
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 42.21
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 86.482
+    }
+   }
+  },
+  {
+   "id": "samar",
+   "name": "Samar",
+   "name_local": "Самар",
+   "country": "UA",
+   "area_km2": 36.1,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    35.222829,
+    48.634207
+   ],
+   "bounds": [
+    35.164333,
+    48.598622,
+    35.295668,
+    48.677049
+   ],
+   "osm_relation": 3505757,
+   "notes": "City proper (not the whole urban hromada). Dnipropetrovsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Дніпропетровська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 36.1
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 36.1
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 108.435
+    }
+   }
+  },
+  {
+   "id": "chystiakove",
+   "name": "Chystiakove",
+   "name_local": "Чистякове",
+   "country": "UA",
+   "area_km2": 63.59,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.620678,
+    48.035514
+   ],
+   "bounds": [
+    38.539625,
+    47.982482,
+    38.696466,
+    48.084308
+   ],
+   "osm_relation": 2263374,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 63.59
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 63.59
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 179.849
+    }
+   }
+  },
+  {
+   "id": "sheptytskyi",
+   "name": "Sheptytskyi",
+   "name_local": "Шептицький",
+   "country": "UA",
+   "area_km2": 15.432,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    24.227581,
+    50.387729
+   ],
+   "bounds": [
+    24.188513,
+    50.360788,
+    24.259448,
+    50.409581
+   ],
+   "osm_relation": 2819236,
+   "notes": "City proper (not the whole urban hromada). Lviv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Львівська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 15.432
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 228.101
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 49.595
+    }
+   }
+  },
+  {
+   "id": "pervomaisk",
+   "name": "Pervomaisk",
+   "name_local": "Первомайськ",
+   "country": "UA",
+   "area_km2": 42.634,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.846306,
+    48.036525
+   ],
+   "bounds": [
+    30.781261,
+    47.977607,
+    30.908389,
+    48.093983
+   ],
+   "osm_relation": 2318311,
+   "notes": "City proper (not the whole urban hromada). Mykolaiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Миколаївська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.634
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 251.297
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 59.365
+    }
+   }
+  },
+  {
+   "id": "smila",
+   "name": "Smila",
+   "name_local": "Сміла",
+   "country": "UA",
+   "area_km2": 35.668,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    31.886384,
+    49.214266
+   ],
+   "bounds": [
+    31.837143,
+    49.166962,
+    31.933424,
+    49.254523
+   ],
+   "osm_relation": 9245942,
+   "notes": "City proper (not the whole urban hromada). Cherkasy Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Черкаська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 35.668
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 39.35
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 80.811
+    }
+   }
+  },
+  {
+   "id": "pokrovsk",
+   "name": "Pokrovsk",
+   "name_local": "Покровськ",
+   "country": "UA",
+   "area_km2": 31.167,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.173059,
+    48.282155
+   ],
+   "bounds": [
+    37.114793,
+    48.249762,
+    37.231454,
+    48.314906
+   ],
+   "osm_relation": 2506125,
+   "notes": "City proper (not the whole urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 31.167
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 514.634
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 74.927
+    }
+   }
+  },
+  {
+   "id": "kalush",
+   "name": "Kalush",
+   "name_local": "Калуш",
+   "country": "UA",
+   "area_km2": 67.111,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    24.362435,
+    49.040006
+   ],
+   "bounds": [
+    24.273442,
+    48.997835,
+    24.44856,
+    49.091088
+   ],
+   "osm_relation": 2190422,
+   "notes": "City proper (not the whole urban hromada). Ivano-Frankivsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Івано-Франківська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 67.111
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 265.974
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 146.703
+    }
+   }
+  },
+  {
+   "id": "korosten",
+   "name": "Korosten",
+   "name_local": "Коростень",
+   "country": "UA",
+   "area_km2": 43.184,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    28.631977,
+    50.959479
+   ],
+   "bounds": [
+    28.55474,
+    50.912709,
+    28.698883,
+    51.008551
+   ],
+   "osm_relation": 2296668,
+   "notes": "City proper (not the whole urban hromada). Zhytomyr Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Житомирська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 43.184
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 809.278
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 76.2
+    }
+   }
+  },
+  {
+   "id": "rubizhne",
+   "name": "Rubizhne",
+   "name_local": "Рубіжне",
+   "country": "UA",
+   "area_km2": 34.722,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.385493,
+    49.015727
+   ],
+   "bounds": [
+    38.332999,
+    48.970289,
+    38.437011,
+    49.055032
+   ],
+   "osm_relation": 2521435,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2022,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 34.722
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 398.548
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 59.411
+    }
+   }
+  },
+  {
+   "id": "pryluky",
+   "name": "Pryluky",
+   "name_local": "Прилуки",
+   "country": "UA",
+   "area_km2": 42.137,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.376683,
+    50.587524
+   ],
+   "bounds": [
+    32.293964,
+    50.550618,
+    32.44345,
+    50.626199
+   ],
+   "osm_relation": 18281344,
+   "notes": "City proper (not the whole urban hromada). Chernihiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Чернігівська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.137
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 42.137
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 63.025
+    }
+   }
+  },
+  {
+   "id": "druzhkivka",
+   "name": "Druzhkivka",
+   "name_local": "Дружківка",
+   "country": "UA",
+   "area_km2": 33.473,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.532329,
+    48.620193
+   ],
+   "bounds": [
+    37.465471,
+    48.587412,
+    37.600915,
+    48.66478
+   ],
+   "osm_relation": 2900261,
+   "notes": "City proper (not the whole urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 33.473
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 290.477
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 58.949
+    }
+   }
+  },
+  {
+   "id": "khartsyzk",
+   "name": "Khartsyzk",
+   "name_local": "Харцизьк",
+   "country": "UA",
+   "area_km2": 20.473,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.141753,
+    48.04133
+   ],
+   "bounds": [
+    38.098935,
+    48.018743,
+    38.18504,
+    48.062082
+   ],
+   "osm_relation": 2228485,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 20.473
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 20.473
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 32.625
+    }
+   }
+  },
+  {
+   "id": "lozova",
+   "name": "Lozova",
+   "name_local": "Лозова",
+   "country": "UA",
+   "area_km2": 22.839,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    36.316103,
+    48.885628
+   ],
+   "bounds": [
+    36.268194,
+    48.857771,
+    36.361796,
+    48.912826
+   ],
+   "osm_relation": 2580458,
+   "notes": "City proper (not the whole urban hromada). Kharkiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Харківська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 22.839
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 1421.184
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 43.687
+    }
+   }
+  },
+  {
+   "id": "antratsyt",
+   "name": "Antratsyt",
+   "name_local": "Антрацит",
+   "country": "UA",
+   "area_km2": 34.347,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    39.084367,
+    48.12351
+   ],
+   "bounds": [
+    39.033458,
+    48.087024,
+    39.137327,
+    48.162745
+   ],
+   "osm_relation": 2383939,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 34.347
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 34.347
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 75.449
+    }
+   }
+  },
+  {
+   "id": "stryi",
+   "name": "Stryi",
+   "name_local": "Стрий",
+   "country": "UA",
+   "area_km2": 17.097,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    23.842657,
+    49.259507
+   ],
+   "bounds": [
+    23.79713,
+    49.233961,
+    23.887438,
+    49.279919
+   ],
+   "osm_relation": 7986302,
+   "notes": "City proper (not the whole urban hromada). Lviv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Львівська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 17.097
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 550.976
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 52.791
+    }
+   }
+  },
+  {
+   "id": "kolomyia",
+   "name": "Kolomyia",
+   "name_local": "Коломия",
+   "country": "UA",
+   "area_km2": 40.605,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    25.032256,
+    48.544984
+   ],
+   "bounds": [
+    24.975279,
+    48.502876,
+    25.094341,
+    48.589578
+   ],
+   "osm_relation": 2697552,
+   "notes": "City proper (not the whole urban hromada). Ivano-Frankivsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Івано-Франківська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 40.605
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 172.909
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 127.195
+    }
+   }
+  },
+  {
+   "id": "shakhtarsk",
+   "name": "Shakhtarsk",
+   "name_local": "Шахтарськ",
+   "country": "UA",
+   "area_km2": 40.609,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.443244,
+    48.060088
+   ],
+   "bounds": [
+    38.377722,
+    48.027445,
+    38.542993,
+    48.102603
+   ],
+   "osm_relation": 2381773,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 40.609
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 40.609
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 58.371
+    }
+   }
+  },
+  {
+   "id": "snizhne",
+   "name": "Snizhne",
+   "name_local": "Сніжне",
+   "country": "UA",
+   "area_km2": 46.272,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.748386,
+    48.032292
+   ],
+   "bounds": [
+    38.690018,
+    47.985907,
+    38.806193,
+    48.098238
+   ],
+   "osm_relation": 2068203,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Donetsk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Донецька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 46.272
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 46.272
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 76.231
+    }
+   }
+  },
+  {
+   "id": "sorokyne",
+   "name": "Sorokyne",
+   "name_local": "Сорокине",
+   "country": "UA",
+   "area_km2": 38.702,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    39.741314,
+    48.300818
+   ],
+   "bounds": [
+    39.686716,
+    48.264111,
+    39.808441,
+    48.342613
+   ],
+   "osm_relation": 4116163,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 38.702
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 38.702
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 94.987
+    }
+   }
+  },
+  {
+   "id": "zviahel",
+   "name": "Zviahel",
+   "name_local": "Звягель",
+   "country": "UA",
+   "area_km2": 27.977,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    27.624098,
+    50.592471
+   ],
+   "bounds": [
+    27.573152,
+    50.538663,
+    27.664257,
+    50.624313
+   ],
+   "osm_relation": 2313420,
+   "notes": "City proper (not the whole urban hromada). Zhytomyr Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Житомирська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 27.977
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 249.949
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 46.387
+    }
+   }
+  },
+  {
+   "id": "enerhodar",
+   "name": "Enerhodar",
+   "name_local": "Енергодар",
+   "country": "UA",
+   "area_km2": 18.046,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.627839,
+    47.50128
+   ],
+   "bounds": [
+    34.577576,
+    47.479353,
+    34.672893,
+    47.525445
+   ],
+   "osm_relation": 1989799,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Zaporizhzhia Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Запорізька область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2022,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 18.046
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 63.26
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 18.046
+    }
+   }
+  },
+  {
+   "id": "izium",
+   "name": "Izium",
+   "name_local": "Ізюм",
+   "country": "UA",
+   "area_km2": 47.603,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.284051,
+    49.208414
+   ],
+   "bounds": [
+    37.223757,
+    49.146582,
+    37.337336,
+    49.261279
+   ],
+   "osm_relation": 11179426,
+   "notes": "City proper (not the whole urban hromada). Kharkiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Харківська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 47.603
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 414.313
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 59.569
+    }
+   }
+  },
+  {
+   "id": "myrnohrad",
+   "name": "Myrnohrad",
+   "name_local": "Мирноград",
+   "country": "UA",
+   "area_km2": 22.866,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    37.27273,
+    48.295288
+   ],
+   "bounds": [
+    37.234906,
+    48.258389,
+    37.303363,
+    48.335045
+   ],
+   "osm_relation": 2910227,
+   "notes": "City proper (not the whole urban hromada). Donetsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Донецька область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 22.866
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 67.056
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 38.303
+    }
+   }
+  },
+  {
+   "id": "brianka",
+   "name": "Brianka",
+   "name_local": "Брянка",
+   "country": "UA",
+   "area_km2": 42.083,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    38.662426,
+    48.498571
+   ],
+   "bounds": [
+    38.604224,
+    48.429814,
+    38.760965,
+    48.539561
+   ],
+   "osm_relation": 4716256,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.083
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 42.083
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 127.721
+    }
+   }
+  },
+  {
+   "id": "chornomorsk",
+   "name": "Chornomorsk",
+   "name_local": "Чорноморськ",
+   "country": "UA",
+   "area_km2": 6.995,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.650174,
+    46.302322
+   ],
+   "bounds": [
+    30.626511,
+    46.282663,
+    30.671381,
+    46.320171
+   ],
+   "osm_relation": 3606771,
+   "notes": "City proper (not the whole urban hromada). Odesa Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Одеська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 6.995
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 20.738
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 24.831
+    }
+   }
+  },
+  {
+   "id": "boryspil",
+   "name": "Boryspil",
+   "name_local": "Бориспіль",
+   "country": "UA",
+   "area_km2": 38.097,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.952221,
+    50.360224
+   ],
+   "bounds": [
+    30.898855,
+    50.317949,
+    31.007632,
+    50.413595
+   ],
+   "osm_relation": 1934961,
+   "notes": "City proper (not the whole urban hromada). Kyiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Київська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 38.097
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 527.821
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 85.013
+    }
+   }
+  },
+  {
+   "id": "novovolynsk",
+   "name": "Novovolynsk",
+   "name_local": "Нововолинськ",
+   "country": "UA",
+   "area_km2": 13.396,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    24.165255,
+    50.73059
+   ],
+   "bounds": [
+    24.115941,
+    50.704843,
+    24.197203,
+    50.761269
+   ],
+   "osm_relation": 1951965,
+   "notes": "City proper (not the whole urban hromada). Volyn Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Волинська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 13.396
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 73.786
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 54.327
+    }
+   }
+  },
+  {
+   "id": "rovenky",
+   "name": "Rovenky",
+   "name_local": "Ровеньки",
+   "country": "UA",
+   "area_km2": 42.145,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    39.350366,
+    48.074598
+   ],
+   "bounds": [
+    39.27437,
+    48.02579,
+    39.423266,
+    48.114012
+   ],
+   "osm_relation": 2878522,
+   "notes": "Temporarily occupied since 2014; OSM mapping may be less complete or current. Luhansk Oblast.",
+   "notes_uk": "Тимчасово окупований з 2014 року; дані OSM можуть бути менш повними чи актуальними. Луганська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2014,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 42.145
+    },
+    "hromada": {
+     "status": "occupied",
+     "area_km2": 42.145
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 63.469
+    }
+   }
+  },
+  {
+   "id": "zhovti_vody",
+   "name": "Zhovti Vody",
+   "name_local": "Жовті Води",
+   "country": "UA",
+   "area_km2": 35.412,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.505445,
+    48.359201
+   ],
+   "bounds": [
+    33.459745,
+    48.327547,
+    33.566225,
+    48.395406
+   ],
+   "osm_relation": 2693667,
+   "notes": "City proper (not the whole urban hromada). Dnipropetrovsk Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Дніпропетровська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 35.412
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 79.214
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 50.01
+    }
+   }
+  },
+  {
+   "id": "lubny",
+   "name": "Lubny",
+   "name_local": "Лубни",
+   "country": "UA",
+   "area_km2": 31.508,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    32.986382,
+    50.01758
+   ],
+   "bounds": [
+    32.936507,
+    49.973934,
+    33.051762,
+    50.058208
+   ],
+   "osm_relation": 18281343,
+   "notes": "City proper (not the whole urban hromada). Poltava Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Полтавська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 31.508
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 1077.941
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 65.895
+    }
+   }
+  },
+  {
+   "id": "nova_kakhovka",
+   "name": "Nova Kakhovka",
+   "name_local": "Нова Каховка",
+   "country": "UA",
+   "area_km2": 22.434,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.353071,
+    46.748392
+   ],
+   "bounds": [
+    33.287389,
+    46.729878,
+    33.405904,
+    46.776526
+   ],
+   "osm_relation": 2516278,
+   "notes": "Temporarily occupied since 2022; OSM mapping may be less complete or current. Kherson Oblast.",
+   "notes_uk": "Тимчасово окупований з 2022 року; дані OSM можуть бути менш повними чи актуальними. Херсонська область.",
+   "group": "other",
+   "occupied": true,
+   "occupied_since": 2022,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 22.434
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 241.234
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 34.43
+    }
+   }
+  },
+  {
+   "id": "fastiv",
+   "name": "Fastiv",
+   "name_local": "Фастів",
+   "country": "UA",
+   "area_km2": 50.856,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    29.917712,
+    50.073843
+   ],
+   "bounds": [
+    29.84395,
+    50.040401,
+    29.984922,
+    50.108264
+   ],
+   "osm_relation": 2533207,
+   "notes": "City proper (not the whole urban hromada). Kyiv Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Київська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 50.856
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 336.345
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 83.108
+    }
+   }
+  },
+  {
+   "id": "bilhorod_dnistrovskyi",
+   "name": "Bilhorod-Dnistrovskyi",
+   "name_local": "Білгород-Дністровський",
+   "country": "UA",
+   "area_km2": 19.648,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    30.334689,
+    46.184159
+   ],
+   "bounds": [
+    30.289106,
+    46.163687,
+    30.380351,
+    46.20382
+   ],
+   "osm_relation": 3200259,
+   "notes": "City proper (not the whole urban hromada). Odesa Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Одеська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 19.648
+    },
+    "hromada": {
+     "status": "same_as_city",
+     "area_km2": 19.648
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 48.833
+    }
+   }
+  },
+  {
+   "id": "horishni_plavni",
+   "name": "Horishni Plavni",
+   "name_local": "Горішні Плавні",
+   "country": "UA",
+   "area_km2": 114.102,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.647765,
+    49.032371
+   ],
+   "bounds": [
+    33.544429,
+    48.974266,
+    33.759616,
+    49.097375
+   ],
+   "osm_relation": 4097647,
+   "notes": "City proper (not the whole urban hromada). Poltava Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Полтавська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 114.102
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 368.583
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 123.57
+    }
+   }
+  },
+  {
+   "id": "romny",
+   "name": "Romny",
+   "name_local": "Ромни",
+   "country": "UA",
+   "area_km2": 32.228,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.483049,
+    50.740407
+   ],
+   "bounds": [
+    33.410844,
+    50.70095,
+    33.535712,
+    50.778702
+   ],
+   "osm_relation": 2696092,
+   "notes": "City proper (not the whole urban hromada). Sumy Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Сумська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 32.228
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 969.458
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 34.192
+    }
+   }
+  },
+  {
+   "id": "okhtyrka",
+   "name": "Okhtyrka",
+   "name_local": "Охтирка",
+   "country": "UA",
+   "area_km2": 33.536,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    34.9013,
+    50.308332
+   ],
+   "bounds": [
+    34.850769,
+    50.271527,
+    34.966773,
+    50.35418
+   ],
+   "osm_relation": 3589658,
+   "notes": "City proper (not the whole urban hromada). Sumy Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Сумська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 33.536
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 84.645
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 58.343
+    }
+   }
+  },
+  {
+   "id": "svitlovodsk",
+   "name": "Svitlovodsk",
+   "name_local": "Світловодськ",
+   "country": "UA",
+   "area_km2": 23.213,
+   "osm_timestamp": "2026-10-12T20:21:35Z",
+   "center": [
+    33.216498,
+    49.048897
+   ],
+   "bounds": [
+    33.142373,
+    49.031129,
+    33.292463,
+    49.074331
+   ],
+   "osm_relation": 18298365,
+   "notes": "City proper (not the whole urban hromada). Kirovohrad Oblast.",
+   "notes_uk": "Власне місто (без решти міської громади). Кіровоградська область.",
+   "group": "other",
+   "occupied": false,
+   "occupied_since": null,
+   "modes": {
+    "city": {
+     "status": "ok",
+     "area_km2": 23.213
+    },
+    "hromada": {
+     "status": "ok",
+     "area_km2": 291.029
+    },
+    "greater": {
+     "status": "ok",
+     "area_km2": 31.559
     }
    }
   }
