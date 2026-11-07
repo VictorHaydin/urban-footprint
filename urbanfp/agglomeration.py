@@ -27,7 +27,7 @@ import osmium
 import pandas as pd
 import shapely
 from scipy.sparse import csr_matrix
-from scipy.sparse.csgraph import dijkstra
+from scipy.sparse.csgraph import connected_components, dijkstra
 from scipy.spatial import cKDTree
 
 from urbanfp.config import Paths, load_cities
@@ -37,7 +37,7 @@ from urbanfp.territories import SPEED
 
 log = logging.getLogger(__name__)
 
-AGGLOMERATION_VERSION = 4
+AGGLOMERATION_VERSION = 5
 OUTLINE_TOLERANCE_DEG = 0.002  # city outline simplification for the map (~200 m)
 THRESHOLDS_MIN = [0, 10, 30, 60, 90, 120, 150, 180]  # buttons; the slider covers every 5 min
 MAX_MIN = 360  # 6 h: region modelling assigns settlements to few, distant centres; agglomerations use up to 3 h
@@ -45,8 +45,9 @@ MAX_MIN = 360  # 6 h: region modelling assigns settlements to few, distant centr
 GRAPH_HIGHWAYS = {k: v for k, v in SPEED.items() if k not in ("service", "track")}
 # The graph is the intact (pre-war) network: roads mapped as destroyed or out of use (blown-up bridges such as
 # the M-18 bridge south of Zaporizhzhia; destroyed bridges retagged highway=proposed + destroyed/ruins, such
-# as the Antonivskyi bridge in Kherson) are kept, and access bans on main roads (front-line closures,
-# checkpoints) are ignored; on minor roads access=no/private still excludes the way.
+# as the Antonivskyi bridge in Kherson) are kept, and access=no bans (front-line closures and checkpoints, also
+# on village roads around Horlivka and Stanytsia Luhanska) are ignored except on service roads;
+# access=private still excludes a minor road.
 WAR_PREFIXES = ("ruined", "destroyed", "damaged", "disused")
 MAIN_ROADS = {"motorway", "trunk", "primary", "secondary", "tertiary", "motorway_link", "trunk_link",
               "primary_link", "secondary_link", "tertiary_link"}
@@ -57,7 +58,12 @@ HEAL_GAP_M = 30
 HEAL_MAIN_GAP_M = 150      # main roads (edges of HEAL_MAIN_KMH and faster): dead end to another main road
 HEAL_MAIN_KMH = 45
 HEAL_SPEED_KMH = 20
-SNAP_MAX_M = 3000          # a settlement further than this from any road is left unreached
+SNAP_MAX_M = 3000          # a settlement further than this from the main road network is left unreached
+# Settlements are joined to the nearest vertex of the main (largest connected) road network, never to a stray
+# piece (a yard, car park or road not joined to anything: Kotsiubynske snapped to one 80 m from the network) or
+# to a village whose only links are field tracks, which the graph leaves out. The straight distance to that
+# vertex is driven at LAST_MILE_KMH (track speed) and added to the drive time.
+LAST_MILE_KMH = 20
 EARTH_M_PER_DEG = 111_320.0
 
 
@@ -95,7 +101,7 @@ def road_graph(region: str):
             hw = w.tags.get("proposed")
         if hw not in GRAPH_HIGHWAYS or w.tags.get("area") == "yes":
             continue
-        if hw not in MAIN_ROADS and w.tags.get("access") in ("no", "private"):
+        if w.tags.get("access") == "private" and hw not in MAIN_ROADS or w.tags.get("access") == "no" and hw == "service":
             continue
         mm = re.match(r"^\s*(\d+)", w.tags.get("maxspeed", "") or "")
         sp = min(float(mm.group(1)) if mm else GRAPH_HIGHWAYS[hw], GRAPH_HIGHWAYS[hw] * 1.3)
@@ -277,9 +283,14 @@ def build_agglomeration() -> dict:
 
     # ---- road graph and snapping
     vlon, vlat, g = road_graph(region)
-    tree = cKDTree(_xy(vlon, vlat))
-    d_snap, v_snap = tree.query(_xy(sett["lon"], sett["lat"]))
+    _, comp = connected_components(g, directed=False)
+    main_v = np.nonzero(comp == np.bincount(comp).argmax())[0]
+    d_snap, j = cKDTree(_xy(vlon[main_v], vlat[main_v])).query(_xy(sett["lon"], sett["lat"]))
+    v_snap = main_v[j]
     reachable = d_snap <= SNAP_MAX_M
+    last_mile = d_snap / (LAST_MILE_KMH / 3.6)  # seconds
+    log.info("settlements joined to the main road network (%d vertices of %d): %d within %d m, median %.0f m",
+             len(main_v), len(vlon), int(reachable.sum()), SNAP_MAX_M, float(np.median(d_snap)))
 
     # ---- drive times from every city (all road vertices inside its boundary)
     reach, centres = {}, []
@@ -311,7 +322,7 @@ def build_agglomeration() -> dict:
             continue
         t1 = time.time()
         tsec = dijkstra(g, directed=False, indices=src, min_only=True, limit=MAX_MIN * 60)
-        ts = tsec[v_snap]
+        ts = tsec[v_snap] + last_mile
         inside = shapely.contains_xy(bnd, sett["lon"].values, sett["lat"].values)
         ts = np.where(inside, 0.0, ts)  # settlements within the city boundary
         ok = np.nonzero((reachable | inside) & np.isfinite(ts) & (ts <= MAX_MIN * 60))[0]

@@ -129,8 +129,11 @@
   <li>On the map, centre circles have an area proportional to the agglomeration population. Settlements over 50k
     are circles on the same scale, 10–50k bright dots, 1–10k paler dots, under 1k faint dots.</li>
   <li>The road network is the <strong>intact, pre-war</strong> one: destroyed bridges and roads count as intact,
-    closures of main roads are ignored, and roads cut in OSM along the front line are joined again. The Kakhovka
-    dam road is not restored.</li>
+    closures and checkpoints (<code>access=no</code>) are ignored, and roads cut in OSM along the front line are
+    joined again. The Kakhovka dam road is not restored.</li>
+  <li>A settlement is joined to the nearest point of the main road network (within 3 km), never to a stray road
+    piece or yard; that distance is covered at field-track speed (20 km/h) and added to the drive time. This also
+    reaches villages linked only by field tracks.</li>
 </ul>
 <h3>Regions → Region modelling</h3>
 <ul>

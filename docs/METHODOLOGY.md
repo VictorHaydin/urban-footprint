@@ -306,8 +306,12 @@ may differ from today's boundary).
 except service roads, tracks and paths; same free-flow speeds as Greater City mode) and locates every
 settlement of every year (Derzhstat, and census rows matched as above) at the OSM `place` point with the
 same KATOTTG code (28,580 of 28,657 Derzhstat settlements; 100% of the population). For every configured city it computes the drive time from any road inside the city boundary to
-every settlement within 6 h (settlement point snapped to the nearest road, at most 3 km away); the Агломерації
-page uses up to 3 h, the region modelling page the whole range.
+every settlement within 6 h; the Агломерації page uses up to 3 h, the region modelling page the whole range.
+A settlement point is joined to the nearest vertex of the main (largest connected) road network, at most 3 km
+away, and that straight distance is driven at 20 km/h (`LAST_MILE_KMH`) and added to the drive time. Snapping to
+any vertex used to catch stray pieces (yards, car parks, footway-bounded service roads: Kotsiubynske, 17.6k, sat
+on one 80 m from the network) and villages linked only by field tracks, which the graph leaves out; 116
+settlements were reached from no city, now 11 (all over 3 km from a road, and Snake Island).
 
 Centres are all 101 cities of over 50,000 people in the 2001 census. A city needs only its extracted OSM boundary
 to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the
@@ -318,7 +322,8 @@ assumption:
 * roads mapped as destroyed or out of use are kept: lifecycle tags (`ruined:`, `destroyed:`, `damaged:`,
   `disused:highway=*`, also with `highway=destroyed`) and destroyed bridges retagged `highway=proposed` +
   `destroyed`/`ruins` (the M-18 bridge south of Zaporizhzhia, the Antonivskyi bridge in Kherson);
-* `access=no` on main roads (motorway to tertiary) is ignored (front-line closures, checkpoints);
+* `access=no` is ignored on every road of the graph except service roads (front-line closures and checkpoints,
+  also on village roads around Horlivka and Stanytsia Luhanska); `access=private` still excludes minor roads;
 * along the front line OSM roads are cut by moving way ends a few metres apart without a shared node. Every
   dead end is joined to the nearest road vertex ahead of it within 30 m, or within 150 m of another main road
   for main-road dead ends (cut dual carriageways), driven at 20 km/h. This also closes ordinary mapping gaps.
