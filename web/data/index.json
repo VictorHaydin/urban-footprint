@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-11-07T05:57:23+00:00",
+ "generated_at": "2026-11-07T06:21:53+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -430,6 +430,33 @@
    "label": "Other cities",
    "label_uk": "Інші міста"
   }
+ ],
+ "default_region_centres": [
+  "kyiv",
+  "vinnytsia",
+  "lutsk",
+  "dnipro",
+  "donetsk",
+  "zhytomyr",
+  "uzhhorod",
+  "zaporizhzhia",
+  "ivano_frankivsk",
+  "kropyvnytskyi",
+  "luhansk",
+  "lviv",
+  "mykolaiv",
+  "odesa",
+  "poltava",
+  "rivne",
+  "sumy",
+  "ternopil",
+  "kharkiv",
+  "kherson",
+  "khmelnytskyi",
+  "cherkasy",
+  "chernivtsi",
+  "chernihiv",
+  "simferopol"
  ],
  "cities": [
   {

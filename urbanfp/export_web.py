@@ -42,7 +42,7 @@ from pmtiles.writer import Writer
 from rasterio import features as rio_features
 from rasterio.transform import from_origin
 
-from urbanfp.config import City, Classification, Paths, load_cities, load_city_groups
+from urbanfp.config import City, Classification, Paths, load_cities, load_city_groups, load_default_region_centres
 
 log = logging.getLogger(__name__)
 
@@ -416,6 +416,7 @@ def export_index(cls: Classification) -> None:
         "config_hash": cls.hash,
         "categories": cls.categories,
         "city_groups": load_city_groups(),
+        "default_region_centres": load_default_region_centres(),
         "cities": cities,
         "attribution": "Map data © OpenStreetMap contributors, available under the Open Database License (ODbL).",
     }

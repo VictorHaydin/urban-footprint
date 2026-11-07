@@ -96,6 +96,17 @@ def load_cities(path: Path | None = None) -> list[City]:
     return cities
 
 
+def load_default_region_centres(path: Path | None = None) -> list[str]:
+    """City ids selected as region centres by default on the region modelling page."""
+    data = yaml.safe_load((path or CONFIG_DIR / "cities.yaml").read_text(encoding="utf-8"))
+    ids = list(data.get("default_region_centres") or [])
+    known = {c["id"] for c in data["cities"]}
+    unknown = [i for i in ids if i not in known]
+    if unknown:
+        raise ValueError(f"default_region_centres: unknown city ids {unknown}")
+    return ids
+
+
 def load_city_groups(path: Path | None = None) -> list[dict]:
     data = yaml.safe_load((path or CONFIG_DIR / "cities.yaml").read_text(encoding="utf-8"))
     return data.get("groups") or [{"id": "other", "label": "Cities", "label_uk": "Міста"}]

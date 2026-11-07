@@ -37,6 +37,12 @@ groups:
   - {id: regional, label: "Oblast centres", label_uk: "Обласні центри"}
   - {id: other,   label: "Other cities",   label_uk: "Інші міста"}
 
+# Region modelling page: centres selected by default (Kyiv, the oblast centres and Simferopol, the capital of
+# the Autonomous Republic of Crimea); the user can add or remove any city there.
+default_region_centres: [kyiv, vinnytsia, lutsk, dnipro, donetsk, zhytomyr, uzhhorod, zaporizhzhia, ivano_frankivsk,
+  kropyvnytskyi, luhansk, lviv, mykolaiv, odesa, poltava, rivne, sumy, ternopil, kharkiv, kherson, khmelnytskyi,
+  cherkasy, chernivtsi, chernihiv, simferopol]
+
 defaults:
   source: "geofabrik:europe/ukraine"
   tiles: "https://victorhaydin.github.io/urban-footprint-data/"

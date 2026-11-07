@@ -39,7 +39,7 @@ Documentation (in English):
   click-to-inspect for every counted piece with a link to the OSM object.
 * **Two cities side by side:** split-screen maps at the same ground scale (latitude-corrected), zooming
   together and panning independently. The sidebar compares the two cities category by category.
-* **City comparison:** stacked bars (% or km²) for a chosen set of cities (multi-select filter). Click a category
+* **Charts (city comparison):** stacked bars (% or km²) for a chosen set of cities (multi-select filter). Click a category
   to focus on it and rank the cities by it. Breakdown by sub-category; collapsible data table.
 * **Population:** de facto population from the State Statistics Service of Ukraine (1 January 2022) or the 2001 census for the city,
   hromada and Greater City, population density and the population of each suburb; a "Population" breakdown on
@@ -48,6 +48,9 @@ Documentation (in English):
   together with settlements within a drive time (city only up to 3 h, in 5 min steps). When two
   centres fall within one range, the larger absorbs the smaller only if it is more than twice its size;
   otherwise both stay centres and the settlements between them join the one reached faster.
+* **Region modelling:** catchment areas of chosen centres (by default Kyiv, the oblast centres and Simferopol;
+  the list can be changed). Every settlement joins the centre it reaches fastest, with no absorption; the region
+  core (within the chosen drive time) is bright, the rest of the region pale.
 * **Languages:** Ukrainian (default) and English, remembered in a cookie.
 * **Mobile:** tiled rasters and vector tiles. Kyiv needs ~14 MB of GPU memory at city scale.
 * Shareable links: city, second city, view and selected cities are kept in the URL.

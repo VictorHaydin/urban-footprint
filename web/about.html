@@ -106,7 +106,7 @@
   has no codes (most of Crimea), the OSM point itself is used. 98.9% of the census population is matched; the
   city figure is the census figure for the city boundary at the time.
 </p>
-<h3>The "Agglomerations" page</h3>
+<h3>Regions → Agglomerations</h3>
 <ul>
   <li>Agglomeration centres are all cities of over 50,000 people in the 2001 census (101).</li>
   <li>For each city the free-flow car drive time (OSM road network, typical speeds) is computed from any road
@@ -132,6 +132,17 @@
     closures of main roads are ignored, and roads cut in OSM along the front line are joined again. The Kakhovka
     dam road is not restored.</li>
 </ul>
+<h3>Regions → Region modelling</h3>
+<ul>
+  <li>Region centres are chosen from the list of all cities. By default they are Kyiv, the oblast centres and
+    Simferopol (25 cities); any city can be added or removed, and the choice is kept in the link.</li>
+  <li>Centres never absorb each other: every settlement belongs to the region whose centre it reaches fastest (the
+    same drive times as for agglomerations, up to 3 h). Settlements more than 3 h from every chosen centre belong to
+    no region.</li>
+  <li>Each region has two zones: the <strong>core</strong>, settlements within the chosen drive time of the centre
+    (bright dots and outline), and the <strong>rest of the region</strong>, those for which this centre is the
+    nearest but further away (pale dots and outline). Outlines are built as for agglomerations.</li>
+</ul>
 <p class="callout">
   Derzhstat does not cover Crimea and Sevastopol, so Simferopol and Sevastopol have 2001 census data only. For
   territories occupied since 2014 the 2022 figures are estimates. Where the OSM city boundary differs from the
@@ -139,7 +150,7 @@
 </p>
 
 <h2 data-page="usage">Using the site</h2>
-<h3>Map</h3>
+<h3>Cities → Map</h3>
 <ul>
   <li>At city scale the map shows anti-aliased coverage rasters (tiled, down to about 6&nbsp;m resolution). When you
     zoom in, it switches to vector tiles with each individual counted piece. Click a piece to see its category, the
@@ -154,7 +165,7 @@
     parts of the cities. The sidebar then shows both cities category by category. Choose "— No city —" to return
     to a single map.</li>
 </ul>
-<h3>Compare cities</h3>
+<h3>Cities → Charts</h3>
 <ul>
   <li>Each bar shows a city's whole territory: either as 100% (shares) or to scale in km², so
     larger cities get longer bars. "Breakdown" switches to the sub-categories of one category, such as building types.</li>

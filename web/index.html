@@ -17,11 +17,11 @@
 <body>
   <header class="topbar">
     <div class="brand" data-i18n="app.title">Структура міст</div>
+    <!-- two-level menu: sections here, their screens in .subtabs below -->
     <nav class="tabs" role="tablist">
-      <button class="tab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
-      <button class="tab" data-view="compare" role="tab" data-i18n="tab.compare">Порівняння міст</button>
-      <button class="tab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
-      <button class="tab" data-view="about" role="tab" data-i18n="tab.about">Методика та дані</button>
+      <button class="tab active" data-section="cities" role="tab" data-i18n="section.cities">Міста</button>
+      <button class="tab" data-section="regions" role="tab" data-i18n="section.regions">Регіони</button>
+      <button class="tab" data-section="about" role="tab" data-i18n="tab.about">Методика та дані</button>
     </nav>
     <div class="spacer"></div>
     <a class="author-link" href="https://linktr.ee/victorhaydin" target="_blank" rel="noopener" data-i18n="author">Про автора</a>
@@ -30,6 +30,16 @@
       <button data-lang="en" lang="en" title="English">ENG</button>
     </div>
   </header>
+  <nav class="subtabs" id="subtabs">
+    <div class="subtab-group" data-section="cities" role="tablist">
+      <button class="subtab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
+      <button class="subtab" data-view="compare" role="tab" data-i18n="tab.compare">Графіки</button>
+    </div>
+    <div class="subtab-group" data-section="regions" role="tablist" hidden>
+      <button class="subtab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
+      <button class="subtab" data-view="modeling" role="tab" data-i18n="tab.modeling">Моделювання регіонів</button>
+    </div>
+  </nav>
 
   <main>
     <!-- MAP VIEW -->
@@ -100,6 +110,32 @@
           <div id="compareTable" class="table-wrap"></div>
         </details>
       </div>
+    </section>
+
+    <!-- REGION MODELLING VIEW -->
+    <section id="view-modeling" class="view">
+      <aside class="sidebar pop-sidebar">
+        <h2 class="pop-title" data-i18n="tab.modeling">Моделювання регіонів</h2>
+        <div class="pop-controls">
+          <span class="terr-label" data-i18n="model.threshold">Ядро регіону — населені пункти в межах доїзду</span>
+          <div class="unit-toggle pop-threshold" id="mThreshold" role="group"></div>
+          <label class="pop-slider">
+            <input type="range" id="mSlider" min="0" max="180" step="5" value="60" data-i18n-aria="pop.slider" aria-label="Час доїзду">
+            <output id="mSliderVal" for="mSlider"></output>
+          </label>
+          <div id="mYear" class="small"></div>
+        </div>
+        <p class="hint" id="mHint"></p>
+        <div class="pop-legend" id="mLegend"></div>
+        <details class="region-picker" id="mPicker">
+          <summary id="mPickerSummary"></summary>
+          <div class="region-picker-actions" id="mPickerActions"></div>
+          <div class="region-list" id="mCentres"></div>
+        </details>
+        <div id="mChart" class="pop-chart"></div>
+        <p class="compare-note" id="mNote"></p>
+      </aside>
+      <div class="map-wrap"><div class="map pop-map" id="modelMap"></div></div>
     </section>
 
     <!-- POPULATION VIEW: cities with their surroundings by drive time -->

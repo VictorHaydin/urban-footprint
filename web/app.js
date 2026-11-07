@@ -32,6 +32,9 @@ const state = {
   popMetric: 'pop',       // compare screen, population breakdown: pop | density
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
   popSelected: null,      // population page: highlighted centre
+  modelThreshold: 60,     // region modelling: drive time of the region core (min)
+  regionCentres: null,    // region modelling: chosen centre ids (null = index.default_region_centres)
+  modelSelected: null,    // region modelling: highlighted region
 };
 const TERRITORIES = ['city', 'hromada', 'greater'];
 
@@ -222,6 +225,7 @@ function readHash() {
     year: p.get('y') ? +p.get('y') : null,
     threshold: p.get('th') != null ? +p.get('th') : null,
     aboutPage: p.get('p'),
+    regionCentres: p.get('rc') != null ? p.get('rc').split(',').filter(Boolean) : null,
     cities: p.get('cities') ? p.get('cities').split(',') : null,
   };
 }
@@ -234,6 +238,10 @@ function writeHash() {
   if (state.demoYear && years.length && state.demoYear !== years[years.length - 1]) p.set('y', state.demoYear);
   if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
   if (state.view === 'population') p.set('th', state.popThreshold);
+  if (state.view === 'modeling') {
+    p.set('th', state.modelThreshold);
+    if (state.regionCentres) p.set('rc', state.regionCentres.join(','));
+  }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
 }
@@ -1452,52 +1460,56 @@ function selectPopCentre(id) {
   renderPopulationView();
 }
 
-async function ensurePopMap() {
-  if (popView.map) { popView.map.resize(); return popView.ready; }
+/**
+ * A map of settlements and centres (Агломерації, Моделювання регіонів): sources/layers `hull-outer` (pale outline),
+ * `hull`, `sett` (settlement dots by size class; `pale` ones faded) and `centres` (circles by total population).
+ * opts: centreTip(properties) and settTip(properties) return tooltip HTML; onCentreClick(id).
+ */
+function createAggMap(container, opts) {
   const map = new maplibregl.Map({
-    container: 'popMap', style: BASE_STYLE(), center: [31.2, 48.6], zoom: 5.3,
+    container, style: BASE_STYLE(), center: [31.2, 48.6], zoom: 5.3,
     attributionControl: { compact: true }, locale: { ...MAP_LOCALE[getLang()] },
     pixelRatio: Math.min(window.devicePixelRatio || 1, 2), dragRotate: false, pitchWithRotate: false,
   });
   map.touchZoomRotate.disableRotation();
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
   map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
-  popView.map = map;
-  popView.ready = new Promise((res) => map.once('load', () => {
-    const S = agg.settlements;
-    map.addSource('pop-sett', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addSource('pop-centres', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
-    map.addSource('pop-hull', { type: 'geojson', data: { type: 'FeatureCollection', features: [] } });
+  const ready = new Promise((res) => map.once('load', () => {
+    const empty = { type: 'FeatureCollection', features: [] };
+    for (const id of ['sett', 'centres', 'hull', 'hull-outer']) map.addSource(id, { type: 'geojson', data: empty });
+    const hullWidth = (k) => ['interpolate', ['linear'], ['zoom'], 5, ['case', ['get', 'sel'], 2.5 * k, 1.6 * k], 9, ['case', ['get', 'sel'], 4 * k, 2.5 * k]];
+    const lineLayout = { 'line-join': 'round', 'line-cap': 'round' };
     map.addLayer({
-      id: 'pop-hull', type: 'line', source: 'pop-hull',
-      layout: { 'line-join': 'round', 'line-cap': 'round' },
-      paint: {
-        'line-color': ['get', 'color'],
-        'line-width': ['interpolate', ['linear'], ['zoom'], 5, ['case', ['get', 'sel'], 2.5, 1.6], 9, ['case', ['get', 'sel'], 4, 2.5]],
-        'line-opacity': ['case', ['get', 'dim'], 0.2, 0.9],
-      },
+      id: 'hull-outer', type: 'line', source: 'hull-outer', layout: lineLayout,
+      paint: { 'line-color': ['get', 'color'], 'line-width': hullWidth(0.8), 'line-opacity': ['case', ['get', 'dim'], 0.1, 0.4] },
+    });
+    map.addLayer({
+      id: 'hull', type: 'line', source: 'hull', layout: lineLayout,
+      paint: { 'line-color': ['get', 'color'], 'line-width': hullWidth(1), 'line-opacity': ['case', ['get', 'dim'], 0.2, 0.9] },
     });
     // settlements by size class (POP_CLASSES): towns as circles like the centres, smaller places as dots
     const big = ['==', ['get', 'cls'], 3];
     const bySize = (town, c2, c1, c0) => ['case', big, town, ['match', ['get', 'cls'], 2, c2, 1, c1, c0]];
+    const fade = ['*', ['case', ['get', 'dim'], 0.2, 1], ['case', ['get', 'pale'], 0.35, 1]];
     map.addLayer({
-      id: 'pop-sett', type: 'circle', source: 'pop-sett',
-      // dots over circles, agglomeration settlements over the grey ones
-      layout: { 'circle-sort-key': ['+', ['case', ['get', 'in'], 0, -1000], ['case', big, ['-', 0, ['get', 'r']], ['get', 'cls']]] },
+      id: 'sett', type: 'circle', source: 'sett',
+      // dots over circles; member settlements over pale ones, pale over the grey ones
+      layout: { 'circle-sort-key': ['+', ['case', ['get', 'in'], 0, -1000], ['case', ['get', 'pale'], -100, 0],
+        ['case', big, ['-', 0, ['get', 'r']], ['get', 'cls']]] },
       paint: {
         'circle-color': ['get', 'color'],
         'circle-radius': ['interpolate', ['exponential', 1.6], ['zoom'],
           5, bySize(['get', 'r'], 2.2, 1.4, 0.9),
           9, bySize(['*', ['get', 'r'], 6.5], 4.5, 3, 2),
           12, bySize(['*', ['get', 'r'], 6.5], 6.5, 4.5, 3)],
-        'circle-opacity': ['*', ['case', ['get', 'dim'], 0.2, 1], bySize(0.45, 1, 0.6, 0.25)],
+        'circle-opacity': ['*', fade, bySize(0.45, 1, 0.6, 0.25)],
         'circle-stroke-color': ['get', 'color'],
         'circle-stroke-width': bySize(1.2, 0, 0, 0),
-        'circle-stroke-opacity': ['case', ['get', 'dim'], 0.3, 1],
+        'circle-stroke-opacity': fade,
       },
     });
     map.addLayer({
-      id: 'pop-centres', type: 'circle', source: 'pop-centres',
+      id: 'centres', type: 'circle', source: 'centres',
       paint: {
         'circle-color': ['get', 'color'],
         'circle-opacity': ['case', ['get', 'dim'], 0.15, 0.55],
@@ -1508,22 +1520,32 @@ async function ensurePopMap() {
         'circle-radius': ['interpolate', ['exponential', 1.6], ['zoom'], 5, ['get', 'r'], 9, ['*', ['get', 'r'], 6.5]],
       },
     });
-    map.on('mousemove', 'pop-centres', (e) => {
+    map.on('mousemove', 'centres', (e) => {
       map.getCanvas().style.cursor = 'pointer';
-      const p = e.features[0].properties;
-      const city = `${t('demo.cityOnly')}: ${fmtInt(p.cityPop)}`;
-      showTip(e.originalEvent, `<b>${p.name}</b><br>${state.popThreshold > 0 ? `${t('pop.agglomeration')}: ${fmtInt(p.total)}<br>` : ''}${city}`);
+      showTip(e.originalEvent, opts.centreTip(e.features[0].properties));
     });
-    map.on('mouseleave', 'pop-centres', () => { map.getCanvas().style.cursor = ''; hideTip(); });
-    map.on('click', 'pop-centres', (e) => selectPopCentre(e.features[0].properties.id));
-    map.on('mousemove', 'pop-sett', (e) => {
-      if (map.queryRenderedFeatures(e.point, { layers: ['pop-centres'] }).length) return;
-      const f = e.features[0].properties;
-      const where = f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}` : t('pop.outside');
-      showTip(e.originalEvent, `<b>${S.name[f.i]}</b><br>${f.pop ? `${fmtInt(f.pop)} ${t('demo.people')}` : t('pop.noPop')} · ${where}`);
+    map.on('mouseleave', 'centres', () => { map.getCanvas().style.cursor = ''; hideTip(); });
+    map.on('click', 'centres', (e) => opts.onCentreClick(e.features[0].properties.id));
+    map.on('mousemove', 'sett', (e) => {
+      if (map.queryRenderedFeatures(e.point, { layers: ['centres'] }).length) return;
+      showTip(e.originalEvent, opts.settTip(e.features[0].properties));
     });
-    map.on('mouseleave', 'pop-sett', hideTip);
+    map.on('mouseleave', 'sett', hideTip);
     res();
+  }));
+  return { map, ready };
+}
+
+/** Tooltip head of a settlement: name and population. */
+const settTipHead = (f) => `<b>${agg.settlements.name[f.i]}</b><br>${f.pop ? `${fmtInt(f.pop)} ${t('demo.people')}` : t('pop.noPop')}`;
+
+async function ensurePopMap() {
+  if (popView.map) { popView.map.resize(); return popView.ready; }
+  Object.assign(popView, createAggMap('popMap', {
+    centreTip: (p) => `<b>${p.name}</b><br>${state.popThreshold > 0 ? `${t('pop.agglomeration')}: ${fmtInt(p.total)}<br>` : ''}`
+      + `${t('demo.cityOnly')}: ${fmtInt(p.cityPop)}`,
+    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}` : t('pop.outside')}`,
+    onCentreClick: selectPopCentre,
   }));
   return popView.ready;
 }
@@ -1535,7 +1557,7 @@ const popClass = (n) => POP_CLASSES.filter((x) => n >= x).length;
 
 function updatePopMap() {
   const map = popView.map;
-  if (!map || !map.getSource('pop-centres')) return;
+  if (!map || !map.getSource('centres')) return;
   const { active, owner, pop } = popView.result;
   const S = agg.settlements;
   const sel = state.popSelected;
@@ -1559,13 +1581,13 @@ function updatePopMap() {
       properties: {
         i, pop: n, cls: popClass(n), r: 34 * Math.sqrt(n / maxTotal), in: !!c,
         color: c ? c.color : POP_OUTSIDE, t: c ? (aggReach[c.id].get(i) || 0) / 10 : null,
-        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id,
+        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id, pale: false,
       },
     });
   }
-  map.getSource('pop-centres').setData({ type: 'FeatureCollection', features: centres });
-  map.getSource('pop-hull').setData({ type: 'FeatureCollection', features: aggHulls(popView.result, sel) });
-  map.getSource('pop-sett').setData({ type: 'FeatureCollection', features: sett });
+  map.getSource('centres').setData({ type: 'FeatureCollection', features: centres });
+  map.getSource('hull').setData({ type: 'FeatureCollection', features: aggHulls(popView.result, sel) });
+  map.getSource('sett').setData({ type: 'FeatureCollection', features: sett });
 }
 
 /**
@@ -1580,24 +1602,44 @@ const HULL_MAX_EDGE_KM = 15;
 const HULL_KX = Math.cos((48.5 * Math.PI) / 180) * 111.32;  // km per degree of longitude / latitude
 const HULL_KY = 111.32;
 
+/** Agglomeration outlines for the Агломерації page: the centre's and every absorbed city's outline count. */
 function aggHulls(res, sel) {
-  if (!res || state.popThreshold === 0 || typeof Delaunator === 'undefined') return [];
-  const S = agg.settlements;
-  const groups = res.active.map(() => ({ lon: [], lat: [], city: [] }));  // city: centre index for outline points, else -1
-  for (let i = 0; i < res.owner.length; i++) {
-    const g = groups[res.owner[i]];
-    if (g) { g.lon.push(S.lon[i]); g.lat.push(S.lat[i]); g.city.push(-1); }
-  }
+  if (!res || state.popThreshold === 0) return [];
   const byId = Object.fromEntries(res.active.map((a) => [a.id, a]));
-  res.centres.forEach((c, ci) => {
+  const outlines = res.centres.map((c) => {
     const host = c.active ? c : byId[c.absorbedBy];
-    if (!host || !c.outline) return;
-    const g = groups[host.idx];
-    for (const [x, y] of c.outline) { g.lon.push(x); g.lat.push(y); g.city.push(ci); }
-  });
-  const centreIdx = Object.fromEntries(res.centres.map((c, ci) => [c.id, ci]));
+    return host ? { o: host.idx, key: c.id, coords: c.outline } : null;
+  }).filter(Boolean);
+  return withSel(hullFeatures(res.active, res.owner, outlines), sel);
+}
+
+/** Mark the selected feature and dim the others (properties.id). */
+const withSel = (feats, sel) => feats.map((f) => {
+  f.properties.sel = sel === f.properties.id;
+  f.properties.dim = !!sel && sel !== f.properties.id;
+  return f;
+});
+
+/**
+ * Outline features of `active` groups: owner[i] = index in `active` of settlement i (or -1); `outlines` are city
+ * outlines added to a group ({o: group index, key: city id, coords}). The centre of group a is its own settlement
+ * or the outline with key === a.id.
+ */
+function hullFeatures(active, owner, outlines) {
+  if (typeof Delaunator === 'undefined') return [];
+  const S = agg.settlements;
+  const groups = active.map(() => ({ lon: [], lat: [], city: [] }));  // city: key of the outline a point is on, else null
+  for (let i = 0; i < owner.length; i++) {
+    const g = groups[owner[i]];
+    if (g) { g.lon.push(S.lon[i]); g.lat.push(S.lat[i]); g.city.push(null); }
+  }
+  for (const { o, key, coords } of outlines) {
+    const g = groups[o];
+    if (!g || !coords) continue;
+    for (const [x, y] of coords) { g.lon.push(x); g.lat.push(y); g.city.push(key); }
+  }
   const feats = [];
-  res.active.forEach((a, o) => {
+  active.forEach((a, o) => {
     const g = groups[o];
     const n = g.lon.length;
     if (n < 3) return;
@@ -1611,12 +1653,11 @@ function aggHulls(res, sel) {
     const keep = new Uint8Array(nT);
     for (let t = 0; t < nT; t++) {
       const [p, q, r] = [V[3 * t], V[3 * t + 1], V[3 * t + 2]];
-      const sameCity = g.city[p] >= 0 && g.city[p] === g.city[q] && g.city[p] === g.city[r];
+      const sameCity = g.city[p] != null && g.city[p] === g.city[q] && g.city[p] === g.city[r];
       keep[t] = sameCity || Math.max(len(p, q), len(q, r), len(r, p)) <= HULL_MAX_EDGE_KM ? 1 : 0;
     }
     // the connected part touching the centre (its outline or its own settlement)
-    const ci = centreIdx[a.id];
-    const isCentre = (v) => g.city[v] === ci || (g.city[v] < 0 && g.lon[v] === S.lon[a.settlement] && g.lat[v] === S.lat[a.settlement]);
+    const isCentre = (v) => g.city[v] === a.id || (g.city[v] == null && g.lon[v] === S.lon[a.settlement] && g.lat[v] === S.lat[a.settlement]);
     const comp = new Int32Array(nT).fill(-1);
     let best = null;
     for (let t0 = 0; t0 < nT; t0++) {
@@ -1691,11 +1732,224 @@ function aggHulls(res, sel) {
     if (lines.length) {
       feats.push({
         type: 'Feature', geometry: { type: 'MultiLineString', coordinates: lines },
-        properties: { id: a.id, color: a.color, sel: sel === a.id, dim: !!sel && sel !== a.id },
+        properties: { id: a.id, color: a.color },
       });
     }
   });
   return feats;
+}
+
+// ------------------------------------------------------------------ region modelling
+const modelView = { map: null, ready: null, result: null, frame: null };
+const validThreshold = (m) => Number.isInteger(m) && m >= 0 && m <= agg.max_min && m % POP_STEP === 0;
+const regionCentreIds = () => {
+  const known = new Set(agg.centres.map((c) => c.id));
+  return (state.regionCentres || state.index.default_region_centres || []).filter((id) => known.has(id));
+};
+
+/**
+ * Regions: every settlement joins the chosen centre it is reached from fastest (within the computed maximum);
+ * no centre absorbs another. The core of a region is what lies within T minutes of its centre.
+ */
+function computeRegions(T, year, ids) {
+  const S = agg.settlements;
+  const pop = S.pop[year] || [];
+  const lim = T * 10;
+  const byId = Object.fromEntries(agg.centres.map((c) => [c.id, c]));
+  const active = ids.map((id) => byId[id]).filter((c) => c && c.settlement != null).map((c, idx) => ({
+    ...c, idx, city: cityById(c.id) || { id: c.id, name: c.name, name_local: c.name_local },
+    cityPop: pop[c.settlement] ?? null, total: 0, core: 0, n: 0, nCore: 0,
+  }));
+  const owner = new Int16Array(S.code.length).fill(-1);
+  const best = new Float32Array(S.code.length).fill(Infinity);
+  for (const a of active) { owner[a.settlement] = a.idx; best[a.settlement] = -1; }  // a centre is its own
+  for (const a of active) {
+    for (const [i, tt] of aggReach[a.id] || []) if (tt < best[i]) { best[i] = tt; owner[i] = a.idx; }
+  }
+  const core = new Uint8Array(S.code.length);
+  for (let i = 0; i < owner.length; i++) {
+    const o = owner[i];
+    if (o < 0) continue;
+    const a = active[o], n = pop[i] || 0, inCore = best[i] <= lim;
+    core[i] = inCore ? 1 : 0;
+    a.total += n;
+    a.n += 1;
+    if (inCore) { a.core += n; a.nCore += 1; }
+  }
+  assignAggColors(active, owner, 1);  // neighbours by settlements of the whole region
+  return { active, owner, core, pop, best };
+}
+
+function setModelThreshold(m, final = true) {
+  state.modelThreshold = m;
+  if (final) writeHash();
+  if (modelView.frame) return;
+  modelView.frame = requestAnimationFrame(async () => {
+    try { await renderModelingView(); } finally { modelView.frame = null; }
+  });
+}
+
+function setRegionCentres(ids) {
+  const def = state.index.default_region_centres || [];
+  const same = ids.length === def.length && ids.every((id) => def.includes(id));
+  state.regionCentres = same ? null : ids;
+  if (state.modelSelected && !ids.includes(state.modelSelected)) state.modelSelected = null;
+  writeHash();
+  renderModelingView();
+}
+
+function selectModelCentre(id) {
+  state.modelSelected = state.modelSelected === id ? null : id;
+  renderModelingView();
+}
+
+async function renderModelingView() {
+  try { await loadAgglomeration(); } catch {
+    $('#mChart').innerHTML = '';
+    $('#mChart').append(el('p', { class: 'hint' }, t('pop.noFile')));
+    return;
+  }
+  if (!validThreshold(state.modelThreshold)) state.modelThreshold = 60;
+  const T = state.modelThreshold;
+  const ids = regionCentreIds();
+  const res = computeRegions(T, state.demoYear, ids);
+  modelView.result = res;
+  const max = fmtThreshold(agg.max_min);
+
+  // controls
+  const th = $('#mThreshold');
+  th.innerHTML = '';
+  for (const m of agg.thresholds_min) {
+    th.append(el('button', {
+      type: 'button', class: T === m ? 'active' : '', 'aria-pressed': T === m, onclick: () => setModelThreshold(m),
+    }, fmtThreshold(m)));
+  }
+  const slider = $('#mSlider');
+  slider.max = agg.max_min;
+  slider.step = POP_STEP;
+  if (document.activeElement !== slider) slider.value = T;
+  slider.oninput = () => { $('#mSliderVal').textContent = fmtThreshold(+slider.value); setModelThreshold(+slider.value, false); };
+  slider.onchange = () => setModelThreshold(+slider.value);
+  $('#mSliderVal').textContent = fmtThreshold(T);
+  const yb = $('#mYear');
+  yb.innerHTML = '';
+  yb.append(`${t('demo.title')}: `, demoYearControl());
+  $('#mHint').textContent = T === 0 ? t('model.hint.city') : t('model.hint', { t: fmtThreshold(T), max });
+  const legend = $('#mLegend');
+  legend.innerHTML = '';
+  legend.append(
+    el('span', { class: 'pop-legend-item core' }, el('i'), el('i', { class: 'line' }), T === 0 ? t('model.coreCity') : t('model.core', { t: fmtThreshold(T) })),
+    el('span', { class: 'pop-legend-item rest' }, el('i'), el('i', { class: 'line' }), t('model.rest')),
+    el('span', { class: 'pop-legend-item outside' }, el('i'), t('model.none', { max })),
+  );
+
+  // centre picker: every city with drive times, by city group
+  const chosen = new Set(ids);
+  const colorOf = Object.fromEntries(res.active.map((a) => [a.id, a.color]));
+  $('#mPickerSummary').textContent = t('model.centres', { n: ids.length, total: agg.centres.length });
+  const acts = $('#mPickerActions');
+  acts.innerHTML = '';
+  acts.append(
+    el('button', { type: 'button', onclick: () => setRegionCentres([...(state.index.default_region_centres || [])]) }, t('model.default')),
+    el('button', { type: 'button', onclick: () => setRegionCentres([]) }, t('model.clear')),
+  );
+  const list = $('#mCentres');
+  const scroll = list.scrollTop;
+  list.innerHTML = '';
+  const aggIds = new Set(agg.centres.map((c) => c.id));
+  for (const g of cityGroups()) {
+    const cities = state.index.cities.filter((c) => (c.group || '') === (g.id || '') && aggIds.has(c.id))
+      .sort((a, b) => cityName(a).localeCompare(cityName(b), getLang()));
+    if (!cities.length) continue;
+    list.append(el('h4', {}, getLang() === 'uk' ? g.label_uk || g.label : g.label));
+    for (const c of cities) {
+      const box = el('input', { type: 'checkbox' });
+      box.checked = chosen.has(c.id);
+      box.addEventListener('change', () => setRegionCentres(box.checked ? [...ids, c.id] : ids.filter((x) => x !== c.id)));
+      list.append(el('label', {}, box, el('i', { style: `background:${colorOf[c.id] || 'transparent'}` }), cityName(c)));
+    }
+  }
+  list.scrollTop = scroll;
+
+  // bar chart: regions by population — the centre city, the rest of the core, the rest of the region
+  const chart = $('#mChart');
+  chart.innerHTML = '';
+  if (!res.active.length) chart.append(el('p', { class: 'hint' }, t('model.empty')));
+  const rows = [...res.active].sort((a, b) => b.total - a.total);
+  const top = Math.max(...rows.map((c) => c.total), 1);
+  const sel = state.modelSelected;
+  for (const c of rows) {
+    const city = c.cityPop || 0;
+    const pct = (v) => (c.total ? (100 * v) / c.total : 0);
+    const row = el('div', { class: 'pop-row' + (sel === c.id ? ' sel' : '') + (sel && sel !== c.id ? ' dim' : ''), 'data-id': c.id },
+      el('div', { class: 'name', title: cityName(c.city) }, cityName(c.city)),
+      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * c.total) / top}%` },
+        el('i', { style: `width:${pct(city)}%;background:${c.color}` }),
+        el('i', { style: `width:${pct(c.core - city)}%;background:${c.color};opacity:.6` }),
+        el('i', { style: `width:${pct(c.total - c.core)}%;background:${c.color};opacity:.22` }))),
+      el('div', { class: 'val' }, fmtInt(c.total)));
+    row.addEventListener('mousemove', (ev) => showTip(ev, regionTip(c)));
+    row.addEventListener('mouseleave', hideTip);
+    row.addEventListener('click', () => selectModelCentre(c.id));
+    chart.append(row);
+  }
+  $('#mNote').textContent = t('model.note') + ' ' + demoSource() + '.';
+  await ensureModelMap();
+  updateModelMap();
+}
+
+/** Tooltip of a region: total, core, rest, centre city. */
+function regionTip(c) {
+  const T = state.modelThreshold;
+  return `<b>${cityName(c.city)}</b><br>${t('model.region')}: ${fmtInt(c.total)} (${t('pop.nSett', { n: fmtInt(c.n) })})`
+    + `<br>${T ? t('model.inCore', { t: fmtThreshold(T) }) : t('model.coreCity')}: ${fmtInt(c.core)}`
+    + `<br>${t('model.inRest')}: ${fmtInt(c.total - c.core)}`
+    + `<br>${t('demo.cityOnly')}: ${c.cityPop == null ? t('pop.noPop') : fmtInt(c.cityPop)}`;
+}
+
+async function ensureModelMap() {
+  if (modelView.map) { modelView.map.resize(); return modelView.ready; }
+  Object.assign(modelView, createAggMap('modelMap', {
+    centreTip: (p) => regionTip(modelView.result.active.find((a) => a.id === p.id)),
+    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}${f.pale ? ` (${t('model.beyond')})` : ''}` : t('model.outside')}`,
+    onCentreClick: selectModelCentre,
+  }));
+  return modelView.ready;
+}
+
+function updateModelMap() {
+  const map = modelView.map;
+  if (!map || !map.getSource('centres')) return;
+  const { active, owner, core, pop, best } = modelView.result;
+  const S = agg.settlements;
+  const sel = state.modelSelected;
+  const maxTotal = Math.max(...active.map((c) => c.total), 1);
+  const centres = active.map((c) => ({
+    type: 'Feature', geometry: { type: 'Point', coordinates: [S.lon[c.settlement], S.lat[c.settlement]] },
+    properties: { id: c.id, color: c.color, r: 34 * Math.sqrt(c.total / maxTotal), sel: sel === c.id, dim: !!sel && sel !== c.id, total: c.total },
+  })).sort((a, b) => b.properties.total - a.properties.total);  // small circles on top
+  const sett = [];
+  for (let i = 0; i < owner.length; i++) {
+    const o = owner[i];
+    const c = o >= 0 ? active[o] : null;
+    if (c?.settlement === i) continue;  // the centre's own circle
+    const n = pop[i] || 0;
+    sett.push({
+      type: 'Feature', geometry: { type: 'Point', coordinates: [S.lon[i], S.lat[i]] },
+      properties: {
+        i, pop: n, cls: popClass(n), r: 34 * Math.sqrt(n / maxTotal), in: !!c, pale: !!c && !core[i],
+        color: c ? c.color : POP_OUTSIDE, t: c ? Math.max(0, best[i]) / 10 : null,
+        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id,
+      },
+    });
+  }
+  // outlines: the core (within T, with the centre city's outline) and the whole region
+  const outlines = active.map((a) => ({ o: a.idx, key: a.id, coords: a.outline }));
+  const coreOwner = owner.map((o, i) => (core[i] ? o : -1));
+  map.getSource('centres').setData({ type: 'FeatureCollection', features: centres });
+  map.getSource('hull').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, coreOwner, outlines), sel) });
+  map.getSource('hull-outer').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, owner, outlines), sel) });
+  map.getSource('sett').setData({ type: 'FeatureCollection', features: sett });
 }
 
 // ------------------------------------------------------------------ bundled PMTiles
@@ -1724,9 +1978,20 @@ function bundleSlice(url, [offset, length]) {
 }
 
 // ------------------------------------------------------------------ views
+/** Two-level menu: top-level sections and the screens (views) in each. */
+const SECTIONS = { cities: ['map', 'compare'], regions: ['population', 'modeling'], about: ['about'] };
+const sectionOf = (view) => Object.keys(SECTIONS).find((s) => SECTIONS[s].includes(view)) || 'cities';
+const lastView = {};  // section -> screen last open in it
+
 function switchView(view) {
+  if (!document.getElementById(`view-${view}`)) view = 'map';
   state.view = view;
-  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
+  const section = sectionOf(view);
+  lastView[section] = view;
+  document.querySelectorAll('.tab').forEach((b) => b.classList.toggle('active', b.dataset.section === section));
+  document.querySelectorAll('.subtab-group').forEach((g) => { g.hidden = g.dataset.section !== section; });
+  $('#subtabs').hidden = SECTIONS[section].length < 2;
+  document.querySelectorAll('.subtab').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
   document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === `view-${view}`));
   if (view === 'map') {
     for (const p of activePanes()) p.map.resize();
@@ -1735,6 +2000,7 @@ function switchView(view) {
   if (view === 'compare') renderCompare();
   if (view === 'about') renderAbout();
   if (view === 'population') renderPopulationView();
+  if (view === 'modeling') renderModelingView();
   hideTip();
   writeHash();
 }
@@ -1767,6 +2033,7 @@ function renderAll() {
   if (state.view === 'map') renderSidebar();
   if (state.view === 'compare') renderCompare();
   if (state.view === 'population') renderPopulationView();
+  if (state.view === 'modeling') renderModelingView();
 }
 
 // ------------------------------------------------------------------ territory modes
@@ -1923,6 +2190,7 @@ function changeLanguage(lang) {
   if (state.view === 'compare') renderCompare();
   if (state.view === 'about') renderAbout();
   if (state.view === 'population') renderPopulationView();
+  if (state.view === 'modeling') renderModelingView();
   hideTip();
 }
 
@@ -1954,18 +2222,23 @@ async function main() {
   let savedYear = null;
   try { savedYear = +localStorage.getItem('demoYear') || null; } catch { /* storage unavailable */ }
   for (const y of [h.year, savedYear]) if (y && demoYears().includes(y)) { state.demoYear = y; break; }
-  if (h.threshold != null && !Number.isNaN(h.threshold)) state.popThreshold = h.threshold;
+  if (h.threshold != null && !Number.isNaN(h.threshold)) {
+    if (h.view === 'modeling') state.modelThreshold = h.threshold; else state.popThreshold = h.threshold;
+  }
+  if (h.regionCentres) state.regionCentres = h.regionCentres;
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();
   $('#citySelect').addEventListener('change', (e) => selectCities(e.target.value, state.city2));
   $('#citySelect2').addEventListener('change', (e) => selectCities(state.city, e.target.value || null));
-  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
+  document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click',
+    () => switchView(lastView[b.dataset.section] || SECTIONS[b.dataset.section][0])));
+  document.querySelectorAll('.subtab').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
 
   pmProtocol = new pmtiles.Protocol();
   maplibregl.addProtocol('pmtiles', pmProtocol.tile);
   createPane(0, 'map');
-  window.app = { panes, state, popView }; // handy for debugging in the console
+  window.app = { panes, state, popView, modelView }; // handy for debugging in the console
 
   $('#basemapToggle').addEventListener('change', (e) => {
     for (const p of activePanes()) p.map.setLayoutProperty('osm', 'visibility', e.target.checked ? 'visible' : 'none');
