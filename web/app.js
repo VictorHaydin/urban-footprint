@@ -1923,7 +1923,9 @@ function updateModelMap() {
   const { active, owner, core, pop, best } = modelView.result;
   const S = agg.settlements;
   const sel = state.modelSelected;
-  const maxTotal = Math.max(...active.map((c) => c.total), 1);
+  // circle areas relative to the largest region; with no region, to the largest settlement (not to 1 person)
+  const maxTotal = active.length ? Math.max(...active.map((c) => c.total), 1)
+    : pop.reduce((m, n) => Math.max(m, n || 0), 1);
   const centres = active.map((c) => ({
     type: 'Feature', geometry: { type: 'Point', coordinates: [S.lon[c.settlement], S.lat[c.settlement]] },
     properties: { id: c.id, color: c.color, r: 34 * Math.sqrt(c.total / maxTotal), sel: sel === c.id, dim: !!sel && sel !== c.id, total: c.total },
