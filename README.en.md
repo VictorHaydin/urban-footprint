@@ -49,7 +49,7 @@ Documentation (in English):
   centres fall within one range, the larger absorbs the smaller only if it is more than twice its size;
   otherwise both stay centres and the settlements between them join the one reached faster.
 * **Region modelling:** catchment areas of chosen centres (by default Kyiv, the oblast centres and Simferopol;
-  the list can be changed). Every settlement joins the centre it reaches fastest, with no absorption; the region
+  the list can be changed, also by clicking on the map). Every settlement joins the centre it reaches fastest, with no absorption; the region
   core (within the chosen drive time) is bright, the rest of the region pale.
 * **Languages:** Ukrainian (default) and English, remembered in a cookie.
 * **Mobile:** tiled rasters and vector tiles. Kyiv needs ~14 MB of GPU memory at city scale.

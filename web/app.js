@@ -1526,11 +1526,20 @@ function createAggMap(container, opts) {
     });
     map.on('mouseleave', 'centres', () => { map.getCanvas().style.cursor = ''; hideTip(); });
     map.on('click', 'centres', (e) => opts.onCentreClick(e.features[0].properties.id));
+    // opts.onSettClick (optional): settlements that are cities (properties.city) are clickable
+    const cityUnder = (e) => (opts.onSettClick ? e.features.find((f) => f.properties.city) : null);
     map.on('mousemove', 'sett', (e) => {
       if (map.queryRenderedFeatures(e.point, { layers: ['centres'] }).length) return;
-      showTip(e.originalEvent, opts.settTip(e.features[0].properties));
+      const city = cityUnder(e);
+      map.getCanvas().style.cursor = city ? 'pointer' : '';
+      showTip(e.originalEvent, opts.settTip((city || e.features[0]).properties));
     });
-    map.on('mouseleave', 'sett', hideTip);
+    map.on('mouseleave', 'sett', () => { map.getCanvas().style.cursor = ''; hideTip(); });
+    map.on('click', 'sett', (e) => {
+      if (map.queryRenderedFeatures(e.point, { layers: ['centres'] }).length) return;
+      const city = cityUnder(e);
+      if (city) opts.onSettClick(city.properties);
+    });
     res();
   }));
   return { map, ready };
@@ -1910,9 +1919,12 @@ function regionTip(c) {
 async function ensureModelMap() {
   if (modelView.map) { modelView.map.resize(); return modelView.ready; }
   Object.assign(modelView, createAggMap('modelMap', {
-    centreTip: (p) => regionTip(modelView.result.active.find((a) => a.id === p.id)),
-    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}${f.pale ? ` (${t('model.beyond')})` : ''}` : t('model.outside')}`,
-    onCentreClick: selectModelCentre,
+    centreTip: (p) => `${regionTip(modelView.result.active.find((a) => a.id === p.id))}<br><i>${t('model.clickRemove')}</i>`,
+    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}${f.pale ? ` (${t('model.beyond')})` : ''}` : t('model.outside')}`
+      + (f.city ? `<br><i>${t('model.clickAdd')}</i>` : ''),
+    // a click on the map toggles a city's centre status (the chart rows highlight a region)
+    onCentreClick: (id) => { hideTip(); setRegionCentres(regionCentreIds().filter((x) => x !== id)); },
+    onSettClick: (f) => { hideTip(); setRegionCentres([...regionCentreIds(), f.city]); },
   }));
   return modelView.ready;
 }
@@ -1923,6 +1935,7 @@ function updateModelMap() {
   const { active, owner, core, pop, best } = modelView.result;
   const S = agg.settlements;
   const sel = state.modelSelected;
+  const cityAt = Object.fromEntries(agg.centres.filter((c) => c.settlement != null).map((c) => [c.settlement, c.id]));  // can become centres
   // circle areas relative to the largest region; with no region, to the largest settlement (not to 1 person)
   const maxTotal = active.length ? Math.max(...active.map((c) => c.total), 1)
     : pop.reduce((m, n) => Math.max(m, n || 0), 1);
@@ -1941,7 +1954,7 @@ function updateModelMap() {
       properties: {
         i, pop: n, cls: popClass(n), r: 34 * Math.sqrt(n / maxTotal), in: !!c, pale: !!c && !core[i],
         color: c ? c.color : POP_OUTSIDE, t: c ? Math.max(0, best[i]) / 10 : null,
-        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id,
+        centre: c ? cityName(c.city) : null, dim: !!sel && sel !== c?.id, city: cityAt[i] || '',
       },
     });
   }
