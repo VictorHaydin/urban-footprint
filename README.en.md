@@ -140,13 +140,17 @@ which Python's built-in `http.server` lacks.
 1. Run the pipeline locally and commit `web/`, including `web/data/`. Raw and intermediate data in `data/` are git-ignored.
 2. In the repository settings, set **Pages → Build and deployment → Source** to **GitHub Actions** (once).
 3. Push to `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the `web/` folder.
+4. Map tiles (`features.pmtiles`, `overview.bin`, ~590 MB) are not in this repository: they are published from
+   [urban-footprint-data](https://github.com/VictorHaydin/urban-footprint-data) (URL in `tiles`,
+   `config/cities.yaml`) to keep the app's deploys small (GitHub Pages takes longer than the 10 min
+   `deploy-pages` allows for a ~650 MB site). After processing cities: `python -m urbanfp publish-tiles
+   ../urban-footprint-data`, then commit and push there. Locally the app reads the tiles from `web/data`.
 
 Notes:
 * `features.pmtiles` (vector tiles, z14) and `overview.bin` (PMTiles raster pyramids per category packed into one file, z6–13, lossless WebP)
   are read with HTTP range requests, which GitHub Pages supports. Only visible tiles are downloaded and decoded.
-* GitHub rejects files over 100 MB. The largest file is Kyiv's `features.pmtiles` (~18 MB); all web data for
-  7 cities is ~110 MB. GitHub Pages sites are limited to 1 GB, so for dozens of cities consider Git LFS or
-  separate data hosting.
+* GitHub rejects files over 100 MB. The largest file is Kyiv's `features.pmtiles` (~25 MB). GitHub Pages sites
+  are limited to 1 GB; if the tiles grow further, cities can be spread over several repositories (`tiles` per city).
 * The base map uses openstreetmap.org raster tiles, which is fine for light use. For heavy traffic, switch to your own
   tile provider in `web/app.js`.
 

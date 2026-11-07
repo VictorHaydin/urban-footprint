@@ -27,6 +27,10 @@
 #   suburbs_radius_km   (optional, default 25) search radius for Greater City settlements
 #   group               id of a city group below (default: the last group). The web app lists cities
 #                       by group (in the order of `groups`), alphabetically by Ukrainian name within a group.
+#   tiles               (default from `defaults`) published URL of the folder holding the city's map tiles
+#                       (<id>/features.pmtiles, <id>/overview.bin), a separate GitHub Pages site so the
+#                       app's own deploys stay small. Copy them there with `python -m urbanfp publish-tiles`.
+#                       Locally (localhost) the app reads the tiles from web/data instead.
 
 groups:
   - {id: million, label: "Largest cities", label_uk: "Міста-мільйонники"}
@@ -35,6 +39,7 @@ groups:
 
 defaults:
   source: "geofabrik:europe/ukraine"
+  tiles: "https://victorhaydin.github.io/urban-footprint-data/"
 
 cities:
   - id: kyiv

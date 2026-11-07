@@ -1,5 +1,7 @@
-# Publishes the static web app (web/, including the committed datasets in web/data)
-# to GitHub Pages. Data is NOT processed in CI: run the pipeline locally, commit web/data, push.
+# Publishes the static web app (web/, including the committed datasets in web/data) to GitHub Pages.
+# Data is NOT processed in CI: run the pipeline locally, commit web/data, push. Map tiles (features.pmtiles,
+# overview.bin) are not in this repository: they are published from VictorHaydin/urban-footprint-data
+# (`python -m urbanfp publish-tiles ../urban-footprint-data`, then commit and push there).
 name: Deploy web app to GitHub Pages
 
 on:
@@ -25,14 +27,9 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-        with:
-          lfs: true
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
       - id: deployment
         uses: actions/deploy-pages@v4
-        with:
-          # the published dataset is large (~650 MB); Pages needs more than the default 10 min to process it
-          timeout: 1800000

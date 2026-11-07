@@ -4,6 +4,10 @@
 import { t, label, getLang, setLang, locale, checkMessage, applyStatic, MAP_LOCALE } from './i18n.js';
 
 const DATA = 'data';
+// Map tiles of the published site live in a separate GitHub Pages repository (`tiles` of each city in
+// index.json), so the app's deploys stay small; a local preview reads them from web/data like everything else.
+const LOCAL = ['localhost', '127.0.0.1', '[::1]', ''].includes(location.hostname);
+const tileBase = (city) => (!LOCAL && city?.tiles ? new URL(`${city.id}/`, city.tiles).href : null);
 const VT_FADE = 0.5; // zoom range over which overview rasters cross-fade into vector tiles
 
 const state = {
@@ -405,6 +409,7 @@ async function loadCityIntoPane(pane, cityId) {
   const unitKey = s._units.join(',');
   if (pane.cityId === cityId && pane.unitKey === unitKey && pane.layers.length) return;
   const base = new URL(`${DATA}/${cityId}/`, location.href).href;
+  const tiles = tileBase(cityById(cityId)) || base;  // features.pmtiles, overview.bin
   clearCityLayers(pane);
   if (pane.popup) pane.popup.remove();
   pane.cityId = cityId;
@@ -436,7 +441,7 @@ async function loadCityIntoPane(pane, cityId) {
   pane.unitFilter = perUnit;
   const ovFiles = perUnit ? s._units.map((u) => [u, ov.files[u] || {}]) : [['A', ov.files]];
   // bundled export: every pyramid is an [offset, length] window of one file per city (overview.bin)
-  const ovUrl = (file) => (Array.isArray(file) ? `pmtiles://${bundleSlice(base + ov.bundle, file)}` : `pmtiles://${base}${file}`);
+  const ovUrl = (file) => (Array.isArray(file) ? `pmtiles://${bundleSlice(tiles + ov.bundle, file)}` : `pmtiles://${base}${file}`);
   for (const c of state.index.categories) {
     for (const [u, files] of ovFiles) {
       const file = files[c.id];
@@ -450,7 +455,7 @@ async function loadCityIntoPane(pane, cityId) {
     }
   }
   // vector tiles (high zoom) — each feature piece is exclusive, exactly what the statistics count
-  add('vt', { type: 'vector', url: `pmtiles://${base}${vt.file}` });
+  add('vt', { type: 'vector', url: `pmtiles://${tiles}${vt.file}` });
   for (const c of state.index.categories) {
     layer({
       id: `vt-${c.id}`, type: 'fill', source: 'vt', 'source-layer': vt.layer, minzoom: vt.minzoom,

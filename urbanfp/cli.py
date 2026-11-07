@@ -103,6 +103,9 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("list", help="list configured cities and their processing state")
     sub.add_parser("demography", help="population per city and territory mode from data/demography (all years)")
     sub.add_parser("agglomeration", help="drive times from every city to all settlements (Агломерації page)")
+    pt = sub.add_parser("publish-tiles", help="copy map tiles into a working copy of the tiles repository")
+    pt.add_argument("repo", help="path of the working copy (e.g. ../urban-footprint-data)")
+    pt.add_argument("cities", nargs="*", help="city ids (default: all)")
     sp = sub.add_parser("serve", help="preview the web app locally (with HTTP Range support)")
     sp.add_argument("--port", type=int, default=8000)
     for name in ["download", "run", *STAGES]:
@@ -140,6 +143,13 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "agglomeration":
         from urbanfp.agglomeration import build_agglomeration
         build_agglomeration()
+        return
+
+    if args.cmd == "publish-tiles":
+        from pathlib import Path
+
+        from urbanfp.export_web import publish_tiles
+        publish_tiles(Path(args.repo), select_cities(args.cities, False))
         return
 
     if args.cmd == "serve":

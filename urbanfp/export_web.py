@@ -170,6 +170,29 @@ def export_overview(gdf3857: gpd.GeoDataFrame, cls: Classification, out_dir, bou
 
 
 OVERVIEW_BUNDLE = "overview.bin"
+TILE_FILES = ("features.pmtiles", OVERVIEW_BUNDLE)  # published from a separate repository (`tiles` in config)
+
+
+def publish_tiles(repo: Path, cities: list[City]) -> None:
+    """Copy each city's map tiles (TILE_FILES) into <repo>/<city id>/ — a working copy of the repository
+    behind the city's `tiles` URL. Unchanged files are left alone, so a commit there holds only real changes."""
+    import filecmp
+    copied = same = 0
+    for c in cities:
+        src = Paths.web_city(c.id)
+        for name in TILE_FILES:
+            f = src / name
+            if not f.exists():
+                log.warning("[%s] %s missing, run the export first", c.id, name)
+                continue
+            dst = repo / c.id / name
+            if dst.exists() and filecmp.cmp(f, dst, shallow=False):
+                same += 1
+                continue
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(f, dst)
+            copied += 1
+    log.info("%s: %d tile files copied, %d unchanged", repo, copied, same)
 
 
 def bundle_overview(web: Path, overview: dict) -> dict:
@@ -384,6 +407,7 @@ def export_index(cls: Classification) -> None:
                        "center": s["map"]["center"], "bounds": s["map"]["bounds"],
                        "osm_relation": c.boundary_relation, "notes": c.notes, "notes_uk": c.notes_uk,
                        "group": c.group, "occupied": c.occupied, "occupied_since": c.occupied_since,
+                       "tiles": c.tiles or None,
                        "modes": {m: {"status": d.get("status"), "area_km2": d["area"]["boundary_km2"]}
                                  for m, d in (s.get("modes") or {}).items()}})
     index = {

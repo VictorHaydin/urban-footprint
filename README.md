@@ -143,13 +143,17 @@ python -m urbanfp agglomeration        # час доїзду від міст д�
    потрапляють у git.
 2. У налаштуваннях репозиторію оберіть **Pages → Build and deployment → Source: GitHub Actions** (один раз).
 3. Надішліть зміни в `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) опублікує теку `web/`.
+4. Тайли мапи (`features.pmtiles`, `overview.bin`, ~590 МБ) не входять у цей репозиторій: їх публікує окремий
+   [urban-footprint-data](https://github.com/VictorHaydin/urban-footprint-data) (адреса — `tiles` у
+   `config/cities.yaml`), щоб деплої застосунку були малими (GitHub Pages обробляє сайт на ~650 МБ довше за
+   10 хв, які дає `deploy-pages`). Після обробки міст: `python -m urbanfp publish-tiles ../urban-footprint-data`,
+   потім коміт і пуш там. Локально застосунок читає тайли з `web/data`.
 
 Примітки:
 * `features.pmtiles` (векторні тайли, z14) і `overview.bin` (растрові піраміди PMTiles для кожної категорії, зібрані в один файл, z6–13,
   WebP без втрат) читаються HTTP Range-запитами, які підтримує GitHub Pages. Завантажуються й декодуються лише видимі тайли.
-* GitHub не приймає файли понад 100 МБ. Найбільший файл — `features.pmtiles` Києва (~18 МБ); усі вебдані для
-  7 міст — ~110 МБ. Сайти GitHub Pages обмежені 1 ГБ, тож для кількох десятків міст варто розглянути Git LFS або
-  окремий хостинг даних.
+* GitHub не приймає файли понад 100 МБ. Найбільший файл — `features.pmtiles` Києва (~25 МБ). Сайти GitHub Pages
+  обмежені 1 ГБ; якщо тайлів стане більше, міста можна розкласти по кількох репозиторіях (своє `tiles` для міста).
 * Базова мапа використовує растрові тайли openstreetmap.org, що підходить для невеликого навантаження. Для
   великого трафіку вкажіть власного постачальника тайлів у `web/app.js`.
 

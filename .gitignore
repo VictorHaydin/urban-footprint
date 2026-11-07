@@ -11,3 +11,8 @@ data/logs/
 data/preview/
 
 .claude/
+
+# Map tiles are published from a separate repository (urban-footprint-data, `tiles` in config/cities.yaml);
+# they stay in web/data for the local preview. Copy them with `python -m urbanfp publish-tiles`.
+web/data/*/features.pmtiles
+web/data/*/overview.bin

@@ -60,6 +60,7 @@ class City:
     katottg: str = ""                  # KATOTTG code of the city (demography); found by name if empty
     occupied_since: int | None = None  # year of (temporary) occupation, if occupied
     suburbs_radius_km: float = 25.0
+    tiles: str = ""                    # published URL of the folder with <id>/features.pmtiles, overview.bin
 
     @property
     def occupied(self) -> bool:
