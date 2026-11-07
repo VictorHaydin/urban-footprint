@@ -1,8 +1,8 @@
 """City populations with their surroundings by drive time ("Агломерації" page).
 
 For every configured city (an urban centre) the free-flow car drive time to every settlement of Ukraine
-within MAX_MIN minutes (3 h) is computed on a national OSM road graph. The web page then joins settlements to
-centres for a chosen threshold (city only, 10, 20, 30, 45 min, 1, 1.5, 2, 2.5, 3 h):
+within MAX_MIN minutes (6 h) is computed on a national OSM road graph. The Агломерації page joins settlements to
+centres for a chosen threshold up to 3 h; the region modelling page uses the whole range:
 
 * centres are taken from the largest (population of the city itself) down; a centre within the threshold
   of an active centre more than twice its size becomes inactive and joins it; centres of comparable size
@@ -40,7 +40,7 @@ log = logging.getLogger(__name__)
 AGGLOMERATION_VERSION = 4
 OUTLINE_TOLERANCE_DEG = 0.002  # city outline simplification for the map (~200 m)
 THRESHOLDS_MIN = [0, 10, 30, 60, 90, 120, 150, 180]  # buttons; the slider covers every 5 min
-MAX_MIN = 180
+MAX_MIN = 360  # 6 h: region modelling assigns settlements to few, distant centres; agglomerations use up to 3 h
 # national graph: no service roads, tracks or paths (they matter for the last metres only)
 GRAPH_HIGHWAYS = {k: v for k, v in SPEED.items() if k not in ("service", "track")}
 # The graph is the intact (pre-war) network: roads mapped as destroyed or out of use (blown-up bridges such as

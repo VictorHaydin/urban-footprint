@@ -1262,11 +1262,14 @@ async function loadAgglomeration() {
   for (const [id, list] of Object.entries(agg.reach)) aggReach[id] = new Map(list);
   // any multiple of POP_STEP up to the computed maximum (the slider); the buttons are shortcuts
   const th = state.popThreshold;
-  if (!(Number.isInteger(th) && th >= 0 && th <= agg.max_min && th % POP_STEP === 0)) state.popThreshold = 30;
+  if (!(Number.isInteger(th) && th >= 0 && th <= aggPageMax() && th % POP_STEP === 0)) state.popThreshold = 30;
   return agg;
 }
 
 const POP_STEP = 5;  // slider step, minutes
+// drive times reach 6 h (region modelling); the Агломерації page stays within 3 h
+const AGG_PAGE_MAX_MIN = 180;
+const aggPageMax = () => Math.min(agg.max_min, AGG_PAGE_MAX_MIN);
 const fmtThreshold = (m) => (m === 0 ? t('pop.cityOnly')
   : m < 60 ? `${m} ${t('set.min')}`
     : m % 30 === 0 ? `${num(m / 60, m % 60 ? 1 : 0)} ${t('pop.hour')}`
@@ -1407,7 +1410,7 @@ async function renderPopulationView() {
     }, fmtThreshold(m)));
   }
   const slider = $('#popSlider');
-  slider.max = agg.max_min;
+  slider.max = aggPageMax();
   slider.step = POP_STEP;
   if (document.activeElement !== slider) slider.value = state.popThreshold;
   slider.oninput = () => { $('#popSliderVal').textContent = fmtThreshold(+slider.value); setPopThreshold(+slider.value, false); };
@@ -1453,7 +1456,7 @@ async function renderPopulationView() {
       inactive.sort((a, b) => b.cityPop - a.cityPop).map((c) => `${cityName(c.city)} → ${cityName(res.centres.find((x) => x.id === c.absorbedBy).city)} (${num(c.time, 0)} ${t('set.min')})`).join('; ')));
   }
   if (nodata.length) ib.append(el('div', {}, el('b', {}, t('pop.noDataTitle')), ' ', nodata.map((c) => cityName(c.city)).join(', ')));
-  $('#popNote').textContent = t('pop.note', { max: fmtThreshold(agg.max_min) }) + ' ' + demoSource() + '.';
+  $('#popNote').textContent = t('pop.note', { max: fmtThreshold(aggPageMax()) }) + ' ' + demoSource() + '.';
   await ensurePopMap();
   updatePopMap();
 }

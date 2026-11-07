@@ -306,7 +306,8 @@ may differ from today's boundary).
 except service roads, tracks and paths; same free-flow speeds as Greater City mode) and locates every
 settlement of every year (Derzhstat, and census rows matched as above) at the OSM `place` point with the
 same KATOTTG code (28,580 of 28,657 Derzhstat settlements; 100% of the population). For every configured city it computes the drive time from any road inside the city boundary to
-every settlement within 3 h (settlement point snapped to the nearest road, at most 3 km away).
+every settlement within 6 h (settlement point snapped to the nearest road, at most 3 km away); the Агломерації
+page uses up to 3 h, the region modelling page the whole range.
 
 Centres are all 101 cities of over 50,000 people in the 2001 census. A city needs only its extracted OSM boundary
 to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the

@@ -110,7 +110,7 @@
 <ul>
   <li>Agglomeration centres are all cities of over 50,000 people in the 2001 census (101).</li>
   <li>For each city the free-flow car drive time (OSM road network, typical speeds) is computed from any road
-    inside the city to every settlement of Ukraine within 3 hours.</li>
+    inside the city to every settlement of Ukraine within 6 hours (the Agglomerations page uses up to 3 h).</li>
   <li>For the chosen threshold (buttons for city only, 10, 30 min, 1, 1.5, 2, 2.5 and 3 h, or any value from 0 to 3 h in 5 min steps with the slider) cities are taken from the
     largest down: a city joins the agglomeration of another only if it is within the threshold and the other is
     more than <strong>twice</strong> its size. Cities of comparable size stay separate centres.</li>
@@ -137,7 +137,7 @@
   <li>Region centres are chosen from the list of all cities. By default they are Kyiv, the oblast centres and
     Simferopol (25 cities); any city can be added or removed in the list or by a click on the map (a click on a city makes it a centre, a click on a centre removes it), and the choice is kept in the link.</li>
   <li>Centres never absorb each other: every settlement belongs to the region whose centre it reaches fastest (the
-    same drive times as for agglomerations, up to 3 h). Settlements more than 3 h from every chosen centre belong to
+    same drive times as for agglomerations, but up to 6 h). Settlements more than 6 h from every chosen centre belong to
     no region.</li>
   <li>Each region has two zones: the <strong>core</strong>, settlements within the chosen drive time of the centre
     (bright dots and outline), and the <strong>rest of the region</strong>, those for which this centre is the
