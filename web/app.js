@@ -1945,12 +1945,15 @@ function updateModelMap() {
       },
     });
   }
-  // outlines: the core (within T, with the centre city's outline) and the whole region
-  const outlines = active.map((a) => ({ o: a.idx, key: a.id, coords: a.outline }));
+  // outlines: the core (within T) and the whole region. Every city of the region counts with its whole area (its
+  // outline), not only the centre: a city is a point among the settlements, and gaps of more than
+  // HULL_MAX_EDGE_KM around it (Sevastopol and its villages) would cut it off
+  const cityOutlines = agg.centres.filter((c) => c.settlement != null && owner[c.settlement] >= 0 && c.outline)
+    .map((c) => ({ o: owner[c.settlement], key: c.id, coords: c.outline, core: !!core[c.settlement] }));
   const coreOwner = owner.map((o, i) => (core[i] ? o : -1));
   map.getSource('centres').setData({ type: 'FeatureCollection', features: centres });
-  map.getSource('hull').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, coreOwner, outlines), sel) });
-  map.getSource('hull-outer').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, owner, outlines), sel) });
+  map.getSource('hull').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, coreOwner, cityOutlines.filter((c) => c.core)), sel) });
+  map.getSource('hull-outer').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, owner, cityOutlines), sel) });
   map.getSource('sett').setData({ type: 'FeatureCollection', features: sett });
 }
 

@@ -202,9 +202,33 @@ def place_points(region: str) -> pd.DataFrame:
     return df
 
 
+# Oblast-level units whose settlements are coded elsewhere today: the villages of the Sevastopol city council of
+# 2001 belong to hromadas of Bakhchysarai raion (UA01) since the 2020 reform or have no code in OSM, so the census
+# rows of Sevastopol found no candidates. Points inside the unit's OSM boundary are flagged (`area`), and
+# uncoded ones take its prefix instead of the nearest coded point's.
+PREFIX_AREAS = {"UA85": 1574364}  # Sevastopol, city with special status (admin_level 4, ISO 3166-2 UA-40)
+
+
+def prefix_areas(region: str) -> dict[str, shapely.Geometry]:
+    """Boundaries of PREFIX_AREAS (cached per extract)."""
+    from urbanfp.extract import extract_boundaries
+    pbf = pbf_path(region)
+    cache = _cache_dir() / f"prefix_areas_{region.replace('/', '_')}.geojson"
+    if cache.exists():
+        g = gpd.read_file(cache)
+        if len(g) and g["stamp"].iloc[0] == _stamp(pbf) and set(g["prefix"]) == set(PREFIX_AREAS):
+            return dict(zip(g["prefix"], g.geometry))
+    found = extract_boundaries(pbf, [], set(PREFIX_AREAS.values()))
+    areas = {pre: found[rel] for pre, rel in PREFIX_AREAS.items() if rel in found}
+    gpd.GeoDataFrame({"prefix": list(areas), "stamp": _stamp(pbf)}, geometry=list(areas.values()),
+                     crs="EPSG:4326").to_file(cache, driver="GeoJSON")
+    return areas
+
+
 def coded_places(region: str) -> pd.DataFrame:
     """Place points with a settlement `code`: the KATOTTG code, or `OSM<node id>` where OSM has none (most of
-    Crimea), and the oblast `prefix` (UAxx) of the code or of the nearest coded point."""
+    Crimea), and the oblast `prefix` (UAxx) of the code, else of the PREFIX_AREAS unit the point lies in, else of
+    the nearest coded point."""
     pts = place_points(region).copy()
     valid = pts["katotth"].str.match(r"^UA\d{17}$")
     pts["code"] = np.where(valid, pts["katotth"], "OSM" + pts["osm"].astype(str))
@@ -212,6 +236,11 @@ def coded_places(region: str) -> pd.DataFrame:
     if (~valid).any() and valid.any():
         _, near = cKDTree(_xy(pts.loc[valid, "lon"], pts.loc[valid, "lat"])).query(_xy(pts.loc[~valid, "lon"], pts.loc[~valid, "lat"]))
         pts.loc[~valid, "prefix"] = pts.loc[valid, "prefix"].values[near]
+    pts["area"] = ""  # PREFIX_AREAS unit the point lies in, whatever its code
+    for pre, area in prefix_areas(region).items():
+        inside = shapely.contains_xy(area, pts["lon"].values, pts["lat"].values)
+        pts.loc[inside, "area"] = pre
+        pts.loc[inside & ~valid, "prefix"] = pre
     return pts.drop_duplicates("code")
 
 

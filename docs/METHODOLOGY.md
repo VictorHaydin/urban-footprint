@@ -276,7 +276,10 @@ ignores spelling variants (є/е, і/и). A few renamings OSM does not record an
 since 2001 (Inhulets → Kryvyi Rih, Taromske → Dnipro) are listed in `CENSUS_RENAMES`. Settlements merged into
 one are summed. Where OSM has no code (most of Crimea), a place point is used instead, identified by its OSM id
 (`OSM<id>`) and assigned to the oblast of the nearest coded point; it is only used when no coded settlement has
-that name. 28,998 of 29,962 settlements (98.9% of the population) are matched; the unmatched are mostly small
+that name. Points inside Sevastopol's OSM boundary (relation 1574364, `PREFIX_AREAS` in `agglomeration.py`)
+belong to Sevastopol whatever their code: the villages of its 2001 city council are coded in Bakhchysarai raion
+since the 2020 reform or have no code, and the nearest coded points are Crimean. 29,030 of 29,962 settlements
+(98.9% of the population) are matched; the unmatched are mostly small
 villages that no longer exist or have been renamed. Hromada totals for 2001
 are sums of their matched settlements; the city row is the city's own census figure (the 2001 city, which
 may differ from today's boundary).

@@ -109,6 +109,8 @@ CENSUS_RENAMES = {
     ("Інгулець", "Інгулецька міська рада"): "Кривий Ріг",      # part of Kryvyi Rih since 2002
     ("Таромське", "Таромська селищна рада"): "Дніпро",         # part of Dnipro
     ("Красний Луч", "Краснолуцька міська рада"): "Хрустальний",  # not the village Mamusheve (old_name Красний Луч)
+    ("Колхозне", "Орлинівська сільська рада"): "Колгоспне",       # Sevastopol
+    ("Повортне", "Верхньосадівська сільська рада"): "Поворотне",  # typo in the census table
 }
 
 
@@ -145,10 +147,13 @@ def parse_census(path: Path, current: pd.DataFrame) -> pd.DataFrame:
             add(code, name, typ)
     pts = coded_places(load_cities()[0].source_region)
     coded = pts[~pts["code"].str.startswith("OSM")]
-    for code, name, place in zip(coded["code"], coded["name"], coded["place"]):
-        add(code, name, OSM_KIND.get(place, ""))
-    for code, old, place in zip(coded["code"], coded["old_name"], coded["place"]):
-        add(code, old, OSM_KIND.get(place, ""), only_new=True)  # a former name never shadows a current one
+    # a point inside a PREFIX_AREAS unit but coded elsewhere today (a Sevastopol village of 2001, in Bakhchysarai
+    # raion since 2020) is a candidate of that unit only, so it never takes a namesake from the rest of Crimea
+    pool = [a if a and a != c[:4] else None for c, a in zip(coded["code"], coded["area"])]
+    for code, name, place, pre in zip(coded["code"], coded["name"], coded["place"], pool):
+        add(code, name, OSM_KIND.get(place, ""), pre=pre)
+    for code, old, place, pre in zip(coded["code"], coded["old_name"], coded["place"], pool):
+        add(code, old, OSM_KIND.get(place, ""), only_new=True, pre=pre)  # a former name never shadows a current one
     # places OSM gives no code (most of Crimea): identified by their OSM point, never shadowing a coded one
     rest = pts[pts["code"].str.startswith("OSM")]
     for code, name, place, pre in zip(rest["code"], rest["name"], rest["place"], rest["prefix"]):
