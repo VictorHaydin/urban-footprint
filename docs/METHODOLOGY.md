@@ -322,7 +322,7 @@ Without this, Zaporizhzhia → Melitopol took 307 min (detour via Huliaipole) in
 Melitopol 401 min instead of 167 min. The Kakhovka dam road (mapped as proposed, without destroyed tags) is
 not restored.
 
-The page joins settlements for a threshold of 0 (city only), 10, 20, 30, 45, 60, 90, 120, 150 or 180 min:
+The page joins settlements for any threshold from 0 (city only) to 180 min in 5 min steps (slider; buttons for 0, 10, 20, 30, 45, 60, 90, 120, 150 and 180 min):
 * centres are taken from the largest city (own population) down; a centre within the threshold of an active
   centre more than twice its size becomes inactive and joins it (the fastest reached one; e.g. Kamianske →
   Dnipro at 20 min). Centres of comparable size (ratio ≤ 2, e.g. Dnipro with Zaporizhzhia and Kryvyi Rih) both stay

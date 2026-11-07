@@ -1232,7 +1232,7 @@ function fillAboutCities() {
  */
 let agg = null;
 let aggReach = null;   // centre id -> Map(settlement index -> tenths of a minute)
-const popView = { map: null, ready: null, result: null };
+const popView = { map: null, ready: null, result: null, frame: null };
 // clearly distinct hues only: neighbouring agglomerations get different ones (assignAggColors)
 const POP_COLORS = ['#2f6db5', '#d1495b', '#2e9d6a', '#e08a1e', '#7b52ae', '#1c9aa8', '#6c8a1f', '#8c6d3f'];
 const AGG_ADJ_KM = 30;  // agglomerations whose settlements come this close count as neighbours
@@ -1242,12 +1242,27 @@ async function loadAgglomeration() {
   agg = await getJSON(`${DATA}/agglomeration.json`);
   aggReach = {};
   for (const [id, list] of Object.entries(agg.reach)) aggReach[id] = new Map(list);
-  if (!agg.thresholds_min.includes(state.popThreshold)) state.popThreshold = 30;
+  // any multiple of POP_STEP up to the computed maximum (the slider); the buttons are shortcuts
+  const th = state.popThreshold;
+  if (!(Number.isInteger(th) && th >= 0 && th <= agg.max_min && th % POP_STEP === 0)) state.popThreshold = 30;
   return agg;
 }
 
+const POP_STEP = 5;  // slider step, minutes
 const fmtThreshold = (m) => (m === 0 ? t('pop.cityOnly')
-  : m < 60 ? `${m} ${t('set.min')}` : `${num(m / 60, m % 60 ? 1 : 0)} ${t('pop.hour')}`);
+  : m < 60 ? `${m} ${t('set.min')}`
+    : m % 30 === 0 ? `${num(m / 60, m % 60 ? 1 : 0)} ${t('pop.hour')}`
+      : `${Math.floor(m / 60)} ${t('pop.hour')} ${m % 60} ${t('set.min')}`);
+
+/** Set the drive-time threshold and redraw; slider moves are coalesced to one redraw per frame. */
+function setPopThreshold(m, final = true) {
+  state.popThreshold = m;
+  if (final) writeHash();
+  if (popView.frame) return;
+  popView.frame = requestAnimationFrame(async () => {
+    try { await renderPopulationView(); } finally { popView.frame = null; }
+  });
+}
 
 /** A centre joins a larger one only if the larger city is more than this many times bigger. */
 const ABSORB_RATIO = 2;
@@ -1370,9 +1385,16 @@ async function renderPopulationView() {
   for (const m of agg.thresholds_min) {
     th.append(el('button', {
       type: 'button', class: state.popThreshold === m ? 'active' : '', 'aria-pressed': state.popThreshold === m,
-      onclick: () => { state.popThreshold = m; writeHash(); renderPopulationView(); },
+      onclick: () => setPopThreshold(m),
     }, fmtThreshold(m)));
   }
+  const slider = $('#popSlider');
+  slider.max = agg.max_min;
+  slider.step = POP_STEP;
+  if (document.activeElement !== slider) slider.value = state.popThreshold;
+  slider.oninput = () => { $('#popSliderVal').textContent = fmtThreshold(+slider.value); setPopThreshold(+slider.value, false); };
+  slider.onchange = () => setPopThreshold(+slider.value);
+  $('#popSliderVal').textContent = fmtThreshold(state.popThreshold);
   const yb = $('#popYear');
   yb.innerHTML = '';
   yb.append(`${t('demo.title')}: `, demoYearControl());

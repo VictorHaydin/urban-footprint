@@ -45,7 +45,7 @@ Documentation (in English):
   hromada and Greater City, population density and the population of each suburb; a "Population" breakdown on
   the comparison screen (count or density). A switch selects the source (year).
 * **Agglomerations:** a separate page with a bar chart and a map of population circles for each city
-  together with settlements within a drive time (city only, 10, 20, 30, 45 min, 1, 1.5, 2, 2.5 or 3 h). When two
+  together with settlements within a drive time (city only up to 3 h, in 5 min steps). When two
   centres fall within one range, the larger absorbs the smaller only if it is more than twice its size;
   otherwise both stay centres and the settlements between them join the one reached faster.
 * **Languages:** Ukrainian (default) and English, remembered in a cookie.

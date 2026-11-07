@@ -327,6 +327,9 @@ details.panel > summary h3 { font-size: 14px; }
 .pop-controls .terr-label { color: var(--muted); font-size: 13px; }
 .pop-threshold { flex-wrap: wrap; margin: 0; }
 .pop-threshold button { padding: 4px 8px; }
+.pop-slider { display: flex; align-items: center; gap: 10px; }
+.pop-slider input { flex: 1; min-width: 0; accent-color: var(--accent); }
+.pop-slider output { min-width: 92px; font-size: 13px; font-variant-numeric: tabular-nums; text-align: right; }
 .pop-map { position: absolute; inset: 0; }
 .pop-chart { display: flex; flex-direction: column; gap: 3px; }
 .pop-row { display: grid; grid-template-columns: 112px 1fr 78px; gap: 8px; align-items: center; cursor: pointer;

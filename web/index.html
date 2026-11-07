@@ -109,6 +109,10 @@
         <div class="pop-controls">
           <span class="terr-label" data-i18n="pop.threshold">Разом із населеними пунктами в межах доїзду</span>
           <div class="unit-toggle pop-threshold" id="popThreshold" role="group"></div>
+          <label class="pop-slider">
+            <input type="range" id="popSlider" min="0" max="180" step="5" value="30" data-i18n-aria="pop.slider" aria-label="Час доїзду">
+            <output id="popSliderVal" for="popSlider"></output>
+          </label>
           <div id="popYear" class="small"></div>
         </div>
         <p class="hint" id="popHint"></p>
