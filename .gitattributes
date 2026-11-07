@@ -2,3 +2,4 @@
 *.pmtiles binary
 *.png binary
 *.ico binary
+*.bin binary

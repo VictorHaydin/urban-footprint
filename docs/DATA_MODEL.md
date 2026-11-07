@@ -37,10 +37,12 @@ web/data/
     index.json                cities + category definitions (label / label_uk, colours, order)
     <city>/stats.json         statistics + validation summary + map georeferencing
     <city>/boundary.geojson   simplified boundary
-    <city>/overview/<cat>.pmtiles  coverage raster pyramid per category (lossless WebP tiles, 512 px,
-                              z6–13 ≈ 6 m/px; alpha = share of the pixel covered by the category).
-                              Tiled so browsers only load visible tiles; full-size images exhausted
-                              mobile GPU memory
+    <city>/overview.bin       coverage raster pyramids per unit and category (PMTiles, lossless WebP tiles,
+                              512 px, z6–13 ≈ 6 m/px; alpha = share of the pixel covered by the category),
+                              concatenated into one file; stats.json `map.overview.files[unit][cat]` is the
+                              [offset, length] of each pyramid, read with HTTP range requests. Tiled so
+                              browsers only load visible tiles (full-size images exhausted mobile GPU memory);
+                              one file per city instead of ~40 keeps GitHub Pages deploys manageable
     demography.json           population per city, year and territory mode (python -m urbanfp demography)
     agglomeration.json        settlements of Ukraine (code, name, point, population per year) and drive times
                               from every city within 3 h, tenths of a minute (python -m urbanfp agglomeration)

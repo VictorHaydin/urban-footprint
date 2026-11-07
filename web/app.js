@@ -435,12 +435,14 @@ async function loadCityIntoPane(pane, cityId) {
   const perUnit = Object.values(ov.files).some((v) => typeof v === 'object');
   pane.unitFilter = perUnit;
   const ovFiles = perUnit ? s._units.map((u) => [u, ov.files[u] || {}]) : [['A', ov.files]];
+  // bundled export: every pyramid is an [offset, length] window of one file per city (overview.bin)
+  const ovUrl = (file) => (Array.isArray(file) ? `pmtiles://${bundleSlice(base + ov.bundle, file)}` : `pmtiles://${base}${file}`);
   for (const c of state.index.categories) {
     for (const [u, files] of ovFiles) {
       const file = files[c.id];
       if (!file) continue;
       const id = `ov-${c.id}-${u}`;
-      add(id, { type: 'raster', url: `pmtiles://${base}${file}`, tileSize: ov.tile_size || 512 });
+      add(id, { type: 'raster', url: ovUrl(file), tileSize: ov.tile_size || 512 });
       layer({
         id, type: 'raster', source: id, maxzoom: vt.minzoom + VT_FADE,
         paint: { 'raster-fade-duration': 0, 'raster-resampling': 'linear' },
@@ -1691,6 +1693,31 @@ function aggHulls(res, sel) {
   return feats;
 }
 
+// ------------------------------------------------------------------ bundled PMTiles
+let pmProtocol = null;
+const bundleSources = new Map();  // bundle URL -> FetchSource (one per file, so ETags stay consistent)
+
+/** A PMTiles archive stored at [offset, offset + length) of a larger file, read with HTTP range requests. */
+class SliceSource {
+  constructor(fetchSource, offset, length, key) { Object.assign(this, { fetchSource, offset, length, key }); }
+  getKey() { return this.key; }
+  getBytes(offset, length, signal, etag) {
+    // never read past the slice (the header read asks for 16 KB, more than a small archive)
+    const n = Math.max(1, Math.min(length, this.length - offset));
+    return this.fetchSource.getBytes(this.offset + offset, n, signal, etag);
+  }
+}
+
+/** Register the archive at `[offset, length]` of `url` with the pmtiles protocol; returns its protocol key. */
+function bundleSlice(url, [offset, length]) {
+  const key = `${url}@${offset}`;
+  if (!pmProtocol.get(key)) {
+    if (!bundleSources.has(url)) bundleSources.set(url, new pmtiles.FetchSource(url));
+    pmProtocol.add(new pmtiles.PMTiles(new SliceSource(bundleSources.get(url), offset, length, key)));
+  }
+  return key;
+}
+
 // ------------------------------------------------------------------ views
 function switchView(view) {
   state.view = view;
@@ -1930,8 +1957,8 @@ async function main() {
   $('#citySelect2').addEventListener('change', (e) => selectCities(state.city, e.target.value || null));
   document.querySelectorAll('.tab').forEach((b) => b.addEventListener('click', () => switchView(b.dataset.view)));
 
-  const protocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
+  pmProtocol = new pmtiles.Protocol();
+  maplibregl.addProtocol('pmtiles', pmProtocol.tile);
   createPane(0, 'map');
   window.app = { panes, state, popView }; // handy for debugging in the console
 

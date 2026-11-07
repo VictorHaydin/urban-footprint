@@ -142,7 +142,7 @@ which Python's built-in `http.server` lacks.
 3. Push to `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) publishes the `web/` folder.
 
 Notes:
-* `features.pmtiles` (vector tiles, z14) and `overview/*.pmtiles` (raster pyramids per category, z6–13, lossless WebP)
+* `features.pmtiles` (vector tiles, z14) and `overview.bin` (PMTiles raster pyramids per category packed into one file, z6–13, lossless WebP)
   are read with HTTP range requests, which GitHub Pages supports. Only visible tiles are downloaded and decoded.
 * GitHub rejects files over 100 MB. The largest file is Kyiv's `features.pmtiles` (~18 MB); all web data for
   7 cities is ~110 MB. GitHub Pages sites are limited to 1 GB, so for dozens of cities consider Git LFS or

@@ -3,7 +3,9 @@
 Per city (web/data/<city>/):
     stats.json            statistics (copy of processed stats + validation summary + overview georef)
     boundary.geojson      simplified administrative boundary (WGS84)
-    overview/<unit>/<cat>.pmtiles  per-unit, per-category coverage raster pyramid (lossless WebP tiles, z6–13)
+    overview.bin          per-unit, per-category coverage raster pyramids (PMTiles, lossless WebP tiles, z6–13),
+                          concatenated into one file; stats.json gives each pyramid's [offset, length]. One file
+                          instead of ~40 per city keeps the published site small in file count (Pages deploys)
     territories.geojson   outline of each territory mode (city / hromada / greater)
     settlements.geojson   (territorial cities) evaluated Greater City settlements with drive times
     features.pmtiles      vector tiles (layer "features") with every exclusive feature piece
@@ -27,6 +29,7 @@ import shutil
 import time
 from concurrent.futures import ProcessPoolExecutor
 from datetime import datetime, timezone
+from pathlib import Path
 
 import geopandas as gpd
 import mapbox_vector_tile
@@ -164,6 +167,29 @@ def export_overview(gdf3857: gpd.GeoDataFrame, cls: Classification, out_dir, bou
     return {"format": "pmtiles", "files": files, "minzoom": OVERVIEW_MINZOOM, "maxzoom": OVERVIEW_MAXZOOM,
             "tile_size": OVERVIEW_TILE, "pixel_size_m": round(res_m, 2), "total_bytes": total,
             "tiles": sum(len(t) for t in per_cat.values())}
+
+
+OVERVIEW_BUNDLE = "overview.bin"
+
+
+def bundle_overview(web: Path, overview: dict) -> dict:
+    """Concatenate the per-unit, per-category PMTiles pyramids of `overview["files"]` ({unit: {cat: path}},
+    paths relative to `web`) into web/overview.bin and remove them. PMTiles offsets are relative to the
+    archive start, so the web app reads each pyramid through a byte-range window of the bundle."""
+    refs, offset = {}, 0
+    tmp = web / (OVERVIEW_BUNDLE + ".tmp")
+    with open(tmp, "wb") as out:
+        for unit, files in overview["files"].items():
+            refs[unit] = {}
+            for cat, rel in files.items():
+                data = (web / rel).read_bytes()
+                out.write(data)
+                refs[unit][cat] = [offset, len(data)]
+                offset += len(data)
+    tmp.replace(web / OVERVIEW_BUNDLE)
+    if (web / "overview").exists():
+        shutil.rmtree(web / "overview")
+    return {**overview, "format": "pmtiles-bundle", "bundle": OVERVIEW_BUNDLE, "files": refs, "total_bytes": offset}
 
 
 # --------------------------------------------------------------------------- vector tiles
@@ -306,6 +332,7 @@ def export_city(city: City, cls: Classification) -> None:
 
     if (web / "overview").exists():
         shutil.rmtree(web / "overview")
+    (web / OVERVIEW_BUNDLE).unlink(missing_ok=True)
     overview = {"format": "pmtiles", "files": {}, "minzoom": OVERVIEW_MINZOOM, "maxzoom": OVERVIEW_MAXZOOM,
                 "tile_size": OVERVIEW_TILE, "tiles": 0, "total_bytes": 0}
     for unit in units["unit"]:
@@ -317,8 +344,9 @@ def export_city(city: City, cls: Classification) -> None:
         overview["tiles"] += ov["tiles"]
         overview["total_bytes"] += ov["total_bytes"]
         overview["pixel_size_m"] = ov["pixel_size_m"]
-    log.info("[%s] overview pyramids (units %s): %d tiles, %.1f MB", city.id, list(overview["files"]),
-             overview["tiles"], overview["total_bytes"] / 1e6)
+    overview = bundle_overview(web, overview)
+    log.info("[%s] overview pyramids (units %s): %d tiles, %.1f MB in %s", city.id, list(overview["files"]),
+             overview["tiles"], overview["total_bytes"] / 1e6, OVERVIEW_BUNDLE)
 
     tile_stats = export_pmtiles(g3857, web / "features.pmtiles", region_b, center)
     log.info("[%s] features.pmtiles %.1f MB, tile sizes %s", city.id,

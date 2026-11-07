@@ -145,7 +145,7 @@ python -m urbanfp agglomeration        # час доїзду від міст д�
 3. Надішліть зміни в `main`. [`.github/workflows/pages.yml`](.github/workflows/pages.yml) опублікує теку `web/`.
 
 Примітки:
-* `features.pmtiles` (векторні тайли, z14) і `overview/*.pmtiles` (растрові піраміди для кожної категорії, z6–13,
+* `features.pmtiles` (векторні тайли, z14) і `overview.bin` (растрові піраміди PMTiles для кожної категорії, зібрані в один файл, z6–13,
   WebP без втрат) читаються HTTP Range-запитами, які підтримує GitHub Pages. Завантажуються й декодуються лише видимі тайли.
 * GitHub не приймає файли понад 100 МБ. Найбільший файл — `features.pmtiles` Києва (~18 МБ); усі вебдані для
   7 міст — ~110 МБ. Сайти GitHub Pages обмежені 1 ГБ, тож для кількох десятків міст варто розглянути Git LFS або

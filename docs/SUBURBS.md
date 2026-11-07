@@ -91,7 +91,7 @@ Alternatives considered and rejected:
   `suburbs_radius_km` (default 25 km), plus settlement outlines and `place=*` points (a fast node-only pass).
 * `stats.json` keeps City-mode figures at the top level and every mode under `modes`; each mode has its own
   validation. Vector tiles carry the unit (`u`); overview rasters are stored per unit
-  (`overview/<unit>/<category>.pmtiles`); `territories.geojson` has the outline of each mode.
+  (one PMTiles pyramid per unit and category, all packed into `overview.bin`); `territories.geojson` has the outline of each mode.
 * The web app shows the selected territory's outline and **hides everything outside it** (no fading).
 * Settlement-level results (drive time, continuity share, built-up area, approx flag, inclusion per mode) are
   exported for the Method & data page and validation.
