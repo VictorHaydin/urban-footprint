@@ -240,7 +240,10 @@ function writeHash() {
   if (state.view === 'population') p.set('th', state.popThreshold);
   if (state.view === 'modeling') {
     p.set('th', state.modelThreshold);
-    if (state.regionCentres) p.set('rc', state.regionCentres.join(','));
+    if (state.regionCentres) {
+      const all = agg && agg.centres.every((c) => c.settlement == null || state.regionCentres.includes(c.id));
+      p.set('rc', all ? 'all' : state.regionCentres.join(','));  // every city: short link
+    }
   }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
@@ -1753,6 +1756,7 @@ const modelView = { map: null, ready: null, result: null, frame: null };
 const validThreshold = (m) => Number.isInteger(m) && m >= 0 && m <= agg.max_min && m % POP_STEP === 0;
 const regionCentreIds = () => {
   const known = new Set(agg.centres.map((c) => c.id));
+  if (state.regionCentres?.[0] === 'all') return agg.centres.filter((c) => c.settlement != null).map((c) => c.id);  // rc=all
   return (state.regionCentres || state.index.default_region_centres || []).filter((id) => known.has(id));
 };
 
@@ -1860,6 +1864,7 @@ async function renderModelingView() {
   acts.innerHTML = '';
   acts.append(
     el('button', { type: 'button', onclick: () => setRegionCentres([...(state.index.default_region_centres || [])]) }, t('model.default')),
+    el('button', { type: 'button', onclick: () => setRegionCentres(agg.centres.filter((c) => c.settlement != null).map((c) => c.id)) }, t('model.all')),
     el('button', { type: 'button', onclick: () => setRegionCentres([]) }, t('model.clear')),
   );
   const list = $('#mCentres');
