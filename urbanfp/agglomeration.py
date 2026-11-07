@@ -39,7 +39,7 @@ log = logging.getLogger(__name__)
 
 AGGLOMERATION_VERSION = 4
 OUTLINE_TOLERANCE_DEG = 0.002  # city outline simplification for the map (~200 m)
-THRESHOLDS_MIN = [0, 10, 20, 30, 45, 60, 90, 120, 150, 180]
+THRESHOLDS_MIN = [0, 10, 30, 60, 90, 120, 150, 180]  # buttons; the slider covers every 5 min
 MAX_MIN = 180
 # national graph: no service roads, tracks or paths (they matter for the last metres only)
 GRAPH_HIGHWAYS = {k: v for k, v in SPEED.items() if k not in ("service", "track")}
