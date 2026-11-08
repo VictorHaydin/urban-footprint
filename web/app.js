@@ -32,6 +32,8 @@ const state = {
   popMetric: 'pop',       // compare screen, population breakdown: pop | density
   budgetYear: null,       // hromada budgets: year shown (budgets.json years)
   budgetMetric: 'pc',     // compare screen, budget breakdowns: pc (per resident) | total
+  budgetUnit: 'total',    // map sidebar budget block: total | pc (per resident)
+  budgetOpen: new Set(),  // map sidebar budget block: expanded sides (inc, exp)
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
   popSelected: null,      // population page: highlighted centre
   modelThreshold: 60,     // region modelling: drive time of the region core (min)
@@ -425,6 +427,8 @@ async function loadCityIntoPane(pane, cityId) {
   const { map } = pane;
   const unitKey = s._units.join(',');
   if (pane.cityId === cityId && pane.unitKey === unitKey && pane.layers.length) return;
+  // the latest call wins: an earlier load of the same city still awaiting data stops (else both add the layers)
+  const token = pane.loadToken = (pane.loadToken || 0) + 1;
   const base = new URL(`${DATA}/${cityId}/`, location.href).href;
   const tiles = tileBase(cityById(cityId)) || base;  // features.pmtiles, overview.bin
   clearCityLayers(pane);
@@ -444,7 +448,7 @@ async function loadCityIntoPane(pane, cityId) {
   add('boundary', { type: 'geojson', data: terrUrl });
   const modeFilter = s.map.territories ? { filter: ['==', ['get', 'mode'], s._mode] } : {};
   const terr = await getJSON(terrUrl);
-  if (pane.cityId !== cityId || pane.unitKey !== unitKey) return; // superseded while loading
+  if (pane.loadToken !== token || pane.cityId !== cityId || pane.unitKey !== unitKey) return; // superseded while loading
   add('outside', { type: 'geojson', data: outsideMask(terr, s.map.territories ? s._mode : null) });
   layer({
     id: 'outside-mask', type: 'fill', source: 'outside',
@@ -535,9 +539,11 @@ function fitPanes() {
     const sv = statsView(p.cityId, paneMode(p.idx));
     const b = sv.map.mode_bounds?.[sv._mode] || sv.map.bounds;
     const cam = p.map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: isDual() ? 40 : 30 });
+    if (!cam) return null; // the pane is too small for the padding (e.g. while it is being laid out)
     const center = maplibregl.LngLat.convert(cam.center);
     return { p, center, res: cosd(center.lat) / 2 ** cam.zoom }; // ∝ metres per pixel
-  });
+  }).filter(Boolean);
+  if (!cams.length) return;
   const res = Math.max(...cams.map((c) => c.res)); // the city that needs most room sets the scale
   syncing = true;
   for (const { p, center } of cams) {
@@ -1839,70 +1845,61 @@ function budgetYearControl(onChange = renderAll) {
   });
   return sel;
 }
-/** Stacked bar of one budget side (revenue / spending) with tooltips. */
-function budgetBar(b, kind, e, name) {
-  const total = budgetTotal(b, kind);
-  const bar = el('div', { class: 'budget-bar' });
-  for (const g of budgetGroups(kind)) {
-    const v = g.v(b);
-    if (v <= 0) continue;
-    const seg = el('i', { style: `width:${(100 * v) / Math.max(total, 1)}%;background:${g.color}` });
-    seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${name ? `${name} — ` : ''}${t(g.key)}</b><br>${fmtMoney(v)} · ${num((100 * v) / total, 1)}%`
-      + `<br>${fmtInt(perResident(v, e))} ${t('budget.perResidentShort')}`));
-    seg.addEventListener('mouseleave', hideTip);
-    bar.append(seg);
-  }
-  return bar;
-}
-function budgetKeys(kind, b) {
-  return el('div', { class: 'budget-keys' }, budgetGroups(kind).filter((g) => !b || g.v(b) > 0)
-    .map((g) => el('span', {}, el('i', { style: `background:${g.color}` }), t(g.key))));
-}
 function budgetPopNote(e) {
   return t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: fmtInt(e.population) });
 }
 
-/** Map sidebar: the hromada budget of the shown city (or a comparison table for two cities). */
+/**
+ * Map sidebar: the hromada budget — revenue and spending (total or per resident, both shown), each expandable into
+ * its items, like the territory legend; notes go to the bottom of the sidebar.
+ */
 function renderBudgetPanel(list, names) {
   const box = $('#budgetPanel');
   box.innerHTML = '';
-  if (!budgets?.years?.length) return;
-  const head = el('div', { class: 'demo-head' }, el('h3', {}, t('budget.title')), budgetYearControl());
+  if (!budgets?.years?.length) { setNotes('#notesBudget', []); return; }
+  const dual = list.length > 1;
+  const pc = state.budgetUnit === 'pc';
   const data = list.map((x) => budgetOf(x.city.id));
-  const whose = (d) => (d.e.katottg === 'UA80000000000093317' ? t('budget.ofKyiv') : t('budget.ofHromada', { name: d.e.name }));
+  const unit = el('div', { class: 'unit-toggle' }, [['total', t('budget.unit.total')], ['pc', t('budget.unit.pc')]].map(([id, text]) =>
+    el('button', { class: (state.budgetUnit || 'total') === id ? 'active' : '', onclick: () => { state.budgetUnit = id; renderSidebar(); } }, text)));
+  const head = el('div', { class: 'side-head' }, el('h3', {}, t('budget.title')), budgetYearControl(), unit);
+  const ok = data.map((d) => d?.b || null);
+  const metric = (v, i) => (pc ? perResident(v, data[i].e) : v);
+  const main = (v) => (pc ? `${fmtInt(v)} ${t('budget.uah')}` : fmtMoney(v));
+  const other = (v, i) => (pc ? fmtMoney(v * data[i].e.population) : `${fmtInt(perResident(v, data[i].e))} ${t('budget.perResidentShort')}`);
+  const sides = [['inc', 'budget.income', '#2f6db5'], ['exp', 'budget.expenses', '#d1495b']];
+  const topMax = Math.max(...sides.flatMap(([k]) => ok.map((b, i) => (b ? metric(budgetTotal(b, k), i) : 0))), 1);
+  const rows = sides.map(([kind, key, color]) => {
+    const open = state.budgetOpen.has(kind);
+    const groups = budgetGroups(kind);
+    const subMax = Math.max(...groups.flatMap((g) => ok.map((b, i) => (b ? metric(Math.max(g.v(b), 0), i) : 0))), 1);
+    return {
+      color, name: t(key), total: true, open,
+      onToggle: () => { open ? state.budgetOpen.delete(kind) : state.budgetOpen.add(kind); renderSidebar(); },
+      values: ok.map((b, i) => (b ? metric(budgetTotal(b, kind), i) : null)), max: topMax,
+      text: (v) => main(v), sec: (v, i) => other(v, i),
+      tip: () => `<b>${t(key)}</b>` + ok.map((b, i) => (b ? `<br>${dual ? names[i] + ': ' : ''}${fmtMoney(budgetTotal(b, kind))} · ${fmtInt(perResident(budgetTotal(b, kind), data[i].e))} ${t('budget.perResidentShort')}` : '')).join(''),
+      children: groups.filter((g) => ok.some((b) => b && g.v(b) > 0)).map((g) => ({
+        color: g.color, name: t(g.key), max: subMax,
+        values: ok.map((b, i) => (b ? metric(Math.max(g.v(b), 0), i) : null)),
+        text: (v) => main(v), sec: (v, i) => `${num((100 * g.v(ok[i])) / Math.max(budgetTotal(ok[i], kind), 1), 1)}%`,
+        tip: () => `<b>${t(g.key)}</b>` + ok.map((b, i) => (b ? `<br>${dual ? names[i] + ': ' : ''}${fmtMoney(g.v(b))} · ${fmtInt(perResident(g.v(b), data[i].e))} ${t('budget.perResidentShort')} · ${num((100 * g.v(b)) / Math.max(budgetTotal(b, kind), 1), 1)}%` : '')).join(''),
+      })),
+    };
+  });
   const why = (d) => (!d ? t('budget.noData') : d.occupied ? t('budget.occupied') : null);
-  if (list.length === 1) {
-    const d = data[0];
-    const body = [];
-    if (d?.b) {
-      for (const kind of ['inc', 'exp']) {
-        const v = budgetTotal(d.b, kind);
-        body.push(el('div', { class: 'budget-line' }, el('span', {}, t(kind === 'inc' ? 'budget.income' : 'budget.expenses'), ': ', el('b', {}, fmtMoney(v))),
-          el('span', { class: 'small' }, `${fmtInt(perResident(v, d.e))} ${t('budget.perResidentShort')}`)), budgetBar(d.b, kind, d.e), budgetKeys(kind, d.b));
-      }
-      body.push(el('div', { class: 'small demo-note' }, `${whose(d)} ${budgetPopNote(d.e)} ${t('budget.source', { year: state.budgetYear })}`));
-    } else {
-      body.push(el('div', { class: 'small demo-note' }, why(d)));
-    }
-    box.append(el('div', { class: 'panel demo' }, head, ...body));
-    return;
-  }
-  const own = (b) => `${num((100 * b.inc_own) / Math.max(b.inc_total, 1), 0)}%`;
-  const rows = [
-    [t('budget.income'), (d) => fmtMoney(d.b.inc_total)],
-    [`${t('budget.income')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.inc_total, d.e))],
-    [t('budget.ownShare'), (d) => own(d.b)],
-    [`${t('budget.inc.pit')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.inc_pit, d.e))],
-    [t('budget.expenses'), (d) => fmtMoney(d.b.exp_total)],
-    [`${t('budget.expenses')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.exp_total, d.e))],
-    [`${t('budget.exp.education')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.exp_education, d.e))],
-  ];
   box.append(el('div', { class: 'panel demo' }, head,
-    el('div', { class: 'kv kv3' },
-      el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), names[i])),
-      rows.flatMap(([k, f]) => [el('span', {}, k), ...data.map((d) => el('span', { class: 'v' }, d?.b ? f(d) : '—'))])),
-    ...data.map((d, i) => el('div', { class: 'small demo-note' }, `${names[i]}: ${d?.b ? whose(d) : why(d)}`)),
-    el('div', { class: 'small demo-note' }, `${t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: '' }).replace(' ()', '')} ${t('budget.source', { year: state.budgetYear })}`)));
+    ok.some(Boolean) ? sideRows(rows, dual, names) : el('div', { class: 'small demo-note' }, why(data[0]))));
+  const whose = (d) => (d.e.katottg === 'UA80000000000093317' ? t('budget.ofKyiv') : t('budget.ofHromada', { name: d.e.name }));
+  setNotes('#notesBudget', [
+    ...data.map((d, i) => {
+      const n = d?.b ? whose(d) : why(d);
+      return dual ? `${names[i]}: ${n}` : n;
+    }),
+    ok.some(Boolean) ? (dual ? t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: '' }).replace(' ()', '')
+      : budgetPopNote(data[0].e)) : null,
+    t('budget.source', { year: state.budgetYear }),
+  ]);
 }
 
 /** Compare screen, budget breakdowns: one stacked bar per city (revenue or spending by item). */
@@ -2347,41 +2344,84 @@ async function setTerritory(mode, idx = 0) {
 }
 
 /** Map sidebar: population of the shown territory (one column per pane in split screen). */
+/**
+ * A block of rows like the territory legend: swatch, name with one bar per city, one value column per city.
+ * rows: [{color, name, values: [v per city], max, text: (v, i) => node|string, sec?: (v, i) => string,
+ *         total?, open?, onToggle?, tip?: () => html}]
+ */
+function sideRows(rows, dual, heads) {
+  const box = el('div', { class: 'side-rows' + (dual ? ' dual' : '') });
+  if (dual) {
+    box.append(el('div', { class: 'legend-row legend-head' }, el('span'), el('span'),
+      ...heads.map((h, i) => el('div', { class: 'value' }, el('span', { class: `city-key k${i}` }), h))));
+  }
+  for (const r of rows) {
+    const bars = el('div', { class: 'bars' }, r.values.map((v, i) => el('div', { class: 'bar' },
+      el('span', { class: `k${i}`, style: `width:${v == null ? 0 : (100 * Math.max(v, 0)) / Math.max(r.max, 1e-9)}%;--c:${r.color}` }))));
+    const row = el('div', { class: 'legend-row' + (r.total ? ' total' : '') },
+      el('span', { class: 'swatch static', style: `background:${r.color}` }),
+      el('div', { class: 'label' }, el('div', { class: 'name' },
+        r.onToggle ? el('button', { class: 'expander', 'aria-expanded': !!r.open, onclick: r.onToggle }, r.open ? '▾' : '▸') : null, r.name), bars),
+      ...r.values.map((v, i) => el('div', { class: 'value' }, v == null ? '—' : r.text(v, i),
+        v != null && r.sec ? el('span', { class: 'sec' }, r.sec(v, i)) : null)));
+    if (r.onToggle) row.querySelector('.name').addEventListener('click', (e) => { if (e.target.tagName !== 'BUTTON') r.onToggle(); });
+    if (r.onToggle) row.querySelector('.name').style.cursor = 'pointer';
+    if (r.tip) {
+      row.addEventListener('mousemove', (ev) => showTip(ev, r.tip()));
+      row.addEventListener('mouseleave', hideTip);
+    }
+    box.append(row);
+    if (r.open && r.children?.length) {
+      const sub = sideRows(r.children, dual, heads);
+      box.append(el('div', { class: 'subrows side-rows' + (dual ? ' dual' : '') },
+        [...sub.children].filter((c) => !c.classList.contains('legend-head'))));
+    }
+  }
+  return box;
+}
+
+/** Notes of the side blocks, shown at the bottom of the sidebar. */
+function setNotes(id, notes) {
+  const box = $(id);
+  box.innerHTML = '';
+  for (const n of notes.filter(Boolean)) box.append(el('div', { class: 'small demo-note' }, n));
+  $('#dataNotes').hidden = !$('#notesPop').childNodes.length && !$('#notesBudget').childNodes.length;
+}
+
+/** Map sidebar: population of the territory (total, city, rest) as rows with bars, like the territory legend. */
 function renderPopulationPanel(list, names) {
   const box = $('#demographyPanel');
   box.innerHTML = '';
-  if (!demoYears().length) return;
+  if (!demoYears().length) { setNotes('#notesPop', []); return; }
+  const dual = list.length > 1;
   const pops = list.map((x) => popOf(x));
-  const head = el('div', { class: 'demo-head' }, el('h3', {}, t('demo.title')), demoYearControl());
-  const notes = list.map((x, i) => {
-    const c = cityById(x.city.id);
-    const n = !pops[i] ? t('demo.noData') : demoEstimateNote(c);
-    return n ? el('div', { class: 'small demo-note' }, list.length > 1 ? `${names[i]}: ${n}` : n) : null;
-  });
-  if (list.length === 1) {
-    const x = list[0], p = pops[0];
-    const body = p ? [
-      el('div', { class: 'demo-big' }, fmtInt(p.pop), el('span', { class: 'small' }, ` ${t('demo.people')}`)),
-      el('div', { class: 'small' }, `${t('demo.density')}: ${fmtInt(p.density)} ${t('demo.perKm2')}`),
-      x._mode !== 'city' && p.pop !== p.cityPop ? el('div', { class: 'small' }, t('demo.ofWhich', {
-        city: fmtInt(p.cityPop), rest: restLabel(x._mode), restPop: fmtInt(p.pop - p.cityPop),
-      })) : null,
-    ] : [];
-    box.append(el('div', { class: 'panel demo' }, head, ...body, ...notes,
-      p && x._mode === 'greater' && p.unmatched.length
-        ? el('div', { class: 'small demo-note' }, t('demo.unmatched', { n: p.unmatched.length, names: p.unmatched.map((n) => (n === '—' ? t('demo.unnamed') : n)).join(', ') })) : null));
-    return;
+  const head = el('div', { class: 'side-head' }, el('h3', {}, t('demo.title')), demoYearControl());
+  const vals = (f) => pops.map((p) => (p ? f(p) : null));
+  const max = Math.max(...pops.map((p) => p?.pop || 0), 1);
+  const CITY = '#4a5a6a', REST = '#a9b4bf';
+  const restMode = list.map((x) => x._mode).find((m) => m !== 'city');
+  const rows = [{
+    color: CITY, name: t('demo.population'), total: true, values: vals((p) => p.pop), max,
+    text: (v) => fmtInt(v), sec: (v, i) => `${fmtInt(pops[i].density)} ${t('demo.densityShort')}`,
+    tip: () => `<b>${t('demo.population')}</b>` + pops.map((p, i) => (p ? `<br>${dual ? names[i] + ': ' : ''}${fmtInt(p.pop)} ${t('demo.people')}, ${fmtInt(p.density)} ${t('demo.perKm2')}` : '')).join(''),
+  }];
+  if (restMode) {
+    rows.push({ color: CITY, name: t('demo.cityOnly'), values: vals((p) => p.cityPop), max, text: (v) => fmtInt(v),
+      sec: (v, i) => `${num((100 * v) / Math.max(pops[i].pop, 1), 0)}%` });
+    rows.push({ color: REST, name: restLabel(restMode), values: list.map((x, i) => (pops[i] && x._mode !== 'city' ? pops[i].pop - pops[i].cityPop : (pops[i] ? 0 : null))),
+      max, text: (v) => fmtInt(v), sec: (v, i) => `${num((100 * v) / Math.max(pops[i].pop, 1), 0)}%` });
   }
-  const rows = [
-    [t('demo.population'), (p) => fmtInt(p.pop)],
-    [t('demo.density'), (p) => `${fmtInt(p.density)} ${t('demo.perKm2')}`],
-    [t('demo.cityOnly'), (p) => fmtInt(p.cityPop)],
-  ];
-  box.append(el('div', { class: 'panel demo' }, head,
-    el('div', { class: 'kv kv3' },
-      el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), names[i])),
-      rows.flatMap(([k, f]) => [el('span', {}, k), ...pops.map((p) => el('span', { class: 'v' }, p ? f(p) : '—'))])),
-    ...notes));
+  box.append(el('div', { class: 'panel demo' }, head, sideRows(rows, dual, names)));
+  // notes at the bottom of the sidebar
+  setNotes('#notesPop', [
+    ...list.map((x, i) => {
+      const n = !pops[i] ? t('demo.noData') : demoEstimateNote(cityById(x.city.id));
+      return n ? (dual ? `${names[i]}: ${n}` : n) : null;
+    }),
+    ...list.map((x, i) => (pops[i] && x._mode === 'greater' && pops[i].unmatched.length
+      ? `${dual ? names[i] + ': ' : ''}${t('demo.unmatched', { n: pops[i].unmatched.length, names: pops[i].unmatched.map((n) => (n === '—' ? t('demo.unnamed') : n)).join(', ') })}` : null)),
+    `${demoSource()}.`,
+  ]);
 }
 
 const settlementsCache = {};

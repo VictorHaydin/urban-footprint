@@ -52,14 +52,14 @@
           <select id="citySelect2"></select>
         </label>
         <div class="territory" id="territoryMap"></div>
-        <div id="cityHeader"></div>
-        <div id="demographyPanel"></div>
-        <div id="budgetPanel"></div>
         <div class="map-controls">
           <label><input type="checkbox" id="basemapToggle" checked> <span data-i18n="map.basemap">Базова мапа</span></label>
           <label><input type="checkbox" id="boundaryToggle" checked> <span data-i18n="map.boundary">Межа</span></label>
           <label><span data-i18n="map.opacity">Прозорість</span> <input type="range" id="opacityRange" min="0.2" max="1" step="0.05" value="0.85"></label>
         </div>
+        <div id="cityHeader"></div>
+        <div id="demographyPanel"></div>
+        <div id="budgetPanel"></div>
         <div class="unit-toggle" id="unitToggleMap"></div>
         <label class="sub-pct-toggle" id="subPctToggle">
           <input type="checkbox" id="subPctCheckbox" checked>
@@ -69,6 +69,8 @@
         <div id="settlementsPanel"></div>
         <div id="buildingPanel"></div>
         <div id="validationPanel"></div>
+        <!-- notes of the population and budget blocks, kept out of the way -->
+        <div class="panel data-notes" id="dataNotes" hidden><h3 data-i18n="notes.title">Примітки до даних</h3><div id="notesPop"></div><div id="notesBudget"></div></div>
       </aside>
       <div class="map-wrap">
         <div class="map-panes" id="mapPanes">

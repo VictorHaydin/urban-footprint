@@ -263,10 +263,10 @@ tr.hl td { background: var(--panel); font-weight: 600; }
 .dual-city .city-key { margin-top: 6px; }
 .dual-city .name { font-size: 17px; font-weight: 700; line-height: 1.2; }
 
-#legend .bars { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
-#legend .bars .bar { margin-top: 0; }
-#legend .bar > span.k0 { background: var(--c); }
-#legend .bar > span.k1 { background: repeating-linear-gradient(135deg, var(--c) 0 3px, color-mix(in srgb, var(--c) 35%, transparent) 3px 5px); }
+#legend .bars, .side-rows .bars { display: flex; flex-direction: column; gap: 2px; margin-top: 3px; }
+#legend .bars .bar, .side-rows .bars .bar { margin-top: 0; }
+#legend .bar > span.k0, .side-rows .bar > span.k0 { background: var(--c); }
+#legend .bar > span.k1, .side-rows .bar > span.k1 { background: repeating-linear-gradient(135deg, var(--c) 0 3px, color-mix(in srgb, var(--c) 35%, transparent) 3px 5px); }
 #legend.dual .legend-row { grid-template-columns: 18px 1fr 66px 66px; }
 #legend.dual .legend-head { font-size: 11px; color: var(--muted); font-weight: 600; padding-bottom: 0; }
 #legend.dual .legend-head .value { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -327,14 +327,21 @@ details.panel > summary h3 { font-size: 14px; }
 .demo-head h3 { margin: 0; }
 .demo-big { font-size: 22px; font-weight: 600; margin: 4px 0 2px; }
 .demo-note { color: var(--muted); margin-top: 4px; }
-/* hromada budget: totals and structure bars */
-.budget-line { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin: 8px 0 3px; font-size: 13px; }
-.budget-line b { font-size: 15px; }
-.budget-bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: var(--bar-bg); }
-.budget-bar i { display: block; height: 100%; }
-.budget-keys { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; font-size: 11px; color: var(--muted); }
-.budget-keys span { display: inline-flex; align-items: center; gap: 4px; }
-.budget-keys i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+/* population and budget blocks: rows like the territory legend (swatch, name + bars, values per city) */
+.side-rows .legend-row { grid-template-columns: 18px 1fr auto; }
+.side-rows.dual .legend-row { grid-template-columns: 18px 1fr 98px 98px; gap: 6px; }
+.side-rows.dual .value { font-size: 12px; }
+.side-rows.dual .value .sec { font-size: 10.5px; }
+.side-rows .legend-head { font-size: 11px; color: var(--muted); font-weight: 600; padding-bottom: 0; }
+.side-rows .legend-head .value { overflow: hidden; text-overflow: ellipsis; }
+.side-rows .value .sec { display: block; font-size: 11px; color: var(--muted); }
+.side-rows .legend-row.total .name { font-weight: 600; }
+.swatch.static { cursor: default; }
+.side-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 2px; }
+.side-head h3 { margin: 0; }
+.side-head .unit-toggle { margin: 0; }
+.side-head .unit-toggle button { padding: 2px 8px; font-size: 12px; }
+.data-notes .demo-note { margin-top: 6px; }
 .year-select { font: inherit; font-size: 12px; padding: 1px 4px; }
 .demo-year { font-size: 13px; color: var(--muted); }
 
