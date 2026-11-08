@@ -32,6 +32,8 @@ const state = {
   popMetric: 'pop',       // compare screen, population breakdown: pop | density
   budgetYear: null,       // hromada budgets: year shown (budgets.json years)
   budgetMetric: 'pc',     // compare screen, budget breakdowns: pc (per resident) | total
+  financeBreakdown: 'budgetInc', // Budgets & population screen: population | budgetInc | budgetExp
+  budgetFocus: null,      // Budgets & population screen: the one budget item compared (null = all)
   budgetUnit: 'total',    // map sidebar budget block: total | pc (per resident)
   budgetOpen: new Set(),  // map sidebar budget block: expanded sides (inc, exp)
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
@@ -228,6 +230,8 @@ function readHash() {
     city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'), territory2: p.get('t2'),
     year: p.get('y') ? +p.get('y') : null,
     budgetYear: p.get('by') ? +p.get('by') : null,
+    financeBreakdown: p.get('show'),
+    budgetFocus: p.get('item'),
     threshold: p.get('th') != null ? +p.get('th') : null,
     aboutPage: p.get('p'),
     regionCentres: p.get('rc') != null ? p.get('rc').split(',').filter(Boolean) : null,
@@ -241,8 +245,12 @@ function writeHash() {
   if (state.city2) p.set('t2', state.territory2);
   const years = demoYears();
   if (state.demoYear && years.length && state.demoYear !== years[years.length - 1]) p.set('y', state.demoYear);
-  if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
-  if ((state.view === 'map' || state.view === 'compare') && budgets?.years?.length && state.budgetYear !== budgets.years[0]) {
+  if ((state.view === 'compare' || state.view === 'finance') && state.compareCities) p.set('cities', compareCityIds().join(','));
+  if (state.view === 'finance') {
+    p.set('show', state.financeBreakdown);
+    if (state.budgetFocus) p.set('item', state.budgetFocus);
+  }
+  if (['map', 'compare', 'finance'].includes(state.view) && budgets?.years?.length && state.budgetYear !== budgets.years[0]) {
     p.set('by', state.budgetYear);
   }
   if (state.view === 'population') p.set('th', state.popThreshold);
@@ -906,38 +914,51 @@ async function renderCompare() {
   const all = await Promise.all(ids.map(loadStats));
   await loadDemography();
   await loadBudgets();
-  if (state.breakdown === 'population' && !demoYears().length) state.breakdown = 'categories';
-  const budgetKind = { budgetInc: 'inc', budgetExp: 'exp' }[state.breakdown];
-  if (budgetKind && !budgets.years.length) state.breakdown = 'categories';
+  // two screens: land structure (categories) and budgets & population (finance)
+  const finance = state.view === 'finance';
+  $('#compareTitle').textContent = t(finance ? 'cmp.titleFinance' : 'cmp.title');
+  if (['population', 'budgetInc', 'budgetExp'].includes(state.breakdown)) state.breakdown = 'categories';
+  if (finance && state.financeBreakdown !== 'population' && !budgets.years.length) state.financeBreakdown = 'population';
+  const show = finance ? state.financeBreakdown : null;
+  const budgetKind = { budgetInc: 'inc', budgetExp: 'exp' }[show];
   const unitOpts = [['pct', t('unit.pctCity')], ['km2', t('unit.km2abs')]];
   if (state.breakdown !== 'categories' && state.breakdown !== 'population') {
     unitOpts.push(['pctcat', t('unit.pctOf', { what: label(catDef(state.breakdown)).toLowerCase() })]);
   }
   if (state.unit === 'pctcat' && state.breakdown === 'categories') state.unit = 'pct';
-  if (state.breakdown === 'population') renderPopMetricToggle();
-  else if (!budgetKind) renderUnitToggle($('#unitToggleCompare'), unitOpts);
+  if (show === 'population') renderPopMetricToggle();
+  else if (!finance) renderUnitToggle($('#unitToggleCompare'), unitOpts);
   renderTerritoryToggles();
   renderCityFilter();
 
   const sel = $('#compareBreakdown');
-  if (sel.dataset.lang !== getLang()) {
+  sel.previousElementSibling.textContent = t(finance ? 'cmp.show' : 'cmp.breakdown');
+  const selKey = `${getLang()}/${finance ? 'finance' : 'land'}`;
+  if (sel.dataset.key !== selKey) {
     sel.innerHTML = '';
-    sel.append(el('option', { value: 'categories' }, t('cmp.all')));
-    if (demoYears().length) sel.append(el('option', { value: 'population' }, t('cmp.population')));
-    if (budgets.years.length) {
-      sel.append(el('option', { value: 'budgetInc' }, t('cmp.budgetInc')), el('option', { value: 'budgetExp' }, t('cmp.budgetExp')));
+    if (finance) {
+      if (budgets.years.length) {
+        sel.append(el('option', { value: 'budgetInc' }, t('cmp.budgetInc')), el('option', { value: 'budgetExp' }, t('cmp.budgetExp')));
+      }
+      if (demoYears().length) sel.append(el('option', { value: 'population' }, t('cmp.population')));
+    } else {
+      sel.append(el('option', { value: 'categories' }, t('cmp.all')));
+      for (const c of state.index.categories) {
+        if (c.subcategories.length > 1) sel.append(el('option', { value: c.id }, t('cmp.byType', { cat: label(c) })));
+      }
     }
-    for (const c of state.index.categories) {
-      if (c.subcategories.length > 1) sel.append(el('option', { value: c.id }, t('cmp.byType', { cat: label(c) })));
-    }
-    sel.dataset.lang = getLang();
+    sel.dataset.key = selKey;
   }
   if (!sel.dataset.bound) {
-    sel.addEventListener('change', () => { state.breakdown = sel.value; state.focus = null; renderCompare(); });
+    sel.addEventListener('change', () => {
+      if (state.view === 'finance') { state.financeBreakdown = sel.value; state.budgetFocus = null; } else { state.breakdown = sel.value; state.focus = null; }
+      writeHash();
+      renderCompare();
+    });
     sel.dataset.bound = '1';
   }
-  sel.value = state.breakdown;
-  if (state.breakdown === 'population') {
+  sel.value = finance ? show : state.breakdown;
+  if (show === 'population') {
     renderPopulationCompare(all);
     return;
   }
@@ -1076,7 +1097,7 @@ function renderPopMetricToggle() {
 function renderPopulationCompare(all) {
   const density = state.popMetric === 'density';
   $('#compareFocus').innerHTML = '';
-  $('#compareFocus').append(el('span', { class: 'demo-year' }, `${t('demo.title')}: `, demoYearControl()));
+  $('#compareFocus').append(financeYearControls());
   $('#compareHint').textContent = t(density ? 'cmp.hint.density' : 'cmp.hint.pop');
   const chart = $('#compareChart');
   chart.innerHTML = '';
@@ -1149,11 +1170,12 @@ function renderPopulationTable(all) {
 
 async function renderCompareTable(statsList) {
   const all = statsList || await Promise.all(compareCityIds().map(loadStats));
-  if (state.breakdown === 'budgetInc' || state.breakdown === 'budgetExp') {
-    renderBudgetTable(all, state.breakdown === 'budgetInc' ? 'inc' : 'exp');
+  const fb = state.view === 'finance' ? state.financeBreakdown : null;
+  if (fb === 'budgetInc' || fb === 'budgetExp') {
+    renderBudgetTable(all, fb === 'budgetInc' ? 'inc' : 'exp');
     return;
   }
-  if (state.breakdown === 'population') {
+  if (fb === 'population') {
     renderPopulationTable(all);
     return;
   }
@@ -1902,17 +1924,37 @@ function renderBudgetPanel(list, names) {
   ]);
 }
 
-/** Compare screen, budget breakdowns: one stacked bar per city (revenue or spending by item). */
+/** Budgets & population screen: year switches of both data sets (population; budget). */
+function financeYearControls() {
+  const box = el('div', { class: 'year-controls' });
+  if (demoYears().length) box.append(el('span', { class: 'demo-year' }, `${t('cmp.popYear')}: `, demoYearControl()));
+  if (budgets?.years?.length) box.append(el('span', { class: 'demo-year' }, `${t('cmp.budgetYear')}: `, budgetYearControl(renderCompare)));
+  return box;
+}
+
+/**
+ * Budgets & population screen, budget revenue or spending: one stacked bar per city by item, total or per resident.
+ * A click on an item (legend or bar) compares that item alone, cities sorted by it.
+ */
 function renderBudgetCompare(all, kind) {
   const pc = state.budgetMetric !== 'total';
+  const groups = budgetGroups(kind);
+  if (state.budgetFocus && !groups.some((g) => g.id === state.budgetFocus)) state.budgetFocus = null;
+  const focus = groups.find((g) => g.id === state.budgetFocus) || null;
+  const setFocus = (id) => { hideTip(); state.budgetFocus = state.budgetFocus === id ? null : id; writeHash(); renderCompare(); };
   const box = $('#unitToggleCompare');
   box.innerHTML = '';
   for (const [id, text] of [['pc', t('budget.metric.pc')], ['total', t('budget.metric.total')]]) {
     box.append(el('button', { class: (state.budgetMetric || 'pc') === id ? 'active' : '', onclick: () => { state.budgetMetric = id; renderCompare(); } }, text));
   }
-  $('#compareFocus').innerHTML = '';
-  $('#compareFocus').append(el('span', { class: 'demo-year' }, `${t('budget.year')}: `, budgetYearControl(renderCompare)));
-  $('#compareHint').textContent = t('cmp.hint.budget');
+  const fbar = $('#compareFocus');
+  fbar.innerHTML = '';
+  fbar.append(financeYearControls());
+  if (focus) {
+    fbar.append(el('span', { class: 'focus-chip', style: `--c:${focus.color}` }, el('i'), t('cmp.budgetFocus', { item: t(focus.key) }),
+      el('button', { type: 'button', title: t('cmp.focusClear'), 'aria-label': t('cmp.focusClear'), onclick: () => setFocus(focus.id) }, '✕')));
+  }
+  $('#compareHint').textContent = focus ? t('cmp.hint.budgetFocus', { item: t(focus.key) }) : `${t('cmp.hint.budget')} ${t('cmp.hint.budgetClick')}`;
   const chart = $('#compareChart');
   chart.innerHTML = '';
   if (!all.length) {
@@ -1923,25 +1965,29 @@ function renderBudgetCompare(all, kind) {
   }
   const rows = all.map((s) => ({ s, d: budgetOf(s.city.id) }));
   const scale = (r) => (pc ? 1 / Math.max(r.d.e.population, 1) : 1);
-  const value = (r) => (r.d?.b ? budgetTotal(r.d.b, kind) * scale(r) : -1);
+  const amount = (r) => (focus ? Math.max(focus.v(r.d.b), 0) : budgetTotal(r.d.b, kind));
+  const value = (r) => (r.d?.b ? amount(r) * scale(r) : -1);
   rows.sort((a, b) => value(b) - value(a));
   const max = Math.max(...rows.map(value), 1);
   const show = (v) => (pc ? `${fmtInt(v)} ${t('budget.perResidentShort')}` : fmtMoney(v));
   for (const r of rows) {
     const { s, d } = r;
-    const stack = el('div', { class: 'stack' });
+    const stack = el('div', { class: 'stack' + (focus ? ' focused' : '') });
     if (d?.b) {
       const total = budgetTotal(d.b, kind);
       stack.style.width = `${(100 * value(r)) / max}%`;
-      for (const g of budgetGroups(kind)) {
+      for (const g of focus ? [focus] : groups) {
         const v = g.v(d.b);
         if (v <= 0) continue;
-        const w = (100 * v) / Math.max(total, 1);
-        const seg = el('div', { class: 'seg', style: `width:${w}%;background:${g.color}` },
-          el('span', { style: isLight(g.color) ? 'color:#333;text-shadow:none' : '' }, w > 9 ? `${num(w, 0)}%` : ''));
-        seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(s.city)} — ${t(g.key)}</b><br>${fmtMoney(v)} · ${num(w, 1)}%`
+        const share = (100 * v) / Math.max(total, 1);
+        const w = focus ? 100 : share;
+        const seg = el('div', { class: 'seg' + (focus ? ' active' : ''), style: `width:${w}%;background:${g.color}`, role: 'button', tabindex: '0' },
+          el('span', { style: isLight(g.color) ? 'color:#333;text-shadow:none' : '' }, focus ? (w > 0 ? `${num(share, 1)}%` : '') : (w > 9 ? `${num(w, 0)}%` : '')));
+        seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(s.city)} — ${t(g.key)}</b><br>${fmtMoney(v)} · ${num(share, 1)}%`
           + `<br>${fmtInt(perResident(v, d.e))} ${t('budget.perResidentShort')}`));
         seg.addEventListener('mouseleave', hideTip);
+        seg.addEventListener('click', () => setFocus(g.id));
+        seg.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setFocus(g.id); } });
         stack.append(seg);
       }
     }
@@ -1953,11 +1999,18 @@ function renderBudgetCompare(all, kind) {
         onclick: () => { state.city = s.city.id; if (state.city2 === s.city.id) state.city2 = null; switchView('map'); },
       }, cityName(s.city), el('span', { class: 'terr-mark', title: note }, ' ⓘ')),
       el('div', {}, stack),
-      el('div', { class: 'total' }, d?.b ? show(value(r)) : '—')));
+      el('div', { class: 'total' }, d?.b ? (focus
+        ? el('span', { class: 'focus-value' }, show(value(r)), el('span', { class: 'small' }, ` · ${pc ? fmtMoney(amount(r)) : `${fmtInt(perResident(amount(r), d.e))} ${t('budget.perResidentShort')}`}`))
+        : show(value(r))) : '—')));
   }
   const lg = $('#compareLegend');
   lg.innerHTML = '';
-  for (const g of budgetGroups(kind)) lg.append(el('span', { class: 'legend-item' }, el('i', { style: `background:${g.color}` }), t(g.key)));
+  for (const g of groups) {
+    const on = state.budgetFocus === g.id;
+    lg.append(el('button', {
+      type: 'button', class: 'legend-item' + (on ? ' active' : '') + (focus && !on ? ' dim' : ''), 'aria-pressed': on, onclick: () => setFocus(g.id),
+    }, el('i', { style: `background:${g.color}` }), t(g.key)));
+  }
   $('#compareNote').textContent = `${t('budget.source', { year: state.budgetYear })} ${t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: '' }).replace(' ()', '')}`;
   const details = $('#compareTableDetails');
   if (!details.dataset.bound) {
@@ -2234,12 +2287,14 @@ function bundleSlice(url, [offset, length]) {
 
 // ------------------------------------------------------------------ views
 /** Two-level menu: top-level sections and the screens (views) in each. */
-const SECTIONS = { cities: ['map', 'compare'], regions: ['population', 'modeling'], about: ['about'] };
+const SECTIONS = { cities: ['map', 'compare', 'finance'], regions: ['population', 'modeling'], about: ['about'] };
+const VIEW_SECTION = { finance: 'compare' };  // views drawn into another view's section
+const sectionEl = (view) => `view-${VIEW_SECTION[view] || view}`;
 const sectionOf = (view) => Object.keys(SECTIONS).find((s) => SECTIONS[s].includes(view)) || 'cities';
 const lastView = {};  // section -> screen last open in it
 
 function switchView(view) {
-  if (!document.getElementById(`view-${view}`)) view = 'map';
+  if (!document.getElementById(sectionEl(view))) view = 'map';
   state.view = view;
   const section = sectionOf(view);
   lastView[section] = view;
@@ -2247,12 +2302,12 @@ function switchView(view) {
   document.querySelectorAll('.subtab-group').forEach((g) => { g.hidden = g.dataset.section !== section; });
   $('#subtabs').hidden = SECTIONS[section].length < 2;
   document.querySelectorAll('.subtab').forEach((b) => b.classList.toggle('active', b.dataset.view === view));
-  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === `view-${view}`));
+  document.querySelectorAll('.view').forEach((v) => v.classList.toggle('active', v.id === sectionEl(view)));
   if (view === 'map') {
     for (const p of activePanes()) p.map.resize();
     selectCities(state.city, state.city2, false);
   }
-  if (view === 'compare') renderCompare();
+  if (view === 'compare' || view === 'finance') renderCompare();
   if (view === 'about') renderAbout();
   if (view === 'population') renderPopulationView();
   if (view === 'modeling') renderModelingView();
@@ -2286,7 +2341,7 @@ async function selectCities(city, city2, fit = true) {
 
 function renderAll() {
   if (state.view === 'map') renderSidebar();
-  if (state.view === 'compare') renderCompare();
+  if (state.view === 'compare' || state.view === 'finance') renderCompare();
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
 }
@@ -2333,7 +2388,7 @@ async function setTerritory(mode, idx = 0) {
   try { localStorage.setItem('territory', mode); } catch { /* storage unavailable */ }
   renderTerritoryToggles();
   hideTip();
-  if (state.view === 'compare') renderCompare();
+  if (state.view === 'compare' || state.view === 'finance') renderCompare();
   renderSidebar();
   renderPaneLabels();
   for (const p of activePanes()) if (p.popup) p.popup.remove();
@@ -2485,7 +2540,7 @@ function changeLanguage(lang) {
   renderPaneLabels();
   renderTerritoryToggles();
   renderSidebar();
-  if (state.view === 'compare') renderCompare();
+  if (state.view === 'compare' || state.view === 'finance') renderCompare();
   if (state.view === 'about') renderAbout();
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
@@ -2528,6 +2583,8 @@ async function main() {
     if (h.view === 'modeling') state.modelThreshold = h.threshold; else state.popThreshold = h.threshold;
   }
   if (h.regionCentres) state.regionCentres = h.regionCentres;
+  if (['population', 'budgetInc', 'budgetExp'].includes(h.financeBreakdown)) state.financeBreakdown = h.financeBreakdown;
+  if (h.budgetFocus) state.budgetFocus = h.budgetFocus;
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();

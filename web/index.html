@@ -33,7 +33,8 @@
   <nav class="subtabs" id="subtabs">
     <div class="subtab-group" data-section="cities" role="tablist">
       <button class="subtab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
-      <button class="subtab" data-view="compare" role="tab" data-i18n="tab.compare">Графіки</button>
+      <button class="subtab" data-view="compare" role="tab" data-i18n="tab.compare">Структура територій</button>
+      <button class="subtab" data-view="finance" role="tab" data-i18n="tab.finance">Бюджети й населення</button>
     </div>
     <div class="subtab-group" data-section="regions" role="tablist" hidden>
       <button class="subtab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
@@ -85,7 +86,7 @@
     <section id="view-compare" class="view">
       <div class="compare">
         <div class="compare-head">
-          <h2 data-i18n="cmp.title">Структура території міст</h2>
+          <h2 id="compareTitle" data-i18n="cmp.title">Структура території міст</h2>
           <div class="unit-toggle" id="unitToggleCompare"></div>
           <label><span data-i18n="cmp.breakdown">Розбивка</span>
             <select id="compareBreakdown"></select>

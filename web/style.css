@@ -344,6 +344,7 @@ details.panel > summary h3 { font-size: 14px; }
 .data-notes .demo-note { margin-top: 6px; }
 .year-select { font: inherit; font-size: 12px; padding: 1px 4px; }
 .demo-year { font-size: 13px; color: var(--muted); }
+.year-controls { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-bottom: 6px; }
 
 /* ---- population view (cities with their surroundings by drive time) ---- */
 .pop-sidebar { width: 460px; }
