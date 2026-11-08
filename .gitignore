@@ -9,6 +9,8 @@ data/interim/
 data/processed/
 data/logs/
 data/preview/
+data/budgets/cache/
+data/budgets/budget_codes.csv
 
 .claude/
 

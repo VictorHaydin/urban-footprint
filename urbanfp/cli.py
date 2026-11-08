@@ -103,6 +103,10 @@ def main(argv: list[str] | None = None) -> None:
     sub.add_parser("list", help="list configured cities and their processing state")
     sub.add_parser("demography", help="population per city and territory mode from data/demography (all years)")
     sub.add_parser("agglomeration", help="drive times from every city to all settlements (Агломерації page)")
+    bp = sub.add_parser("budgets", help="annual budgets of every hromada from OpenBudget (data/budgets)")
+    bp.add_argument("--years", type=int, nargs="+", default=[2021, 2025])
+    bp.add_argument("--workers", type=int, default=2, help="parallel API requests (more make the API answer 503)")
+    bp.add_argument("--export-only", action="store_true", help="only write web/data/budgets.json from the CSV")
     pt = sub.add_parser("publish-tiles", help="copy map tiles into a working copy of the tiles repository")
     pt.add_argument("repo", help="path of the working copy (e.g. ../urban-footprint-data)")
     pt.add_argument("cities", nargs="*", help="city ids (default: all)")
@@ -143,6 +147,14 @@ def main(argv: list[str] | None = None) -> None:
     if args.cmd == "agglomeration":
         from urbanfp.agglomeration import build_agglomeration
         build_agglomeration()
+        return
+
+    if args.cmd == "budgets":
+        from urbanfp.budgets import build_budgets, export_budgets
+        if args.export_only:
+            export_budgets()
+        else:
+            build_budgets(tuple(args.years), args.workers)
         return
 
     if args.cmd == "publish-tiles":

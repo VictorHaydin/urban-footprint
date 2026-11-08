@@ -327,6 +327,14 @@ details.panel > summary h3 { font-size: 14px; }
 .demo-head h3 { margin: 0; }
 .demo-big { font-size: 22px; font-weight: 600; margin: 4px 0 2px; }
 .demo-note { color: var(--muted); margin-top: 4px; }
+/* hromada budget: totals and structure bars */
+.budget-line { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; margin: 8px 0 3px; font-size: 13px; }
+.budget-line b { font-size: 15px; }
+.budget-bar { display: flex; height: 14px; border-radius: 3px; overflow: hidden; background: var(--bar-bg); }
+.budget-bar i { display: block; height: 100%; }
+.budget-keys { display: flex; flex-wrap: wrap; gap: 2px 10px; margin-top: 4px; font-size: 11px; color: var(--muted); }
+.budget-keys span { display: inline-flex; align-items: center; gap: 4px; }
+.budget-keys i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 .year-select { font: inherit; font-size: 12px; padding: 1px 4px; }
 .demo-year { font-size: 13px; color: var(--muted); }
 

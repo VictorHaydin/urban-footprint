@@ -44,6 +44,8 @@ Documentation (in English):
 * **Population:** de facto population from the State Statistics Service of Ukraine (1 January 2022) or the 2001 census for the city,
   hromada and Greater City, population density and the population of each suburb; a "Population" breakdown on
   the comparison screen (count or density). A switch selects the source (year).
+* **Hromada budgets:** revenue and spending of each city's hromada budget for 2021 and 2025 (OpenBudget,
+  Ministry of Finance): in the map sidebar and in the "Budget: revenue / spending" breakdowns of the charts.
 * **Agglomerations:** a separate page with a bar chart and a map of population circles for each city
   together with settlements within a drive time (city only up to 3 h, in 5 min steps). When two
   centres fall within one range, the larger absorbs the smaller only if it is more than twice its size;

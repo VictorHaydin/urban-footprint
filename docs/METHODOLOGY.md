@@ -300,6 +300,27 @@ may differ from today's boundary).
   Mykytyntsi, Khryplyn and Uhornyky, which are officially part of the city), the population refers to the
   official city and the density is over-estimated.
 
+### Hromada budgets (OpenBudget)
+
+`python -m urbanfp budgets` reads the annual budget of every hromada (and Kyiv) for 2021 and 2025 from the public
+OpenBudget API of the Ministry of Finance (`api.openbudget.gov.ua`). The budget code of a hromada comes from the
+budget dictionary `BUDG`, which carries the KATOTTG code; codes change over the years (Kryvyi Rih, Poltava,
+Kropyvnytskyi in 2023, Kherson in 2026), so every code a unit has had is tried. Only the last quarter of the
+cumulative reports is used (= the year), all funds together:
+
+* revenue (`INCOMES`): actual amounts by revenue code, grouped by code prefix — PIT `1101`, single tax `180504`,
+  property and land `1801`, own revenue `1`–`3`, transfers `4`, earmarked funds `5`;
+* spending (`EXPENSES`, programme classification): actual amounts of the programme totals (economic code `0000`)
+  grouped by functional code — `09` education, `07` health, `10` social, `06` housing, `04` economy, `08` culture,
+  `011`–`016` administration, `018` transfers to other budgets, the rest as other. The functional report itself is
+  not used: its "actual" column repeats the plan.
+
+Output: `data/budgets/budgets_2021_2025.csv` (one row per hromada and year) and `web/data/budgets.json` (the
+hromada of each configured city). Per-resident figures use the population on 1 January 2022. Years of hromadas
+occupied before them are flagged (budgets of administrations in exile, or nothing); OpenBudget has no data for
+Crimea and Sevastopol. API responses are cached in `data/budgets/cache/` (a full run takes ~3.5 h, 4 parallel
+requests; more make the API answer 503).
+
 ### Agglomerations: city population with surroundings by drive time ("Агломерації" page)
 
 `python -m urbanfp agglomeration` builds a national car road graph from the OSM extract (all `highway` classes

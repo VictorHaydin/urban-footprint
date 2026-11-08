@@ -30,6 +30,8 @@ const state = {
   aboutPage: 'overview',   // sub-page of the Method & data view
   demoYear: null,         // population (demography) reference year; null = latest available
   popMetric: 'pop',       // compare screen, population breakdown: pop | density
+  budgetYear: null,       // hromada budgets: year shown (budgets.json years)
+  budgetMetric: 'pc',     // compare screen, budget breakdowns: pc (per resident) | total
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
   popSelected: null,      // population page: highlighted centre
   modelThreshold: 60,     // region modelling: drive time of the region core (min)
@@ -223,6 +225,7 @@ function readHash() {
   return {
     city: p.get('city'), city2: p.get('city2'), view: p.get('view'), territory: p.get('t'), territory2: p.get('t2'),
     year: p.get('y') ? +p.get('y') : null,
+    budgetYear: p.get('by') ? +p.get('by') : null,
     threshold: p.get('th') != null ? +p.get('th') : null,
     aboutPage: p.get('p'),
     regionCentres: p.get('rc') != null ? p.get('rc').split(',').filter(Boolean) : null,
@@ -237,6 +240,9 @@ function writeHash() {
   const years = demoYears();
   if (state.demoYear && years.length && state.demoYear !== years[years.length - 1]) p.set('y', state.demoYear);
   if (state.view === 'compare' && state.compareCities) p.set('cities', compareCityIds().join(','));
+  if ((state.view === 'map' || state.view === 'compare') && budgets?.years?.length && state.budgetYear !== budgets.years[0]) {
+    p.set('by', state.budgetYear);
+  }
   if (state.view === 'population') p.set('th', state.popThreshold);
   if (state.view === 'modeling') {
     p.set('th', state.modelThreshold);
@@ -671,6 +677,7 @@ function renderSidebar() {
     if (note) head.append(el('div', { class: 'mode-note' }, s2 ? `${names[i]}: ${note}` : note));
   });
   renderPopulationPanel(list, names);
+  renderBudgetPanel(list, names);
   renderSettlements(list, names);
   renderUnitToggle($('#unitToggleMap'), [['pct', t('unit.pctArea')], ['km2', t('unit.km2')]]);
   $('#subPctToggle').hidden = state.unit === 'km2'; // only meaningful for percentages
@@ -892,14 +899,17 @@ async function renderCompare() {
   const ids = compareCityIds();
   const all = await Promise.all(ids.map(loadStats));
   await loadDemography();
+  await loadBudgets();
   if (state.breakdown === 'population' && !demoYears().length) state.breakdown = 'categories';
+  const budgetKind = { budgetInc: 'inc', budgetExp: 'exp' }[state.breakdown];
+  if (budgetKind && !budgets.years.length) state.breakdown = 'categories';
   const unitOpts = [['pct', t('unit.pctCity')], ['km2', t('unit.km2abs')]];
   if (state.breakdown !== 'categories' && state.breakdown !== 'population') {
     unitOpts.push(['pctcat', t('unit.pctOf', { what: label(catDef(state.breakdown)).toLowerCase() })]);
   }
   if (state.unit === 'pctcat' && state.breakdown === 'categories') state.unit = 'pct';
   if (state.breakdown === 'population') renderPopMetricToggle();
-  else renderUnitToggle($('#unitToggleCompare'), unitOpts);
+  else if (!budgetKind) renderUnitToggle($('#unitToggleCompare'), unitOpts);
   renderTerritoryToggles();
   renderCityFilter();
 
@@ -908,6 +918,9 @@ async function renderCompare() {
     sel.innerHTML = '';
     sel.append(el('option', { value: 'categories' }, t('cmp.all')));
     if (demoYears().length) sel.append(el('option', { value: 'population' }, t('cmp.population')));
+    if (budgets.years.length) {
+      sel.append(el('option', { value: 'budgetInc' }, t('cmp.budgetInc')), el('option', { value: 'budgetExp' }, t('cmp.budgetExp')));
+    }
     for (const c of state.index.categories) {
       if (c.subcategories.length > 1) sel.append(el('option', { value: c.id }, t('cmp.byType', { cat: label(c) })));
     }
@@ -920,6 +933,10 @@ async function renderCompare() {
   sel.value = state.breakdown;
   if (state.breakdown === 'population') {
     renderPopulationCompare(all);
+    return;
+  }
+  if (budgetKind) {
+    renderBudgetCompare(all, budgetKind);
     return;
   }
 
@@ -1126,6 +1143,10 @@ function renderPopulationTable(all) {
 
 async function renderCompareTable(statsList) {
   const all = statsList || await Promise.all(compareCityIds().map(loadStats));
+  if (state.breakdown === 'budgetInc' || state.breakdown === 'budgetExp') {
+    renderBudgetTable(all, state.breakdown === 'budgetInc' ? 'inc' : 'exp');
+    return;
+  }
   if (state.breakdown === 'population') {
     renderPopulationTable(all);
     return;
@@ -1754,6 +1775,217 @@ function hullFeatures(active, owner, outlines) {
   return feats;
 }
 
+// ------------------------------------------------------------------ hromada budgets (OpenBudget)
+/**
+ * web/data/budgets.json: per city, the budget of its hromada (Kyiv: the city) by year, actual figures in UAH:
+ * inc_* revenue groups, exp_* spending by function. Optional: the app works without it.
+ */
+let budgets = null;
+async function loadBudgets() {
+  if (budgets !== null) return budgets;
+  try { budgets = await getJSON(`${DATA}/budgets.json`); } catch { budgets = { years: [], cities: {} }; }
+  if (!budgets.years.includes(state.budgetYear)) state.budgetYear = budgets.years[0] ?? null;
+  return budgets;
+}
+const otherOwn = (b) => b.inc_own - b.inc_pit - b.inc_single_tax - b.inc_property;
+const BUDGET_INC = [
+  { id: 'pit', key: 'budget.inc.pit', color: '#2f6db5', v: (b) => b.inc_pit },
+  { id: 'single', key: 'budget.inc.single', color: '#5b9bd5', v: (b) => b.inc_single_tax },
+  { id: 'property', key: 'budget.inc.property', color: '#8cc1e6', v: (b) => b.inc_property },
+  { id: 'own', key: 'budget.inc.otherOwn', color: '#bcd8ee', v: otherOwn },
+  { id: 'transfers', key: 'budget.inc.transfers', color: '#e08a1e', v: (b) => b.inc_transfers },
+  { id: 'other', key: 'budget.inc.other', color: '#c4c9cf', v: (b) => b.inc_total - b.inc_own - b.inc_transfers },
+];
+const EXP_MAIN = ['exp_education', 'exp_health', 'exp_social', 'exp_housing', 'exp_economy', 'exp_culture', 'exp_admin', 'exp_transfers'];
+const BUDGET_EXP = [
+  { id: 'education', key: 'budget.exp.education', color: '#2e9d6a', v: (b) => b.exp_education },
+  { id: 'health', key: 'budget.exp.health', color: '#d1495b', v: (b) => b.exp_health },
+  { id: 'social', key: 'budget.exp.social', color: '#7b52ae', v: (b) => b.exp_social },
+  { id: 'housing', key: 'budget.exp.housing', color: '#e08a1e', v: (b) => b.exp_housing },
+  { id: 'economy', key: 'budget.exp.economy', color: '#6c8a1f', v: (b) => b.exp_economy },
+  { id: 'culture', key: 'budget.exp.culture', color: '#1c9aa8', v: (b) => b.exp_culture },
+  { id: 'admin', key: 'budget.exp.admin', color: '#8c6d3f', v: (b) => b.exp_admin },
+  { id: 'transfers', key: 'budget.exp.transfers', color: '#9aa3ad', v: (b) => b.exp_transfers },
+  { id: 'other', key: 'budget.exp.other', color: '#c4c9cf', v: (b) => b.exp_total - EXP_MAIN.reduce((a, k) => a + b[k], 0) },
+];
+const budgetGroups = (kind) => (kind === 'inc' ? BUDGET_INC : BUDGET_EXP);
+const budgetTotal = (b, kind) => (kind === 'inc' ? b.inc_total : b.exp_total);
+
+/** {e: city entry, b: figures of the year | null, occupied} or null when the city has no hromada budget. */
+function budgetOf(cityId, year = state.budgetYear) {
+  const e = budgets?.cities?.[cityId];
+  if (!e) return null;
+  const y = e.years[year];
+  return { e, b: y && !y.occupied ? y : null, occupied: !!y?.occupied };
+}
+/** Money: 21,6 млрд грн / 345 млн грн / 12 345 грн. */
+function fmtMoney(v) {
+  const a = Math.abs(v);
+  if (a >= 1e9) return `${num(v / 1e9, a >= 1e11 ? 0 : 1)} ${t('budget.bn')}`;
+  if (a >= 1e6) return `${num(v / 1e6, a >= 1e8 ? 0 : 1)} ${t('budget.mn')}`;
+  return `${fmtInt(v)} ${t('budget.uah')}`;
+}
+const perResident = (v, e) => v / Math.max(e.population, 1);
+function budgetYearControl(onChange = renderAll) {
+  const years = budgets?.years || [];
+  if (years.length < 2) return el('span', { class: 'small' }, String(state.budgetYear ?? ''));
+  const sel = el('select', { class: 'year-select', 'aria-label': t('budget.year') }, years.map((y) => el('option', { value: y }, String(y))));
+  sel.value = state.budgetYear;
+  sel.addEventListener('change', () => {
+    state.budgetYear = +sel.value;
+    try { localStorage.setItem('budgetYear', String(state.budgetYear)); } catch { /* storage unavailable */ }
+    writeHash();
+    onChange();
+  });
+  return sel;
+}
+/** Stacked bar of one budget side (revenue / spending) with tooltips. */
+function budgetBar(b, kind, e, name) {
+  const total = budgetTotal(b, kind);
+  const bar = el('div', { class: 'budget-bar' });
+  for (const g of budgetGroups(kind)) {
+    const v = g.v(b);
+    if (v <= 0) continue;
+    const seg = el('i', { style: `width:${(100 * v) / Math.max(total, 1)}%;background:${g.color}` });
+    seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${name ? `${name} — ` : ''}${t(g.key)}</b><br>${fmtMoney(v)} · ${num((100 * v) / total, 1)}%`
+      + `<br>${fmtInt(perResident(v, e))} ${t('budget.perResidentShort')}`));
+    seg.addEventListener('mouseleave', hideTip);
+    bar.append(seg);
+  }
+  return bar;
+}
+function budgetKeys(kind, b) {
+  return el('div', { class: 'budget-keys' }, budgetGroups(kind).filter((g) => !b || g.v(b) > 0)
+    .map((g) => el('span', {}, el('i', { style: `background:${g.color}` }), t(g.key))));
+}
+function budgetPopNote(e) {
+  return t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: fmtInt(e.population) });
+}
+
+/** Map sidebar: the hromada budget of the shown city (or a comparison table for two cities). */
+function renderBudgetPanel(list, names) {
+  const box = $('#budgetPanel');
+  box.innerHTML = '';
+  if (!budgets?.years?.length) return;
+  const head = el('div', { class: 'demo-head' }, el('h3', {}, t('budget.title')), budgetYearControl());
+  const data = list.map((x) => budgetOf(x.city.id));
+  const whose = (d) => (d.e.katottg === 'UA80000000000093317' ? t('budget.ofKyiv') : t('budget.ofHromada', { name: d.e.name }));
+  const why = (d) => (!d ? t('budget.noData') : d.occupied ? t('budget.occupied') : null);
+  if (list.length === 1) {
+    const d = data[0];
+    const body = [];
+    if (d?.b) {
+      for (const kind of ['inc', 'exp']) {
+        const v = budgetTotal(d.b, kind);
+        body.push(el('div', { class: 'budget-line' }, el('span', {}, t(kind === 'inc' ? 'budget.income' : 'budget.expenses'), ': ', el('b', {}, fmtMoney(v))),
+          el('span', { class: 'small' }, `${fmtInt(perResident(v, d.e))} ${t('budget.perResidentShort')}`)), budgetBar(d.b, kind, d.e), budgetKeys(kind, d.b));
+      }
+      body.push(el('div', { class: 'small demo-note' }, `${whose(d)} ${budgetPopNote(d.e)} ${t('budget.source', { year: state.budgetYear })}`));
+    } else {
+      body.push(el('div', { class: 'small demo-note' }, why(d)));
+    }
+    box.append(el('div', { class: 'panel demo' }, head, ...body));
+    return;
+  }
+  const own = (b) => `${num((100 * b.inc_own) / Math.max(b.inc_total, 1), 0)}%`;
+  const rows = [
+    [t('budget.income'), (d) => fmtMoney(d.b.inc_total)],
+    [`${t('budget.income')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.inc_total, d.e))],
+    [t('budget.ownShare'), (d) => own(d.b)],
+    [`${t('budget.inc.pit')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.inc_pit, d.e))],
+    [t('budget.expenses'), (d) => fmtMoney(d.b.exp_total)],
+    [`${t('budget.expenses')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.exp_total, d.e))],
+    [`${t('budget.exp.education')}, ${t('budget.perResidentShort')}`, (d) => fmtInt(perResident(d.b.exp_education, d.e))],
+  ];
+  box.append(el('div', { class: 'panel demo' }, head,
+    el('div', { class: 'kv kv3' },
+      el('span'), ...list.map((x, i) => el('span', { class: 'v head' }, el('span', { class: `city-key k${i}` }), names[i])),
+      rows.flatMap(([k, f]) => [el('span', {}, k), ...data.map((d) => el('span', { class: 'v' }, d?.b ? f(d) : '—'))])),
+    ...data.map((d, i) => el('div', { class: 'small demo-note' }, `${names[i]}: ${d?.b ? whose(d) : why(d)}`)),
+    el('div', { class: 'small demo-note' }, `${t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: '' }).replace(' ()', '')} ${t('budget.source', { year: state.budgetYear })}`)));
+}
+
+/** Compare screen, budget breakdowns: one stacked bar per city (revenue or spending by item). */
+function renderBudgetCompare(all, kind) {
+  const pc = state.budgetMetric !== 'total';
+  const box = $('#unitToggleCompare');
+  box.innerHTML = '';
+  for (const [id, text] of [['pc', t('budget.metric.pc')], ['total', t('budget.metric.total')]]) {
+    box.append(el('button', { class: (state.budgetMetric || 'pc') === id ? 'active' : '', onclick: () => { state.budgetMetric = id; renderCompare(); } }, text));
+  }
+  $('#compareFocus').innerHTML = '';
+  $('#compareFocus').append(el('span', { class: 'demo-year' }, `${t('budget.year')}: `, budgetYearControl(renderCompare)));
+  $('#compareHint').textContent = t('cmp.hint.budget');
+  const chart = $('#compareChart');
+  chart.innerHTML = '';
+  if (!all.length) {
+    chart.append(el('p', { class: 'hint' }, t('cmp.noCities')));
+    $('#compareLegend').innerHTML = '';
+    $('#compareTable').innerHTML = '';
+    return;
+  }
+  const rows = all.map((s) => ({ s, d: budgetOf(s.city.id) }));
+  const scale = (r) => (pc ? 1 / Math.max(r.d.e.population, 1) : 1);
+  const value = (r) => (r.d?.b ? budgetTotal(r.d.b, kind) * scale(r) : -1);
+  rows.sort((a, b) => value(b) - value(a));
+  const max = Math.max(...rows.map(value), 1);
+  const show = (v) => (pc ? `${fmtInt(v)} ${t('budget.perResidentShort')}` : fmtMoney(v));
+  for (const r of rows) {
+    const { s, d } = r;
+    const stack = el('div', { class: 'stack' });
+    if (d?.b) {
+      const total = budgetTotal(d.b, kind);
+      stack.style.width = `${(100 * value(r)) / max}%`;
+      for (const g of budgetGroups(kind)) {
+        const v = g.v(d.b);
+        if (v <= 0) continue;
+        const w = (100 * v) / Math.max(total, 1);
+        const seg = el('div', { class: 'seg', style: `width:${w}%;background:${g.color}` },
+          el('span', { style: isLight(g.color) ? 'color:#333;text-shadow:none' : '' }, w > 9 ? `${num(w, 0)}%` : ''));
+        seg.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(s.city)} — ${t(g.key)}</b><br>${fmtMoney(v)} · ${num(w, 1)}%`
+          + `<br>${fmtInt(perResident(v, d.e))} ${t('budget.perResidentShort')}`));
+        seg.addEventListener('mouseleave', hideTip);
+        stack.append(seg);
+      }
+    }
+    const note = !d ? t('budget.noData') : d.occupied ? t('budget.occupied')
+      : d.e.katottg === 'UA80000000000093317' ? t('budget.ofKyiv') : t('budget.ofHromada', { name: d.e.name });
+    chart.append(el('div', { class: 'chart-row' },
+      el('button', {
+        type: 'button', class: 'city link', title: t('cmp.openMap', { city: cityName(s.city) }),
+        onclick: () => { state.city = s.city.id; if (state.city2 === s.city.id) state.city2 = null; switchView('map'); },
+      }, cityName(s.city), el('span', { class: 'terr-mark', title: note }, ' ⓘ')),
+      el('div', {}, stack),
+      el('div', { class: 'total' }, d?.b ? show(value(r)) : '—')));
+  }
+  const lg = $('#compareLegend');
+  lg.innerHTML = '';
+  for (const g of budgetGroups(kind)) lg.append(el('span', { class: 'legend-item' }, el('i', { style: `background:${g.color}` }), t(g.key)));
+  $('#compareNote').textContent = `${t('budget.source', { year: state.budgetYear })} ${t(state.budgetYear > 2022 ? 'budget.popNote2025' : 'budget.popNote', { pop: '' }).replace(' ()', '')}`;
+  const details = $('#compareTableDetails');
+  if (!details.dataset.bound) {
+    details.addEventListener('toggle', () => { if (details.open) renderCompareTable(); });
+    details.dataset.bound = '1';
+  }
+  if (details.open) renderCompareTable(all);
+  else $('#compareTable').innerHTML = '';
+}
+
+function renderBudgetTable(all, kind) {
+  const groups = budgetGroups(kind);
+  const head = el('tr', {}, el('th', {}, t('cmp.city')), el('th', {}, t('budget.total')), el('th', {}, t('budget.perResidentShort')),
+    groups.map((g) => el('th', {}, `${t(g.key)}, ${t('budget.perResidentShort')}`)));
+  const body = all.map((s) => {
+    const d = budgetOf(s.city.id);
+    if (!d?.b) return el('tr', {}, el('td', {}, cityName(s.city)), el('td', { colspan: groups.length + 2 }, d?.occupied ? t('budget.occupied') : t('budget.noData')));
+    const total = budgetTotal(d.b, kind);
+    return el('tr', {}, el('td', {}, cityName(s.city)), el('td', {}, fmtMoney(total)), el('td', {}, fmtInt(perResident(total, d.e))),
+      groups.map((g) => el('td', {}, fmtInt(perResident(g.v(d.b), d.e)))));
+  });
+  $('#compareTable').innerHTML = '';
+  $('#compareTable').append(el('table', {}, el('thead', {}, head), el('tbody', {}, body)));
+}
+
 // ------------------------------------------------------------------ region modelling
 const modelView = { map: null, ready: null, result: null, frame: null };
 const validThreshold = (m) => Number.isInteger(m) && m >= 0 && m <= agg.max_min && m % POP_STEP === 0;
@@ -2248,6 +2480,10 @@ async function main() {
   let savedYear = null;
   try { savedYear = +localStorage.getItem('demoYear') || null; } catch { /* storage unavailable */ }
   for (const y of [h.year, savedYear]) if (y && demoYears().includes(y)) { state.demoYear = y; break; }
+  await loadBudgets();
+  let savedBudgetYear = null;
+  try { savedBudgetYear = +localStorage.getItem('budgetYear') || null; } catch { /* storage unavailable */ }
+  for (const y of [h.budgetYear, savedBudgetYear]) if (y && budgets.years.includes(y)) { state.budgetYear = y; break; }
   if (h.threshold != null && !Number.isNaN(h.threshold)) {
     if (h.view === 'modeling') state.modelThreshold = h.threshold; else state.popThreshold = h.threshold;
   }
