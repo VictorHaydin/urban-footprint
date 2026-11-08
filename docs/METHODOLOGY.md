@@ -321,6 +321,12 @@ occupied before them are flagged (budgets of administrations in exile, or nothin
 Crimea and Sevastopol. API responses are cached in `data/budgets/cache/` (a full run takes ~3.5 h, 4 parallel
 requests; more make the API answer 503).
 
+On the Агломерації and region modelling pages the revenue of every hromada (`web/data/budgets_hromadas.json`,
+keyed by the 9-character KATOTTG hromada prefix) is shared out among its settlements by population on 1 January
+2022 and summed per agglomeration or region: the centre (the city's own share), the joined settlements, and the
+total; settlements outside any hromada with data (Crimea, Sevastopol) or without population are listed as unknown.
+Occupied hromadas are counted as reported (administrations in exile since 2022, negligible since 2014).
+
 ### Agglomerations: city population with surroundings by drive time ("Агломерації" page)
 
 `python -m urbanfp agglomeration` builds a national car road graph from the OSM extract (all `highway` classes

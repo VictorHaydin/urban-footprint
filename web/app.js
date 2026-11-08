@@ -34,6 +34,7 @@ const state = {
   budgetMetric: 'pc',     // compare screen, budget breakdowns: pc (per resident) | total
   financeBreakdown: 'budgetInc', // Budgets & population screen: population | budgetInc | budgetExp
   budgetFocus: null,      // Budgets & population screen: the one budget item compared (null = all)
+  aggChart: 'pop',        // Агломерації / region modelling bar chart: pop | rev (budget revenue)
   budgetUnit: 'total',    // map sidebar budget block: total | pc (per resident)
   budgetOpen: new Set(),  // map sidebar budget block: expanded sides (inc, exp)
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
@@ -1304,8 +1305,85 @@ const popView = { map: null, ready: null, result: null, frame: null };
 const POP_COLORS = ['#2f6db5', '#d1495b', '#2e9d6a', '#e08a1e', '#7b52ae', '#1c9aa8', '#6c8a1f', '#8c6d3f'];
 const AGG_ADJ_KM = 30;  // agglomerations whose settlements come this close count as neighbours
 
+// ------------------------------------------------------------------ budget revenue of settlements
+/**
+ * web/data/budgets_hromadas.json: {hromada KATOTTG prefix: [population 2022, revenue per year]}. A settlement gets
+ * the share of its hromada's revenue proportional to its 2022 population (unknown without population, outside
+ * any hromada with data — Crimea — or in a year without data).
+ */
+let hromadaRevenue = null;
+async function loadHromadaRevenue() {
+  if (hromadaRevenue !== null) return hromadaRevenue;
+  try { hromadaRevenue = await getJSON(`${DATA}/budgets_hromadas.json`); } catch { hromadaRevenue = { years: [], hromadas: {} }; }
+  return hromadaRevenue;
+}
+function settRevenue(i, year = state.budgetYear) {
+  const S = agg.settlements;
+  const h = hromadaRevenue?.hromadas?.[S.code[i].slice(0, 9)];  // UA + oblast, raion, hromada
+  const k = hromadaRevenue?.years?.indexOf(year) ?? -1;
+  const p = S.pop['2022']?.[i];
+  if (!h || k < 0 || h[1 + k] == null || p == null || !h[0]) return null;
+  return (h[1 + k] * p) / h[0];
+}
+/**
+ * Per agglomeration / region: revenue of the centre (its city), of the joined settlements (split into those in the
+ * core and the rest when `core` is given, for regions), total; settlements with unknown budget.
+ */
+function revenueByGroup(active, owner, core = null) {
+  if (!hromadaRevenue?.years?.length) return null;
+  const pop22 = agg.settlements.pop['2022'] || [];
+  const out = active.map(() => ({ centre: null, attached: 0, attachedCore: 0, total: 0, unknownN: 0, unknownPop: 0 }));
+  for (let i = 0; i < owner.length; i++) {
+    const o = owner[i];
+    if (o < 0) continue;
+    const v = settRevenue(i);
+    const g = out[o];
+    if (i === active[o].settlement) g.centre = v;
+    else if (v != null) {
+      g.attached += v;
+      if (core?.[i]) g.attachedCore += v;
+    }
+    if (v == null) { g.unknownN += 1; g.unknownPop += pop22[i] || 0; }
+  }
+  for (const g of out) g.total = (g.centre || 0) + g.attached;
+  return out;
+}
+/** Tooltip lines of a group's revenue: centre, joined areas, total, settlements with unknown budget. */
+function revenueTip(r) {
+  if (!r) return '';
+  return `<br><b>${t('rev.title', { year: state.budgetYear })}</b>`
+    + `<br>${t('rev.centre')}: ${r.centre == null ? t('rev.unknown') : fmtMoney(r.centre)}`
+    + `<br>${t('rev.attached')}: ${fmtMoney(r.attached)}`
+    + `<br>${t('rev.total')}: ${fmtMoney(r.total)}`
+    + (r.unknownN ? `<br><i>${t('rev.unknownN', { n: fmtInt(r.unknownN), pop: fmtInt(r.unknownPop) })}</i>` : '');
+}
+/** Tooltip line of a settlement's share of its hromada's revenue. */
+function settRevenueTip(i) {
+  if (!hromadaRevenue?.years?.length) return '';
+  const v = settRevenue(i);
+  return `<br>${v == null ? `<i>${t('rev.settUnknown')}</i>` : `${t('rev.sett', { year: state.budgetYear })}: ${fmtMoney(v)}`}`;
+}
+/** Population / budget revenue switch of the bar chart (hidden without revenue data). */
+function chartToggle(id, rerender) {
+  const box = $(id);
+  box.innerHTML = '';
+  box.hidden = !hromadaRevenue?.years?.length;
+  if (box.hidden) { state.aggChart = 'pop'; return; }
+  for (const [k, key] of [['pop', 'rev.chartPop'], ['rev', 'rev.chartRev']]) {
+    box.append(el('button', { class: state.aggChart === k ? 'active' : '', onclick: () => { state.aggChart = k; rerender(); } }, t(key)));
+  }
+}
+
+/** Population year switch plus the budget year switch, for the Агломерації and region modelling pages. */
+function yearSwitches(box, rerender) {
+  box.innerHTML = '';
+  box.append(`${t('demo.title')}: `, demoYearControl());
+  if (budgets?.years?.length && hromadaRevenue?.years?.length) box.append('  ', `${t('rev.yearLabel')}: `, budgetYearControl(rerender));
+}
+
 async function loadAgglomeration() {
   if (agg) return agg;
+  await loadHromadaRevenue();
   agg = await getJSON(`${DATA}/agglomeration.json`);
   aggReach = {};
   for (const [id, list] of Object.entries(agg.reach)) aggReach[id] = new Map(list);
@@ -1447,6 +1525,7 @@ async function renderPopulationView() {
   }
   const year = state.demoYear;
   const res = computeAgglomeration(state.popThreshold, year);
+  res.revenue = revenueByGroup(res.active, res.owner);
   popView.result = res;
 
   // controls
@@ -1467,7 +1546,7 @@ async function renderPopulationView() {
   $('#popSliderVal').textContent = fmtThreshold(state.popThreshold);
   const yb = $('#popYear');
   yb.innerHTML = '';
-  yb.append(`${t('demo.title')}: `, demoYearControl());
+  yearSwitches(yb, renderPopulationView);
   $('#popHint').textContent = state.popThreshold === 0 ? t('pop.hint.city') : t('pop.hint', { t: fmtThreshold(state.popThreshold) });
   const legend = $('#popLegend');
   legend.innerHTML = '';
@@ -1475,23 +1554,33 @@ async function renderPopulationView() {
     el('span', { class: `pop-legend-item cls${3 - i}` }, el('i'), t(k))));
   legend.append(el('span', { class: 'pop-legend-item outside' }, el('i'), t('pop.outsideLegend')));
 
-  // bar chart: active centres by total population
-  const rows = [...res.active].sort((a, b) => b.total - a.total);
-  const max = Math.max(...rows.map((c) => c.total), 1);
+  // bar chart: active centres by total population, or by budget revenue (centre + joined areas)
+  chartToggle('#popChartToggle', renderPopulationView);
+  const byRev = state.aggChart === 'rev' && !!res.revenue;
+  const parts = (c) => {
+    if (!byRev) return [c.cityPop, c.total - c.cityPop];
+    const r = res.revenue[c.idx];
+    return [r.centre || 0, r.attached];
+  };
+  const total = (c) => parts(c).reduce((a, v) => a + v, 0);
+  const rows = [...res.active].sort((a, b) => total(b) - total(a));
+  const max = Math.max(...rows.map(total), 1);
   const chart = $('#popChart');
   chart.innerHTML = '';
   for (const c of rows) {
+    const [centre, rest] = parts(c), sum = Math.max(centre + rest, 1);
     const row = el('div', { class: 'pop-row' + (state.popSelected === c.id ? ' sel' : '') + (state.popSelected && state.popSelected !== c.id ? ' dim' : ''), 'data-id': c.id },
       el('div', { class: 'name', title: cityName(c.city) }, cityName(c.city)),
-      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * c.total) / max}%` },
-        el('i', { style: `width:${(100 * c.cityPop) / c.total}%;background:${c.color}` }),
-        el('i', { style: `width:${(100 * (c.total - c.cityPop)) / c.total}%;background:${c.color};opacity:.45` }))),
-      el('div', { class: 'val' }, fmtInt(c.total)));
+      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * total(c)) / max}%` },
+        el('i', { style: `width:${(100 * centre) / sum}%;background:${c.color}` }),
+        el('i', { style: `width:${(100 * rest) / sum}%;background:${c.color};opacity:.45` }))),
+      el('div', { class: 'val' }, byRev ? fmtMoney(total(c)) : fmtInt(c.total)));
     const absorbed = res.centres.filter((x) => x.absorbedBy === c.id);
     row.addEventListener('mousemove', (ev) => showTip(ev, `<b>${cityName(c.city)}</b><br>${t('demo.population')}: ${fmtInt(c.total)}`
       + `<br>${t('demo.cityOnly')}: ${fmtInt(c.cityPop)}`
       + (state.popThreshold ? `<br>${t('pop.around', { t: fmtThreshold(state.popThreshold) })}: ${fmtInt(c.total - c.cityPop)} (${t('pop.nSett', { n: fmtInt(c.n) })})` : '')
-      + (absorbed.length ? `<br>${t('pop.includes')}: ${absorbed.map((x) => cityName(x.city)).join(', ')}` : '')));
+      + (absorbed.length ? `<br>${t('pop.includes')}: ${absorbed.map((x) => cityName(x.city)).join(', ')}` : '')
+      + revenueTip(res.revenue?.[c.idx])));
     row.addEventListener('mouseleave', hideTip);
     row.addEventListener('click', () => selectPopCentre(c.id));
     chart.append(row);
@@ -1505,7 +1594,8 @@ async function renderPopulationView() {
       inactive.sort((a, b) => b.cityPop - a.cityPop).map((c) => `${cityName(c.city)} → ${cityName(res.centres.find((x) => x.id === c.absorbedBy).city)} (${num(c.time, 0)} ${t('set.min')})`).join('; ')));
   }
   if (nodata.length) ib.append(el('div', {}, el('b', {}, t('pop.noDataTitle')), ' ', nodata.map((c) => cityName(c.city)).join(', ')));
-  $('#popNote').textContent = t('pop.note', { max: fmtThreshold(aggPageMax()) }) + ' ' + demoSource() + '.';
+  $('#popNote').textContent = t('pop.note', { max: fmtThreshold(aggPageMax()) }) + ' ' + demoSource() + '.'
+    + (res.revenue ? ' ' + t('rev.note', { year: state.budgetYear }) : '');
   await ensurePopMap();
   updatePopMap();
 }
@@ -1607,8 +1697,9 @@ async function ensurePopMap() {
   if (popView.map) { popView.map.resize(); return popView.ready; }
   Object.assign(popView, createAggMap('popMap', {
     centreTip: (p) => `<b>${p.name}</b><br>${state.popThreshold > 0 ? `${t('pop.agglomeration')}: ${fmtInt(p.total)}<br>` : ''}`
-      + `${t('demo.cityOnly')}: ${fmtInt(p.cityPop)}`,
-    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}` : t('pop.outside')}`,
+      + `${t('demo.cityOnly')}: ${fmtInt(p.cityPop)}`
+      + revenueTip(popView.result.revenue?.[popView.result.active.find((a) => a.id === p.id)?.idx]),
+    settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}` : t('pop.outside')}` + settRevenueTip(f.i),
     onCentreClick: selectPopCentre,
   }));
   return popView.ready;
@@ -2111,6 +2202,7 @@ async function renderModelingView() {
   const T = state.modelThreshold;
   const ids = regionCentreIds();
   const res = computeRegions(T, state.demoYear, ids);
+  res.revenue = revenueByGroup(res.active, res.owner, res.core);
   modelView.result = res;
   const max = fmtThreshold(agg.max_min);
 
@@ -2131,7 +2223,7 @@ async function renderModelingView() {
   $('#mSliderVal').textContent = fmtThreshold(T);
   const yb = $('#mYear');
   yb.innerHTML = '';
-  yb.append(`${t('demo.title')}: `, demoYearControl());
+  yearSwitches(yb, renderModelingView);
   $('#mHint').textContent = T === 0 ? t('model.hint.city') : t('model.hint', { t: fmtThreshold(T), max });
   const legend = $('#mLegend');
   legend.innerHTML = '';
@@ -2170,29 +2262,37 @@ async function renderModelingView() {
   }
   list.scrollTop = scroll;
 
-  // bar chart: regions by population — the centre city, the rest of the core, the rest of the region
+  // bar chart: regions by population or budget revenue — the centre city, the rest of the core, the rest of the region
+  chartToggle('#mChartToggle', renderModelingView);
+  const byRev = state.aggChart === 'rev' && !!res.revenue;
+  const parts = (c) => {
+    if (!byRev) return [c.cityPop || 0, c.core - (c.cityPop || 0), c.total - c.core];
+    const r = res.revenue[c.idx];
+    return [r.centre || 0, r.attachedCore, r.attached - r.attachedCore];
+  };
+  const total = (c) => parts(c).reduce((a, v) => a + v, 0);
   const chart = $('#mChart');
   chart.innerHTML = '';
   if (!res.active.length) chart.append(el('p', { class: 'hint' }, t('model.empty')));
-  const rows = [...res.active].sort((a, b) => b.total - a.total);
-  const top = Math.max(...rows.map((c) => c.total), 1);
+  const rows = [...res.active].sort((a, b) => total(b) - total(a));
+  const top = Math.max(...rows.map(total), 1);
   const sel = state.modelSelected;
   for (const c of rows) {
-    const city = c.cityPop || 0;
-    const pct = (v) => (c.total ? (100 * v) / c.total : 0);
+    const [city, coreRest, rest] = parts(c), sum = Math.max(total(c), 1);
+    const pct = (v) => (100 * Math.max(v, 0)) / sum;
     const row = el('div', { class: 'pop-row' + (sel === c.id ? ' sel' : '') + (sel && sel !== c.id ? ' dim' : ''), 'data-id': c.id },
       el('div', { class: 'name', title: cityName(c.city) }, cityName(c.city)),
-      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * c.total) / top}%` },
+      el('div', {}, el('div', { class: 'bar', style: `width:${(100 * total(c)) / top}%` },
         el('i', { style: `width:${pct(city)}%;background:${c.color}` }),
-        el('i', { style: `width:${pct(c.core - city)}%;background:${c.color};opacity:.6` }),
-        el('i', { style: `width:${pct(c.total - c.core)}%;background:${c.color};opacity:.22` }))),
-      el('div', { class: 'val' }, fmtInt(c.total)));
+        el('i', { style: `width:${pct(coreRest)}%;background:${c.color};opacity:.6` }),
+        el('i', { style: `width:${pct(rest)}%;background:${c.color};opacity:.22` }))),
+      el('div', { class: 'val' }, byRev ? fmtMoney(total(c)) : fmtInt(c.total)));
     row.addEventListener('mousemove', (ev) => showTip(ev, regionTip(c)));
     row.addEventListener('mouseleave', hideTip);
     row.addEventListener('click', () => selectModelCentre(c.id));
     chart.append(row);
   }
-  $('#mNote').textContent = t('model.note') + ' ' + demoSource() + '.';
+  $('#mNote').textContent = t('model.note') + ' ' + demoSource() + '.' + (res.revenue ? ' ' + t('rev.note', { year: state.budgetYear }) : '');
   await ensureModelMap();
   updateModelMap();
 }
@@ -2203,7 +2303,8 @@ function regionTip(c) {
   return `<b>${cityName(c.city)}</b><br>${t('model.region')}: ${fmtInt(c.total)} (${t('pop.nSett', { n: fmtInt(c.n) })})`
     + `<br>${T ? t('model.inCore', { t: fmtThreshold(T) }) : t('model.coreCity')}: ${fmtInt(c.core)}`
     + `<br>${t('model.inRest')}: ${fmtInt(c.total - c.core)}`
-    + `<br>${t('demo.cityOnly')}: ${c.cityPop == null ? t('pop.noPop') : fmtInt(c.cityPop)}`;
+    + `<br>${t('demo.cityOnly')}: ${c.cityPop == null ? t('pop.noPop') : fmtInt(c.cityPop)}`
+    + revenueTip(modelView.result?.revenue?.[c.idx]);
 }
 
 async function ensureModelMap() {
@@ -2211,7 +2312,7 @@ async function ensureModelMap() {
   Object.assign(modelView, createAggMap('modelMap', {
     centreTip: (p) => `${regionTip(modelView.result.active.find((a) => a.id === p.id))}<br><i>${t('model.clickRemove')}</i>`,
     settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}${f.pale ? ` (${t('model.beyond')})` : ''}` : t('model.outside')}`
-      + (f.city ? `<br><i>${t('model.clickAdd')}</i>` : ''),
+      + settRevenueTip(f.i) + (f.city ? `<br><i>${t('model.clickAdd')}</i>` : ''),
     // a click on the map toggles a city's centre status (the chart rows highlight a region)
     onCentreClick: (id) => { hideTip(); setRegionCentres(regionCentreIds().filter((x) => x !== id)); },
     onSettClick: (f) => { hideTip(); setRegionCentres([...regionCentreIds(), f.city]); },

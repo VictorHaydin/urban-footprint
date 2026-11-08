@@ -14,7 +14,8 @@ is kept, all funds together (FUND_TYP = T):
 Output: data/budgets/budgets_<years>.csv, one row per hromada and year, amounts in UAH (columns below).
 API responses are cached in data/budgets/cache/, so an interrupted run resumes where it stopped.
 `export_budgets` writes web/data/budgets.json for the web app: the budget of each configured city's hromada
-(Kyiv: the city budget), by year.
+(Kyiv: the city budget), by year; and web/data/budgets_hromadas.json: the revenue of every hromada, which the
+agglomeration and region pages share out among its settlements by population.
 """
 
 from __future__ import annotations
@@ -272,7 +273,7 @@ def export_budgets(csv_path: Path | None = None) -> Path:
     csv_path = csv_path or max(BUDGET_DIR.glob("budgets_*.csv"), key=lambda f: f.stat().st_mtime)
     df = pd.read_csv(csv_path, dtype={"katottg": str, "budget_code": str})
     demo = json.loads((Paths.web_data() / "demography.json").read_text(encoding="utf-8"))
-    by_prefix = {k[:11]: g for k, g in df.groupby(df["katottg"])}
+    by_prefix = {k[:9]: g for k, g in df.groupby(df["katottg"])}  # UA + oblast, raion, hromada
     amounts = [c for c in df.columns if c.startswith(("inc_", "exp_"))]
     years = sorted(int(y) for y in df["year"].unique())
     cities = {}
@@ -280,7 +281,7 @@ def export_budgets(csv_path: Path | None = None) -> Path:
         code = next((v.get("city_code") for v in demo["cities"].get(c.id, {}).values() if v.get("city_code")), None)
         if not code:
             continue
-        g = df[df["katottg"] == code] if code == KYIV else by_prefix.get(code[:11])
+        g = df[df["katottg"] == code] if code == KYIV else by_prefix.get(code[:9])
         if g is None or g.empty:
             continue
         first = g.iloc[0]
@@ -298,4 +299,27 @@ def export_budgets(csv_path: Path | None = None) -> Path:
     path = Paths.web_data() / "budgets.json"
     path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("%s: %d cities, years %s", path, len(cities), years)
+    export_hromada_revenue(df, years)
+    return path
+
+
+def export_hromada_revenue(df: pd.DataFrame, years: list[int]) -> Path:
+    """web/data/budgets_hromadas.json: {hromada KATOTTG prefix (UA + oblast, raion, hromada: 9 chars): [population 2022, revenue per year
+    (null when OpenBudget has none)]}. Occupied hromadas are kept as reported: budgets of their administrations
+    (in exile since 2022; tiny for those occupied since 2014)."""
+    rows = {}
+    for kat, g in df.groupby("katottg"):
+        by_year = {int(r["year"]): r for _, r in g.iterrows()}
+        vals = []
+        for y in years:
+            r = by_year.get(y)
+            vals.append(round(float(r["inc_total"])) if r is not None and r["status"] == "ok" else None)
+        pop = int(g["population_2022"].iloc[0]) if pd.notna(g["population_2022"].iloc[0]) else 0
+        rows[kat[:9]] = [pop, *vals]
+    out = {"schema_version": 1, "years": years, "population_date": "2022-01-01", "fields": ["population", *map(str, years)],
+           "source": "OpenBudget (Ministry of Finance of Ukraine), https://openbudget.gov.ua", "hromadas": rows}
+    path = Paths.web_data() / "budgets_hromadas.json"
+    path.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    unknown = {y: sum(1 for v in rows.values() if v[1 + i] is None) for i, y in enumerate(years)}
+    log.info("%s: %d hromadas; unknown revenue %s", path, len(rows), unknown)
     return path
