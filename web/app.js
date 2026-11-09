@@ -258,8 +258,12 @@ function writeHash() {
   if (state.view === 'modeling') {
     p.set('th', state.modelThreshold);
     if (state.regionCentres) {
-      const all = agg && agg.centres.every((c) => c.settlement == null || state.regionCentres.includes(c.id));
-      p.set('rc', all ? 'all' : state.regionCentres.join(','));  // every city: short link
+      // short links: every possible centre (rc=all) or every city of 50k+ (rc=cities)
+      const has = new Set(state.regionCentres);
+      const cities = agg ? cityCentreIds() : [];
+      const allCities = agg && cities.every((id) => has.has(id));
+      const allTowns = agg && towns.every((x) => has.has(x.id));
+      p.set('rc', allCities && allTowns ? 'all' : allCities && has.size === cities.length ? 'cities' : state.regionCentres.join(','));
     }
   }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
@@ -2168,9 +2172,12 @@ function renderBudgetTable(all, kind) {
 // ------------------------------------------------------------------ region modelling
 const modelView = { map: null, ready: null, result: null, frame: null };
 const validThreshold = (m) => Number.isInteger(m) && m >= 0 && m <= agg.max_min && m % POP_STEP === 0;
+const cityCentreIds = () => agg.centres.filter((c) => c.settlement != null).map((c) => c.id);
+const allCentreIds = () => [...cityCentreIds(), ...towns.map((x) => x.id)];
 const regionCentreIds = () => {
   const known = new Set([...agg.centres.map((c) => c.id), ...townById.keys()]);
-  if (state.regionCentres?.[0] === 'all') return agg.centres.filter((c) => c.settlement != null).map((c) => c.id);  // rc=all
+  if (state.regionCentres?.[0] === 'all') return allCentreIds();      // rc=all: cities and towns
+  if (state.regionCentres?.[0] === 'cities') return cityCentreIds();  // rc=cities: the cities of 50k+
   return (state.regionCentres || state.index.default_region_centres || []).filter((id) => known.has(id));
 };
 
@@ -2275,12 +2282,13 @@ async function renderModelingView() {
   // centre picker: every city with drive times, by city group
   const chosen = new Set(ids);
   const colorOf = Object.fromEntries(res.active.map((a) => [a.id, a.color]));
-  $('#mPickerSummary').textContent = t('model.centres', { n: ids.length, total: agg.centres.length });
+  $('#mPickerSummary').textContent = t('model.centres', { n: ids.length, total: allCentreIds().length });
   const acts = $('#mPickerActions');
   acts.innerHTML = '';
   acts.append(
     el('button', { type: 'button', onclick: () => setRegionCentres([...(state.index.default_region_centres || [])]) }, t('model.default')),
-    el('button', { type: 'button', onclick: () => setRegionCentres(agg.centres.filter((c) => c.settlement != null).map((c) => c.id)) }, t('model.all')),
+    el('button', { type: 'button', onclick: () => setRegionCentres(cityCentreIds()) }, t('model.all')),
+    el('button', { type: 'button', onclick: () => setRegionCentres(allCentreIds()) }, t('model.everything')),
     el('button', { type: 'button', onclick: () => setRegionCentres([]) }, t('model.clear')),
   );
   const list = $('#mCentres');

@@ -395,7 +395,7 @@ details.panel > summary h3 { font-size: 14px; }
 .pop-legend-item.rest i.line { opacity: .4; }
 .region-picker { margin: 0 0 12px; border: 1px solid var(--border); border-radius: 6px; padding: 6px 10px; font-size: 13px; }
 .region-picker summary { cursor: pointer; color: var(--text); }
-.region-picker-actions { display: flex; gap: 6px; margin: 8px 0; }
+.region-picker-actions { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
 .region-picker-actions button { font: inherit; font-size: 12px; padding: 3px 9px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--panel); color: inherit; cursor: pointer; }
 .region-list { columns: 2; column-gap: 16px; max-height: 300px; overflow-y: auto; }
