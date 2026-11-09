@@ -353,7 +353,7 @@ def build_agglomeration() -> dict:
 
 # --------------------------------------------------------------------------- towns as region centres
 
-TOWN_MIN_POP = 20_000   # 2001 census: settlements this large may be chosen as region centres
+TOWN_MIN_POP = 10_000   # 2001 census: settlements this large may be chosen as region centres
 UNREACHED = 0xFFFF
 
 

@@ -135,11 +135,13 @@ def parse_census(path: Path, current: pd.DataFrame) -> pd.DataFrame:
     cands: dict[tuple, dict] = {}  # (oblast prefix, name) -> {code: type}
     loose: dict[tuple, dict] = {}
 
-    def add(code, names, typ, only_new=False, pre=None):
+    def add(code, names, typ, unless=frozenset(), pre=None):
+        """Add `code` as a candidate for each of `names`, except for keys in `unless` (snapshots of the keys of
+        stronger candidates: a key already used by a weaker kind does not block, so namesakes stay candidates)."""
         pre = pre or code[:4]
         for n in re.split(r"\s*;\s*", names or ""):
             k = (pre, _norm(n))
-            if n and not (only_new and k in cands):
+            if n and k not in unless:
                 cands.setdefault(k, {}).setdefault(code, typ)
                 loose.setdefault((pre, _loose(n)), {}).setdefault(code, typ)
     for code, name, typ, kind in zip(current["code"], current["name"], current["type"], current["kind"]):
@@ -150,14 +152,24 @@ def parse_census(path: Path, current: pd.DataFrame) -> pd.DataFrame:
     # a point inside a PREFIX_AREAS unit but coded elsewhere today (a Sevastopol village of 2001, in Bakhchysarai
     # raion since 2020) is a candidate of that unit only, so it never takes a namesake from the rest of Crimea
     pool = [a if a and a != c[:4] else None for c, a in zip(coded["code"], coded["area"])]
-    for code, name, place, pre in zip(coded["code"], coded["name"], coded["place"], pool):
-        add(code, name, OSM_KIND.get(place, ""), pre=pre)
-    for code, old, place, pre in zip(coded["code"], coded["old_name"], coded["place"], pool):
-        add(code, old, OSM_KIND.get(place, ""), only_new=True, pre=pre)  # a former name never shadows a current one
-    # places OSM gives no code (most of Crimea): identified by their OSM point, never shadowing a coded one
+    # type of a coded point: Derzhstat's (city / smt / village / settlement) where it has the code, which tells a
+    # city from an smt (both place=town in OSM: Сорокине and Тепле, both ex-Краснодон), else from the OSM place
+    ctype = dict(zip(current["code"], current["type"]))
+    kind = [ctype.get(c) or OSM_KIND.get(pl, "") for c, pl in zip(coded["code"], coded["place"])]
+    for code, name, typ, pre in zip(coded["code"], coded["name"], kind, pool):
+        add(code, name, typ, pre=pre)
+    # a former name never shadows a current one, but every settlement that had it stays a candidate: several
+    # places of one oblast were renamed from the same name (Жовтневе → Благодатне and Сусваль in Volyn;
+    # Орджонікідзе → Покров and Новотаромське), and the council / raion / type votes tell them apart
+    current_keys = frozenset(cands)
+    for code, old, typ, pre in zip(coded["code"], coded["old_name"], kind, pool):
+        add(code, old, typ, unless=current_keys, pre=pre)
+    # places OSM gives no code (most of Crimea): identified by their OSM point, never shadowing a coded one (its
+    # current or former name), but several uncoded namesakes all stay candidates
+    coded_keys = frozenset(cands)
     rest = pts[pts["code"].str.startswith("OSM")]
     for code, name, place, pre in zip(rest["code"], rest["name"], rest["place"], rest["prefix"]):
-        add(code, name, OSM_KIND.get(place, ""), only_new=True, pre=pre)
+        add(code, name, OSM_KIND.get(place, ""), unless=coded_keys, pre=pre)
 
     names = [CENSUS_RENAMES.get((n, c), n) for n, c in zip(raw["name"], raw["council"])]
     pref = raw["oblast"].map(prefix).fillna("")
@@ -167,23 +179,46 @@ def parse_census(path: Path, current: pd.DataFrame) -> pd.DataFrame:
         types.append(c)
         opts.append([k for k, t in c.items() if not t or t in TYPE_NOW.get(typ, {t})] or list(c))
     raw["code"] = [o[0] if len(o) == 1 else "" for o in opts]
-    # namesakes: the hromada most settlements of the same 2001 council went to, else the raion of the old raion
-    for level, col in ((9, "council"), (6, "raion")):
+    # namesakes: the hromada most settlements of the same 2001 council went to, else the raion of the old raion;
+    # each vote narrows the candidates even when it does not settle them
+    # (councils are keyed with their raion: councils of the same name exist in several raions of an oblast)
+    for level, cols in ((9, ["oblast", "raion", "council"]), (6, ["oblast", "raion"])):
         done = raw[raw["code"] != ""]
-        vote = (done.assign(unit=done["code"].str[:level]).groupby(["oblast", col])["unit"]
+        vote = (done.assign(unit=done["code"].str[:level]).groupby(cols)["unit"]
                 .agg(lambda u: u.value_counts().index[0]).to_dict())
         for i in np.nonzero((raw["code"] == "").values)[0]:
-            unit = vote.get((raw.at[i, "oblast"], raw.at[i, col]))
+            unit = vote.get(tuple(raw.at[i, c] for c in cols))
             hit = [k for k in opts[i] if unit and k[:level] == unit]
+            if hit:
+                opts[i] = hit
             if len(hit) == 1:
                 raw.at[i, "code"] = hit[0]
     for i in np.nonzero((raw["code"] == "").values)[0]:  # still ambiguous: the closest type of today
         for t in TYPE_ORDER.get(raw.at[i, "type"], []):
             hit = [k for k in opts[i] if types[i].get(k) == t]
             if hit:
+                opts[i] = hit
                 if len(hit) == 1:
                     raw.at[i, "code"] = hit[0]
                 break
+    # still ambiguous: the candidate nearest to the settlements of the same 2001 raion matched so far, when it is
+    # clearly nearer than the others (namesakes renamed from the same name are usually in different raions)
+    where = {c: (x, y) for c, x, y in zip(pts["code"], pts["lon"], pts["lat"])}
+    done = raw[raw["code"] != ""]
+    centre = {}
+    for key, g in done.groupby(["oblast", "raion"]):
+        xy = [where[c] for c in g["code"] if c in where]
+        if xy:
+            centre[key] = (sum(p[0] for p in xy) / len(xy), sum(p[1] for p in xy) / len(xy))
+    for i in np.nonzero((raw["code"] == "").values)[0]:
+        c0 = centre.get((raw.at[i, "oblast"], raw.at[i, "raion"]))
+        cand = [k for k in opts[i] if k in where]
+        if not c0 or len(cand) < 2:
+            continue
+        kx = np.cos(np.radians(c0[1]))
+        dist = sorted((np.hypot((where[k][0] - c0[0]) * kx, where[k][1] - c0[1]), k) for k in cand)
+        if dist[0][0] < 0.5 * dist[1][0]:
+            raw.at[i, "code"] = dist[0][1]
     ok = raw["code"] != ""
     log.info("census %s: %d of %d settlements matched (%.1f%% of population)", path.name, ok.sum(), len(raw),
              100 * raw.loc[ok, "population"].sum() / raw["population"].sum())

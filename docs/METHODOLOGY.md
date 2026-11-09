@@ -270,16 +270,20 @@ The original workbooks are kept in `data/demography/raw/`; `python -m urbanfp de
 
 **Census matching.** Census rows are given today's KATOTTG code by name within the oblast, with candidates from
 the Derzhstat table and from OSM `place` points (`katotth`, current name and `old_name`, which covers most
-decommunisation renamings). Namesakes are told apart by the 2001 council (the hromada most other settlements of
-the same council went to), then by the 2001 raion, then by the type closest to the 2001 one; a second pass
-ignores spelling variants (є/е, і/и). A few renamings OSM does not record and settlements merged into a city
+decommunisation renamings). A former name is a candidate for every settlement that had it, unless a settlement
+of the oblast bears it today (several places were renamed from the same name: Жовтневе → Благодатне and
+Сусваль in Volyn, Орджонікідзе → Покров and Новотаромське). Namesakes are told apart by the 2001 council (the
+hromada most other settlements of the same council — keyed with its raion, as council names repeat — went to),
+then by the 2001 raion, then by the type closest to the 2001 one (Derzhstat's type where it has the code, which
+tells a city from an smt), then by distance to the settlements of the same 2001 raion matched so far (when one
+candidate is clearly nearest); a second pass ignores spelling variants (є/е, і/и). A few renamings OSM does not record and settlements merged into a city
 since 2001 (Inhulets → Kryvyi Rih, Taromske → Dnipro) are listed in `CENSUS_RENAMES`. Settlements merged into
 one are summed. Where OSM has no code (most of Crimea), a place point is used instead, identified by its OSM id
 (`OSM<id>`) and assigned to the oblast of the nearest coded point; it is only used when no coded settlement has
-that name. Points inside Sevastopol's OSM boundary (relation 1574364, `PREFIX_AREAS` in `agglomeration.py`)
+that name (several uncoded namesakes all stay candidates). Points inside Sevastopol's OSM boundary (relation 1574364, `PREFIX_AREAS` in `agglomeration.py`)
 belong to Sevastopol whatever their code: the villages of its 2001 city council are coded in Bakhchysarai raion
-since the 2020 reform or have no code, and the nearest coded points are Crimean. 29,030 of 29,962 settlements
-(98.9% of the population) are matched; the unmatched are mostly small
+since the 2020 reform or have no code, and the nearest coded points are Crimean. 29,381 of 29,962 settlements
+(99.4% of the population) are matched; the unmatched are mostly small
 villages that no longer exist or have been renamed. Hromada totals for 2001
 are sums of their matched settlements; the city row is the city's own census figure (the 2001 city, which
 may differ from today's boundary).
@@ -344,7 +348,7 @@ Centres are all 101 cities of over 50,000 people in the 2001 census. A city need
 to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the
 Агломерації page only, named from `config/cities.yaml` and linked to its census / Derzhstat row by `katottg` or by name.
 
-Region centres may also be towns of 20,000+ in the 2001 census that are not configured cities (113):
+Region centres may also be towns of 10,000+ in the 2001 census that are not configured cities (330):
 `build_town_reach` (run after `agglomeration`, or `agglomeration --towns-only`) writes `web/data/towns.json` and one
 file per town, `web/data/reach/<settlement code>.bin` (uint16 tenths of a minute per settlement of
 agglomeration.json, 0xFFFF beyond 6 h); the page loads only those of the chosen towns. Drive times start from the
