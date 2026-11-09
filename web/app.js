@@ -35,6 +35,7 @@ const state = {
   financeBreakdown: 'budgetInc', // Budgets & population screen: population | budgetInc | budgetExp
   budgetFocus: null,      // Budgets & population screen: the one budget item compared (null = all)
   aggChart: 'pop',        // Агломерації / region modelling bar chart: pop | rev (budget revenue)
+  adminOpacity: 0.5,      // region modelling map: opacity of the state border and oblast boundaries
   budgetUnit: 'total',    // map sidebar budget block: total | pc (per resident)
   budgetOpen: new Set(),  // map sidebar budget block: expanded sides (inc, exp)
   popThreshold: 30,       // population page: join settlements within this drive time (min); 0 = city only
@@ -2392,8 +2393,41 @@ function renderModelSummary() {
     el('div', { class: 'kv' }, rows.flatMap(([k, v]) => [el('span', {}, k), el('span', { class: 'v' }, v)])));
 }
 
+/**
+ * Region modelling map: the state border and oblast boundaries (web/data/admin_lines.geojson), drawn under the
+ * region outlines, with an opacity slider, to compare modelled regions with the real oblasts.
+ */
+async function addAdminLayers(map) {
+  if (map.getSource('admin')) return;
+  let data;
+  try { data = await getJSON(`${DATA}/admin_lines.geojson`); } catch { return; }
+  if (map.getSource('admin')) return;
+  map.addSource('admin', { type: 'geojson', data });
+  const before = map.getLayer('hull-outer') ? 'hull-outer' : undefined;
+  map.addLayer({
+    id: 'admin-oblast', type: 'line', source: 'admin', filter: ['==', ['get', 'kind'], 'oblast'],
+    layout: { 'line-join': 'round' },
+    paint: { 'line-color': '#2b2b2b', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 1, 9, 2], 'line-dasharray': [3, 2], 'line-opacity': state.adminOpacity },
+  }, before);
+  map.addLayer({
+    id: 'admin-country', type: 'line', source: 'admin', filter: ['==', ['get', 'kind'], 'country'],
+    layout: { 'line-join': 'round' },
+    paint: { 'line-color': '#2b2b2b', 'line-width': ['interpolate', ['linear'], ['zoom'], 5, 2, 9, 3.5], 'line-opacity': state.adminOpacity },
+  }, before);
+}
+function setAdminOpacity(v) {
+  state.adminOpacity = v;
+  try { localStorage.setItem('adminOpacity', String(v)); } catch { /* storage unavailable */ }
+  const map = modelView.map;
+  for (const id of ['admin-oblast', 'admin-country']) if (map?.getLayer(id)) map.setPaintProperty(id, 'line-opacity', v);
+}
+
 async function ensureModelMap() {
   if (modelView.map) { modelView.map.resize(); return modelView.ready; }
+  try { const v = localStorage.getItem('adminOpacity'); if (v != null && !Number.isNaN(+v)) state.adminOpacity = +v; } catch { /* storage unavailable */ }
+  const slider = $('#mAdmin');
+  slider.value = state.adminOpacity;
+  slider.addEventListener('input', () => setAdminOpacity(+slider.value));
   Object.assign(modelView, createAggMap('modelMap', {
     centreTip: (p) => `${regionTip(modelView.result.active.find((a) => a.id === p.id))}<br><i>${t('model.clickRemove')}</i>`,
     settTip: (f) => `${settTipHead(f)} · ${f.in ? `${num(f.t, 0)} ${t('set.min')} → ${f.centre}${f.pale ? ` (${t('model.beyond')})` : ''}` : t('model.outside')}`
@@ -2402,6 +2436,7 @@ async function ensureModelMap() {
     onCentreClick: (id) => { hideTip(); setRegionCentres(regionCentreIds().filter((x) => x !== id)); },
     onSettClick: (f) => { hideTip(); setRegionCentres([...regionCentreIds(), f.city]); },
   }));
+  modelView.ready = modelView.ready.then(() => addAdminLayers(modelView.map));
   return modelView.ready;
 }
 

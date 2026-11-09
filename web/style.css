@@ -346,6 +346,10 @@ details.panel > summary h3 { font-size: 14px; }
 .demo-year { font-size: 13px; color: var(--muted); }
 .chart-toggle { margin: 0 0 8px; }
 .model-summary { margin-top: 12px; }
+/* notes at the bottom of the agglomeration / region sidebars: no negative margin (it overlapped the block above) */
+.pop-sidebar .compare-note { margin: 14px 0 0; }
+.admin-slider { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.admin-slider span { white-space: nowrap; }
 .model-summary:empty { display: none; }
 .model-summary h3 { margin: 0 0 6px; }
 .chart-toggle[hidden] { display: none; }

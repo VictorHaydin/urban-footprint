@@ -354,6 +354,12 @@ file per town, `web/data/reach/<settlement code>.bin` (uint16 tenths of a minute
 agglomeration.json, 0xFFFF beyond 6 h); the page loads only those of the chosen towns. Drive times start from the
 town's point, joined to the road network with its last mile like any settlement.
 
+The region modelling map also draws the state border and the oblast boundaries (incl. Crimea, Kyiv, Sevastopol)
+from the OSM relations, `build_admin_lines` → `web/data/admin_lines.geojson` (run with `agglomeration`, or
+`agglomeration --admin-only`), with an opacity slider. They are simplified to ~250 m, oblast lines without the parts
+on the state border. OSM boundaries run out over the territorial sea; a vertex counts as sea and is dropped when it
+lies to the right of the nearest `natural=coastline` segment (land is on the left), 300 m to 30 km from it.
+
 The graph is the **intact road network**, as before the full-scale war, consistent with the free-flow
 assumption:
 * roads mapped as destroyed or out of use are kept: lifecycle tags (`ruined:`, `destroyed:`, `damaged:`,

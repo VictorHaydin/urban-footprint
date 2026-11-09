@@ -357,6 +357,78 @@ TOWN_MIN_POP = 10_000   # 2001 census: settlements this large may be chosen as r
 UNREACHED = 0xFFFF
 
 
+# --------------------------------------------------------------------------- admin boundaries for the maps
+
+COUNTRY_RELATION = 60199  # Ukraine
+# oblasts, the Autonomous Republic of Crimea, Kyiv and Sevastopol (admin_level 4, Ukrainian codes)
+OBLAST_RELATIONS = [71022, 71064, 71236, 71245, 71248, 71249, 71250, 71254, 71971, 71973, 71980, 72380, 72488, 72489,
+                    72525, 72526, 72634, 72635, 72639, 90726, 90742, 91278, 91294, 101746, 101859, 421866, 1574364]
+ADMIN_TOLERANCE_DEG = 0.003  # ~250 m: lines for a country-wide map
+
+
+def _on_land(lines, coast_m: float = 300.0, sea_max_m: float = 30_000.0):
+    """The parts of `lines` (WGS84) on land: a vertex is at sea when it lies to the right of the nearest OSM
+    coastline segment (coastlines run with land on the left), more than `coast_m` from it and less than `sea_max_m`
+    (the territorial sea is 12 nmi ~ 22 km; farther inland points are judged against a distant coast segment)."""
+    from urbanfp.coast import coastline
+    metric = "EPSG:32636"
+    coast = coastline(load_cities()[0]).to_crs(metric)
+    segs = []
+    for ln in shapely.get_parts(coast.geometry.values):
+        xy = shapely.get_coordinates(ln)
+        segs.extend(np.stack([xy[:-1], xy[1:]], axis=1))
+    segs = np.asarray(segs)
+    tree = shapely.STRtree(shapely.linestrings(segs))
+    keep = []
+    for ln in shapely.get_parts(gpd.GeoSeries([lines], crs="EPSG:4326").to_crs(metric).iloc[0]):
+        xy = shapely.get_coordinates(ln)
+        pts = shapely.points(xy)
+        idx, dist = tree.query_nearest(pts, return_distance=True, all_matches=False)
+        a, b = segs[idx[1], 0], segs[idx[1], 1]
+        right = ((b[:, 0] - a[:, 0]) * (xy[idx[0], 1] - a[:, 1]) - (b[:, 1] - a[:, 1]) * (xy[idx[0], 0] - a[:, 0])) < 0
+        sea = np.zeros(len(xy), bool)
+        sea[idx[0]] = right & (dist > coast_m) & (dist < sea_max_m)
+        run = []
+        for p, s_ in zip(xy, sea):
+            if s_:
+                if len(run) > 1:
+                    keep.append(shapely.linestrings(run))
+                run = []
+            else:
+                run.append(p)
+        if len(run) > 1:
+            keep.append(shapely.linestrings(run))
+    merged = shapely.line_merge(shapely.multilinestrings(keep)) if keep else shapely.GeometryCollection()
+    return gpd.GeoSeries([merged], crs=metric).to_crs("EPSG:4326").iloc[0]
+
+
+def build_admin_lines() -> Path:
+    """web/data/admin_lines.geojson: the state border and the boundaries of the oblasts (incl. Crimea, Kyiv,
+    Sevastopol) as simplified lines on land (the sea is cut away along the OSM coastline), for comparing modelled
+    regions with real ones on the region modelling map."""
+    from urbanfp.extract import extract_boundaries
+    region = load_cities()[0].source_region
+    found = extract_boundaries(pbf_path(region), [], {COUNTRY_RELATION, *OBLAST_RELATIONS})
+    feats = []
+    country = found.get(COUNTRY_RELATION)
+    if country is not None:
+        feats.append({"kind": "country", "geometry": country.simplify(ADMIN_TOLERANCE_DEG).boundary})
+    oblasts = [found[r] for r in OBLAST_RELATIONS if r in found]
+    if oblasts:
+        # every inner boundary once: the union of the oblast outlines, without the state border
+        lines = shapely.union_all([g.simplify(ADMIN_TOLERANCE_DEG).boundary for g in oblasts])
+        if country is not None:
+            lines = lines.difference(country.simplify(ADMIN_TOLERANCE_DEG).boundary.buffer(ADMIN_TOLERANCE_DEG))
+        feats.append({"kind": "oblast", "geometry": lines})
+    # the state border and coastal oblasts extend over the territorial sea: keep the lines on land only
+    gdf = gpd.GeoDataFrame([{"kind": f["kind"]} for f in feats], geometry=[f["geometry"] for f in feats], crs="EPSG:4326")
+    gdf["geometry"] = [_on_land(g) for g in gdf.geometry]
+    out = Paths.web_data() / "admin_lines.geojson"
+    gdf.to_file(out, driver="GeoJSON", COORDINATE_PRECISION=4)
+    log.info("%s: state border and %d oblast-level units, %.0f KB", out, len(oblasts), out.stat().st_size / 1e3)
+    return out
+
+
 def build_town_reach(min_pop: int = TOWN_MIN_POP) -> None:
     """Drive times from every settlement of at least `min_pop` (2001 census) that is not a configured city to
     every settlement, for the region modelling page: web/data/towns.json (the towns, by settlement index of
