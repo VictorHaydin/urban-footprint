@@ -1381,10 +1381,42 @@ function yearSwitches(box, rerender) {
   if (budgets?.years?.length && hromadaRevenue?.years?.length) box.append('  ', `${t('rev.yearLabel')}: `, budgetYearControl(rerender));
 }
 
+/**
+ * Towns of 20k+ (2001 census) that may be chosen as region centres (web/data/towns.json); their drive times are
+ * one file each (web/data/reach/<code>.bin, uint16 tenths of a minute per settlement), loaded when chosen.
+ */
+let towns = [];
+const townById = new Map();
+async function loadTowns() {
+  try {
+    const d = await getJSON(`${DATA}/towns.json`);
+    if (d.settlements !== agg.settlements.code.length) return;  // built for another settlements table
+    towns = d.towns.map((x) => ({ id: x.id, settlement: x.settlement, name: x.name, name_local: x.name, outline: null, town: true }));
+    for (const x of towns) townById.set(x.id, x);
+  } catch { /* no towns file: cities only */ }
+}
+const townReachLoading = new Map();
+function loadTownReach(id) {
+  if (aggReach[id]) return Promise.resolve();
+  if (!townReachLoading.has(id)) {
+    townReachLoading.set(id, fetch(`${DATA}/reach/${id}.bin`).then((r) => {
+      if (!r.ok) throw new Error(String(r.status));
+      return r.arrayBuffer();
+    }).then((buf) => {
+      const a = new Uint16Array(buf);  // little-endian files; every browser in use is little-endian
+      const m = new Map();
+      for (let i = 0; i < a.length; i++) if (a[i] !== 0xFFFF) m.set(i, a[i]);
+      aggReach[id] = m;
+    }).catch(() => { aggReach[id] = new Map(); }));
+  }
+  return townReachLoading.get(id);
+}
+
 async function loadAgglomeration() {
   if (agg) return agg;
   await loadHromadaRevenue();
   agg = await getJSON(`${DATA}/agglomeration.json`);
+  await loadTowns();
   aggReach = {};
   for (const [id, list] of Object.entries(agg.reach)) aggReach[id] = new Map(list);
   // any multiple of POP_STEP up to the computed maximum (the slider); the buttons are shortcuts
@@ -1885,9 +1917,15 @@ function hullFeatures(active, owner, outlines) {
       }
     }
     if (lines.length) {
+      // area enclosed by the outline (outer rings), km²
+      const areaKm2 = lines.reduce((sum, l) => {
+        let s2 = 0;
+        for (let i = 0; i + 1 < l.length; i++) s2 += l[i][0] * HULL_KX * l[i + 1][1] * HULL_KY - l[i + 1][0] * HULL_KX * l[i][1] * HULL_KY;
+        return sum + Math.abs(s2) / 2;
+      }, 0);
       feats.push({
         type: 'Feature', geometry: { type: 'MultiLineString', coordinates: lines },
-        properties: { id: a.id, color: a.color },
+        properties: { id: a.id, color: a.color, area_km2: areaKm2 },
       });
     }
   });
@@ -2131,7 +2169,7 @@ function renderBudgetTable(all, kind) {
 const modelView = { map: null, ready: null, result: null, frame: null };
 const validThreshold = (m) => Number.isInteger(m) && m >= 0 && m <= agg.max_min && m % POP_STEP === 0;
 const regionCentreIds = () => {
-  const known = new Set(agg.centres.map((c) => c.id));
+  const known = new Set([...agg.centres.map((c) => c.id), ...townById.keys()]);
   if (state.regionCentres?.[0] === 'all') return agg.centres.filter((c) => c.settlement != null).map((c) => c.id);  // rc=all
   return (state.regionCentres || state.index.default_region_centres || []).filter((id) => known.has(id));
 };
@@ -2144,7 +2182,7 @@ function computeRegions(T, year, ids) {
   const S = agg.settlements;
   const pop = S.pop[year] || [];
   const lim = T * 10;
-  const byId = Object.fromEntries(agg.centres.map((c) => [c.id, c]));
+  const byId = Object.fromEntries([...agg.centres, ...towns].map((c) => [c.id, c]));
   const active = ids.map((id) => byId[id]).filter((c) => c && c.settlement != null).map((c, idx) => ({
     ...c, idx, city: cityById(c.id) || { id: c.id, name: c.name, name_local: c.name_local },
     cityPop: pop[c.settlement] ?? null, total: 0, core: 0, n: 0, nCore: 0,
@@ -2201,6 +2239,7 @@ async function renderModelingView() {
   if (!validThreshold(state.modelThreshold)) state.modelThreshold = 60;
   const T = state.modelThreshold;
   const ids = regionCentreIds();
+  await Promise.all(ids.filter((id) => townById.has(id)).map(loadTownReach));
   const res = computeRegions(T, state.demoYear, ids);
   res.revenue = revenueByGroup(res.active, res.owner, res.core);
   modelView.result = res;
@@ -2260,6 +2299,15 @@ async function renderModelingView() {
       list.append(el('label', {}, box, el('i', { style: `background:${colorOf[c.id] || 'transparent'}` }), cityName(c)));
     }
   }
+  if (towns.length) {
+    list.append(el('h4', {}, t('model.towns')));
+    for (const c of [...towns].sort((a, b) => a.name.localeCompare(b.name, 'uk'))) {
+      const box = el('input', { type: 'checkbox' });
+      box.checked = chosen.has(c.id);
+      box.addEventListener('change', () => setRegionCentres(box.checked ? [...ids, c.id] : ids.filter((x) => x !== c.id)));
+      list.append(el('label', {}, box, el('i', { style: `background:${colorOf[c.id] || 'transparent'}` }), c.name));
+    }
+  }
   list.scrollTop = scroll;
 
   // bar chart: regions by population or budget revenue — the centre city, the rest of the core, the rest of the region
@@ -2303,8 +2351,37 @@ function regionTip(c) {
   return `<b>${cityName(c.city)}</b><br>${t('model.region')}: ${fmtInt(c.total)} (${t('pop.nSett', { n: fmtInt(c.n) })})`
     + `<br>${T ? t('model.inCore', { t: fmtThreshold(T) }) : t('model.coreCity')}: ${fmtInt(c.core)}`
     + `<br>${t('model.inRest')}: ${fmtInt(c.total - c.core)}`
+    + `<br>${T ? t('model.inLimit', { t: fmtThreshold(T) }) : t('model.coreCity')}: ${num((100 * c.core) / Math.max(c.total, 1), 1)}%`
     + `<br>${t('demo.cityOnly')}: ${c.cityPop == null ? t('pop.noPop') : fmtInt(c.cityPop)}`
+    + (modelView.areas?.[c.id] ? `<br>${t('model.area')}: ${fmtThKm2(modelView.areas[c.id].total)}`
+      + (state.modelThreshold ? ` (${t('model.areaCore')} ${fmtThKm2(modelView.areas[c.id].core)})` : '') : '')
     + revenueTip(modelView.result?.revenue?.[c.idx]);
+}
+
+/** Region areas in thousand km² (one decimal). */
+const fmtThKm2 = (v) => `${num(v / 1000, 1)} ${t('units.thKm2')}`;
+
+/** Region modelling: overall figures under the chart (count, averages, share of population within the limit). */
+function renderModelSummary() {
+  const box = $('#mSummary');
+  box.innerHTML = '';
+  const res = modelView.result;
+  if (!res?.active.length) return;
+  const T = state.modelThreshold;
+  const n = res.active.length;
+  const pop = res.active.reduce((a, c) => a + c.total, 0);
+  const core = res.active.reduce((a, c) => a + c.core, 0);
+  const areas = res.active.map((c) => modelView.areas?.[c.id]?.total).filter((v) => v != null);
+  const revs = (res.revenue || []).map((r) => r.total).filter((v) => v > 0);
+  const rows = [
+    [t('model.sum.count'), fmtInt(n)],
+    [t('model.sum.avgPop'), fmtInt(pop / n)],
+    revs.length ? [t('model.sum.avgRev', { year: state.budgetYear }), fmtMoney(revs.reduce((a, v) => a + v, 0) / revs.length)] : null,
+    areas.length ? [t('model.sum.avgArea'), fmtThKm2(areas.reduce((a, v) => a + v, 0) / areas.length)] : null,
+    [T ? t('model.sum.inLimit', { t: fmtThreshold(T) }) : t('model.sum.inLimitCity'), `${num((100 * core) / Math.max(pop, 1), 1)}%`],
+  ].filter(Boolean);
+  box.append(el('h3', {}, t('model.sum.title')),
+    el('div', { class: 'kv' }, rows.flatMap(([k, v]) => [el('span', {}, k), el('span', { class: 'v' }, v)])));
 }
 
 async function ensureModelMap() {
@@ -2326,7 +2403,7 @@ function updateModelMap() {
   const { active, owner, core, pop, best } = modelView.result;
   const S = agg.settlements;
   const sel = state.modelSelected;
-  const cityAt = Object.fromEntries(agg.centres.filter((c) => c.settlement != null).map((c) => [c.settlement, c.id]));  // can become centres
+  const cityAt = Object.fromEntries([...agg.centres, ...towns].filter((c) => c.settlement != null).map((c) => [c.settlement, c.id]));  // can become centres
   // circle areas relative to the largest region; with no region, to the largest settlement (not to 1 person)
   const maxTotal = active.length ? Math.max(...active.map((c) => c.total), 1)
     : pop.reduce((m, n) => Math.max(m, n || 0), 1);
@@ -2356,8 +2433,14 @@ function updateModelMap() {
     .map((c) => ({ o: owner[c.settlement], key: c.id, coords: c.outline, core: !!core[c.settlement] }));
   const coreOwner = owner.map((o, i) => (core[i] ? o : -1));
   map.getSource('centres').setData({ type: 'FeatureCollection', features: centres });
-  map.getSource('hull').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, coreOwner, cityOutlines.filter((c) => c.core)), sel) });
-  map.getSource('hull-outer').setData({ type: 'FeatureCollection', features: withSel(hullFeatures(active, owner, cityOutlines), sel) });
+  const coreHull = hullFeatures(active, coreOwner, cityOutlines.filter((c) => c.core));
+  const regionHull = hullFeatures(active, owner, cityOutlines);
+  modelView.areas = {};
+  for (const f of regionHull) modelView.areas[f.properties.id] = { total: f.properties.area_km2, core: 0 };
+  for (const f of coreHull) (modelView.areas[f.properties.id] ??= { total: 0 }).core = f.properties.area_km2;
+  map.getSource('hull').setData({ type: 'FeatureCollection', features: withSel(coreHull, sel) });
+  map.getSource('hull-outer').setData({ type: 'FeatureCollection', features: withSel(regionHull, sel) });
+  renderModelSummary();
   map.getSource('sett').setData({ type: 'FeatureCollection', features: sett });
 }
 

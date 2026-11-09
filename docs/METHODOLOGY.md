@@ -344,6 +344,12 @@ Centres are all 101 cities of over 50,000 people in the 2001 census. A city need
 to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the
 Агломерації page only, named from `config/cities.yaml` and linked to its census / Derzhstat row by `katottg` or by name.
 
+Region centres may also be towns of 20,000+ in the 2001 census that are not configured cities (113):
+`build_town_reach` (run after `agglomeration`, or `agglomeration --towns-only`) writes `web/data/towns.json` and one
+file per town, `web/data/reach/<settlement code>.bin` (uint16 tenths of a minute per settlement of
+agglomeration.json, 0xFFFF beyond 6 h); the page loads only those of the chosen towns. Drive times start from the
+town's point, joined to the road network with its last mile like any settlement.
+
 The graph is the **intact road network**, as before the full-scale war, consistent with the free-flow
 assumption:
 * roads mapped as destroyed or out of use are kept: lifecycle tags (`ruined:`, `destroyed:`, `damaged:`,

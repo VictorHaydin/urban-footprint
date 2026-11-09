@@ -1,6 +1,6 @@
 {
  "schema_version": 1,
- "generated_at": "2026-11-07T06:21:53+00:00",
+ "generated_at": "2026-11-09T07:42:18+00:00",
  "config_hash": "e5fb94079931896d",
  "categories": [
   {
@@ -427,8 +427,8 @@
   },
   {
    "id": "other",
-   "label": "Other cities",
-   "label_uk": "Інші міста"
+   "label": "Other cities of 50k+",
+   "label_uk": "Інші міста з населенням 50+ тис."
   }
  ],
  "default_region_centres": [

@@ -345,6 +345,9 @@ details.panel > summary h3 { font-size: 14px; }
 .year-select { font: inherit; font-size: 12px; padding: 1px 4px; }
 .demo-year { font-size: 13px; color: var(--muted); }
 .chart-toggle { margin: 0 0 8px; }
+.model-summary { margin-top: 12px; }
+.model-summary:empty { display: none; }
+.model-summary h3 { margin: 0 0 6px; }
 .chart-toggle[hidden] { display: none; }
 .year-controls { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-bottom: 6px; }
 

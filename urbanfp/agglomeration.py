@@ -347,4 +347,53 @@ def build_agglomeration() -> dict:
     p.write_text(json.dumps(out, ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("%s: %d settlements, %d centres, %.1f MB, %.0fs total", p, len(sett), len(centres),
              p.stat().st_size / 1e6, time.time() - t0)
+    build_town_reach()
     return out
+
+
+# --------------------------------------------------------------------------- towns as region centres
+
+TOWN_MIN_POP = 20_000   # 2001 census: settlements this large may be chosen as region centres
+UNREACHED = 0xFFFF
+
+
+def build_town_reach(min_pop: int = TOWN_MIN_POP) -> None:
+    """Drive times from every settlement of at least `min_pop` (2001 census) that is not a configured city to
+    every settlement, for the region modelling page: web/data/towns.json (the towns, by settlement index of
+    agglomeration.json) and web/data/reach/<settlement code>.bin, one little-endian uint16 per settlement (tenths
+    of a minute, 0xFFFF beyond MAX_MIN or unreached). A town has no boundary: times are from its own point (joined
+    to the road network like any settlement, with its last mile). Files are loaded only for the towns chosen."""
+    t0 = time.time()
+    data = json.loads((Paths.web_data() / "agglomeration.json").read_text(encoding="utf-8"))
+    S = data["settlements"]
+    n = len(S["code"])
+    cities = {c["settlement"] for c in data["centres"] if c["settlement"] is not None}
+    p01 = S["pop"].get("2001") or []
+    towns = [i for i, v in enumerate(p01) if v and v >= min_pop and i not in cities]
+    lon, lat = np.asarray(S["lon"]), np.asarray(S["lat"])
+    vlon, vlat, g = road_graph(load_cities()[0].source_region)
+    _, comp = connected_components(g, directed=False)
+    main_v = np.nonzero(comp == np.bincount(comp).argmax())[0]
+    d_snap, j = cKDTree(_xy(vlon[main_v], vlat[main_v])).query(_xy(lon, lat))
+    v_snap = main_v[j]
+    reachable = d_snap <= SNAP_MAX_M
+    last_mile = d_snap / (LAST_MILE_KMH / 3.6)
+    out_dir = Paths.web_data() / "reach"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    for f in out_dir.glob("*.bin"):
+        f.unlink()
+    index = []
+    for k, i in enumerate(towns):
+        tsec = dijkstra(g, directed=False, indices=int(v_snap[i]), limit=MAX_MIN * 60)
+        ts = tsec[v_snap] + last_mile + last_mile[i]
+        ts[i] = 0.0
+        tenths = np.where(reachable & np.isfinite(ts) & (ts <= MAX_MIN * 60), np.round(ts / 6), UNREACHED)
+        tenths.astype("<u2").tofile(out_dir / f"{S['code'][i]}.bin")
+        index.append({"id": S["code"][i], "settlement": i, "name": S["name"][i], "pop2001": int(p01[i])})
+        if (k + 1) % 20 == 0 or k + 1 == len(towns):
+            log.info("town drive times: %d/%d (%.0fs)", k + 1, len(towns), time.time() - t0)
+    (Paths.web_data() / "towns.json").write_text(json.dumps(
+        {"schema_version": 1, "min_pop_2001": min_pop, "settlements": n, "max_min": MAX_MIN, "towns": index},
+        ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
+    log.info("web/data/towns.json: %d towns of %d+ (2001), reach files %.1f MB, %.0fs", len(index), min_pop,
+             sum(f.stat().st_size for f in out_dir.glob("*.bin")) / 1e6, time.time() - t0)

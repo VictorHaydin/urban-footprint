@@ -35,7 +35,7 @@
 groups:
   - {id: million, label: "Largest cities", label_uk: "Міста-мільйонники"}
   - {id: regional, label: "Oblast centres", label_uk: "Обласні центри"}
-  - {id: other,   label: "Other cities",   label_uk: "Інші міста"}
+  - {id: other,   label: "Other cities of 50k+", label_uk: "Інші міста з населенням 50+ тис."}
 
 # Region modelling page: centres selected by default (Kyiv, the oblast centres and Simferopol, the capital of
 # the Autonomous Republic of Crimea); the user can add or remove any city there.

@@ -102,7 +102,8 @@ def main(argv: list[str] | None = None) -> None:
     sub = ap.add_subparsers(dest="cmd", required=True)
     sub.add_parser("list", help="list configured cities and their processing state")
     sub.add_parser("demography", help="population per city and territory mode from data/demography (all years)")
-    sub.add_parser("agglomeration", help="drive times from every city to all settlements (Агломерації page)")
+    ap_agg = sub.add_parser("agglomeration", help="drive times from every city (and town of 20k+) to all settlements")
+    ap_agg.add_argument("--towns-only", action="store_true", help="only the towns of 20k+ (region modelling centres)")
     bp = sub.add_parser("budgets", help="annual budgets of every hromada from OpenBudget (data/budgets)")
     bp.add_argument("--years", type=int, nargs="+", default=[2021, 2025])
     bp.add_argument("--workers", type=int, default=2, help="parallel API requests (more make the API answer 503)")
@@ -145,8 +146,8 @@ def main(argv: list[str] | None = None) -> None:
         return
 
     if args.cmd == "agglomeration":
-        from urbanfp.agglomeration import build_agglomeration
-        build_agglomeration()
+        from urbanfp.agglomeration import build_agglomeration, build_town_reach
+        build_town_reach() if args.towns_only else build_agglomeration()
         return
 
     if args.cmd == "budgets":
