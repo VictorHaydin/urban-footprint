@@ -1554,7 +1554,46 @@ function assignAggColors(active, owner, T) {
   }
 }
 
-async function renderPopulationView() {
+/**
+ * Agglomeration / region modelling maps: a "loading data" notice over the map while a render waits for data
+ * (agglomeration.json is several MB, towns' drive times load on demand). Shown only after a short delay, so the
+ * quick re-renders (slider, clicks) don't flash it. Kept until the map has drawn the new data (MapLibre parses
+ * the GeoJSON of ~28k settlements in a worker, a few seconds after the render).
+ */
+const mapIdle = (map) => (map && !map.loaded() ? new Promise((res) => {
+  const done = () => { clearTimeout(timer); res(); };
+  const timer = setTimeout(() => { map.off('idle', done); res(); }, 20000);
+  map.once('idle', done);
+}) : Promise.resolve());
+const mapLoadingCount = new Map();
+async function withMapLoading(mapSel, getMap, fn) {
+  const wrap = $(mapSel)?.parentElement;
+  if (!wrap) return fn();
+  let box = wrap.querySelector('.map-loading');
+  if (!box) {
+    box = el('div', { class: 'map-loading', role: 'status', 'aria-live': 'polite' },
+      el('span', { class: 'spinner', 'aria-hidden': 'true' }), el('span', { 'data-i18n': 'map.loadingData' }, t('map.loadingData')));
+    wrap.append(box);
+  }
+  mapLoadingCount.set(mapSel, (mapLoadingCount.get(mapSel) || 0) + 1);
+  const timer = setTimeout(() => {
+    box.querySelector('[data-i18n]').textContent = t('map.loadingData');
+    box.classList.add('on');
+  }, 250);
+  try {
+    const out = await fn();
+    await mapIdle(getMap());
+    return out;
+  } finally {
+    clearTimeout(timer);
+    const n = mapLoadingCount.get(mapSel) - 1;
+    mapLoadingCount.set(mapSel, n);
+    if (!n) box.classList.remove('on');
+  }
+}
+const renderPopulationView = () => withMapLoading('#popMap', () => popView.map, renderPopulationViewNow);
+
+async function renderPopulationViewNow() {
   try { await loadAgglomeration(); } catch {
     $('#popChart').innerHTML = '';
     $('#popChart').append(el('p', { class: 'hint' }, t('pop.noFile')));
@@ -2238,7 +2277,9 @@ function selectModelCentre(id) {
   renderModelingView();
 }
 
-async function renderModelingView() {
+const renderModelingView = () => withMapLoading('#modelMap', () => modelView.map, renderModelingViewNow);
+
+async function renderModelingViewNow() {
   try { await loadAgglomeration(); } catch {
     $('#mChart').innerHTML = '';
     $('#mChart').append(el('p', { class: 'hint' }, t('pop.noFile')));
