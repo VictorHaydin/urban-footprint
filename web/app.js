@@ -269,6 +269,22 @@ function writeHash() {
   }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
+  trackView();
+}
+
+/**
+ * Usage analytics (Google Tag Manager, index.html): the site is one page whose screens are views in the URL hash,
+ * so every switch of screen (and of the method page) is sent to the dataLayer as a `screen_view_change` event
+ * with a virtual page path, e.g. /modeling or /about/usage. Slider moves and other hash updates are not sent.
+ */
+let trackedView = null;
+function trackView() {
+  const view = state.view === 'about' && state.aboutPage ? `about/${state.aboutPage}` : state.view;
+  if (!view || view === trackedView) return;
+  trackedView = view;
+  (window.dataLayer = window.dataLayer || []).push({
+    event: 'screen_view_change', screen_name: view, page_path: `/${view}`, page_title: `${document.title} — ${view}`,
+  });
 }
 
 // ------------------------------------------------------------------ tooltip
