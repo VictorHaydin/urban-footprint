@@ -11,6 +11,8 @@ data/logs/
 data/preview/
 data/budgets/cache/
 data/budgets/budget_codes.csv
+# Raw traffic reports: licensed data, never committed (deleted after `python -m urbanfp traffic`)
+data/traffic/
 
 .claude/
 

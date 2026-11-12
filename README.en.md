@@ -54,6 +54,8 @@ Documentation (in English):
 * **Region modelling:** catchment areas of chosen centres (by default Kyiv, the oblast centres and Simferopol;
   the list can be changed, also by clicking on the map). Every settlement joins the centre it reaches fastest, with no absorption; the region
   core (within the chosen drive time) is bright, the rest of the region pale.
+* **Traffic:** hourly profile of congestion, speed and time per 10 km (weekdays and weekends), period averages and a
+  map of the grid cells of traffic reports, for one city or two side by side.
 * **Languages:** Ukrainian (default) and English, remembered in a cookie.
 * **Mobile:** tiled rasters and vector tiles. Kyiv needs ~14 MB of GPU memory at city scale.
 * Shareable links: city, second city, view and selected cities are kept in the URL.
@@ -90,6 +92,7 @@ Population (separate command, after the cities are processed): State Statistics 
 ```bash
 python -m urbanfp demography           # writes web/data/demography.json for all cities and years
 python -m urbanfp agglomeration        # drive times from the cities to all settlements ("Agglomerations" page)
+python -m urbanfp traffic              # traffic reports from data/traffic/<city>/ -> web/data/traffic.json ("Traffic" page)
 ```
 
 Each stage can also be run on its own: `download`, `extract`, `classify`, `overlay`, `stats`, `export`.

@@ -365,6 +365,38 @@ details.panel > summary h3 { font-size: 14px; }
 .chart-toggle[hidden] { display: none; }
 .year-controls { display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center; margin-bottom: 6px; }
 
+/* ---- traffic view ---- */
+.traffic-sidebar .city-select { margin-bottom: 6px; }
+.traffic-sidebar .city-select select { flex: 1; min-width: 0; }
+.traffic-metric { flex-wrap: wrap; margin: 8px 0 10px; }
+.traffic-metric button { padding: 4px 8px; font-size: 13px; }
+.traffic-chart-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+.line-chart { width: 100%; height: auto; display: block; }
+.line-chart .grid { stroke: var(--border); stroke-width: 1; }
+.line-chart .tick { font-size: 10px; fill: var(--muted); font-variant-numeric: tabular-nums; }
+.line-chart .cursor { stroke: var(--muted); stroke-width: 1; stroke-dasharray: 2 2; }
+.traffic-chart-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--muted); margin: 2px 0 6px; }
+.traffic-chart-legend span { display: inline-flex; align-items: center; gap: 5px; }
+.traffic-chart-legend i { display: inline-block; width: 16px; height: 3px; border-radius: 1px; }
+.traffic-chart-legend i.solid { background: var(--text); }
+.traffic-chart-legend i.dashed { background: repeating-linear-gradient(90deg, var(--text) 0 5px, transparent 5px 8px); }
+.traffic-period { color: var(--muted); margin: 0 0 12px; }
+.traffic-legend { margin-top: 12px; }
+.traffic-style { margin: 0 0 6px; }
+.traffic-style button { padding: 3px 10px; font-size: 13px; }
+.traffic-legend .ramp { height: 10px; border-radius: 3px; margin: 4px 0 2px; }
+.traffic-legend .ramp-ticks { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin: 0 14px; }
+.traffic-legend .ramp-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
+.traffic-sidebar .compare-note { margin: 14px 0 0; }
+.tip-key { display: inline-block; width: 10px; height: 3px; margin-right: 5px; vertical-align: middle; }
+#view-traffic.dual .map-pane + .map-pane { border-left: 2px solid var(--text); }
+@media (max-width: 760px) {
+  .view.active#view-traffic { flex-direction: column-reverse; }
+  .traffic-sidebar { width: 100%; border-right: none; border-top: 1px solid var(--border); max-height: 50vh; }
+  #view-traffic.dual .map-panes { flex-direction: column; }
+  #view-traffic.dual .map-pane + .map-pane { border-left: none; border-top: 2px solid var(--text); }
+}
+
 /* ---- population view (cities with their surroundings by drive time) ---- */
 .pop-sidebar { width: 460px; }
 .pop-title { font-size: 18px; margin: 2px 0 8px; }

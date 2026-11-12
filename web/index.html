@@ -46,6 +46,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="subtab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
       <button class="subtab" data-view="compare" role="tab" data-i18n="tab.compare">Структура територій</button>
       <button class="subtab" data-view="finance" role="tab" data-i18n="tab.finance">Бюджети й населення</button>
+      <button class="subtab" data-view="traffic" role="tab" data-i18n="tab.traffic">Затори</button>
     </div>
     <div class="subtab-group" data-section="regions" role="tablist" hidden>
       <button class="subtab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
@@ -124,6 +125,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <summary data-i18n="cmp.table">Таблиця даних</summary>
           <div id="compareTable" class="table-wrap"></div>
         </details>
+      </div>
+    </section>
+
+    <!-- TRAFFIC VIEW: hourly profile, averages and the grid cells of the traffic reports -->
+    <section id="view-traffic" class="view">
+      <aside class="sidebar traffic-sidebar">
+        <h2 class="pop-title" data-i18n="tab.traffic">Затори</h2>
+        <label class="city-select"><span data-i18n="city">Місто</span>
+          <select id="tCity"></select>
+        </label>
+        <label class="city-select second"><span data-i18n="city2">Порівняти з</span>
+          <select id="tCity2"></select>
+        </label>
+        <div class="unit-toggle traffic-metric" id="tMetric" role="group"></div>
+        <div id="tChart" class="traffic-chart"></div>
+        <div class="small traffic-period" id="tPeriod"></div>
+        <div id="tSummary"></div>
+        <div id="tLegend" class="traffic-legend"></div>
+        <label class="pop-slider admin-slider"><span data-i18n="map.opacity">Прозорість</span>
+          <input type="range" id="tOpacity" min="0.2" max="1" step="0.05" value="0.75" data-i18n-aria="map.opacity" aria-label="Прозорість">
+        </label>
+        <p class="compare-note" id="tNote"></p>
+      </aside>
+      <div class="map-wrap">
+        <div class="map-panes" id="tMapPanes">
+          <div class="map-pane" id="tPane0"><div class="map" id="tMap0"></div><div class="pane-label" id="tLabel0" hidden></div></div>
+          <div class="map-pane" id="tPane1" hidden><div class="map" id="tMap1"></div><div class="pane-label" id="tLabel1" hidden></div></div>
+        </div>
       </div>
     </section>
 

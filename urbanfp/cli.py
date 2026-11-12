@@ -109,6 +109,9 @@ def main(argv: list[str] | None = None) -> None:
     bp.add_argument("--years", type=int, nargs="+", default=[2021, 2025])
     bp.add_argument("--workers", type=int, default=2, help="parallel API requests (more make the API answer 503)")
     bp.add_argument("--export-only", action="store_true", help="only write web/data/budgets.json from the CSV")
+    tp = sub.add_parser("traffic", help="road traffic of the cities from the reports in data/traffic/<city id>/ "
+                                        "(the reports are deleted after processing)")
+    tp.add_argument("--keep", action="store_true", help="keep the raw report CSVs")
     pt = sub.add_parser("publish-tiles", help="copy map tiles into a working copy of the tiles repository")
     pt.add_argument("repo", help="path of the working copy (e.g. ../urban-footprint-data)")
     pt.add_argument("cities", nargs="*", help="city ids (default: all)")
@@ -163,6 +166,11 @@ def main(argv: list[str] | None = None) -> None:
             export_budgets()
         else:
             build_budgets(tuple(args.years), args.workers)
+        return
+
+    if args.cmd == "traffic":
+        from urbanfp.traffic import build_traffic
+        build_traffic(keep=args.keep)
         return
 
     if args.cmd == "publish-tiles":

@@ -43,6 +43,11 @@ const state = {
   modelThreshold: 60,     // region modelling: drive time of the region core (min)
   regionCentres: null,    // region modelling: chosen centre ids (null = index.default_region_centres)
   modelSelected: null,    // region modelling: highlighted region
+  trafficCity: null,      // traffic screen: main city (null = the map screen's city if it has data, else the first)
+  trafficCity2: null,     // traffic screen: second city (null = one map)
+  trafficMetric: 'cong',  // traffic screen: cong | speed | ff | tt
+  trafficOpacity: 0.75,   // traffic screen: opacity of the grid cells
+  trafficStyle: 'heat',   // traffic screen map: heat (smoothed image of the cells) | cells
 };
 const TERRITORIES = ['city', 'hromada', 'greater'];
 
@@ -238,6 +243,7 @@ function readHash() {
     aboutPage: p.get('p'),
     regionCentres: p.get('rc') != null ? p.get('rc').split(',').filter(Boolean) : null,
     cities: p.get('cities') ? p.get('cities').split(',') : null,
+    trafficCity: p.get('tc'), trafficCity2: p.get('tc2'), trafficMetric: p.get('m'),
   };
 }
 function writeHash() {
@@ -266,6 +272,11 @@ function writeHash() {
       const allTowns = agg && towns.every((x) => has.has(x.id));
       p.set('rc', allCities && allTowns ? 'all' : allCities && has.size === cities.length ? 'cities' : state.regionCentres.join(','));
     }
+  }
+  if (state.view === 'traffic') {
+    if (state.trafficCity) p.set('tc', state.trafficCity);
+    if (state.trafficCity2) p.set('tc2', state.trafficCity2);
+    if (state.trafficMetric !== 'cong') p.set('m', state.trafficMetric);
   }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
@@ -2569,9 +2580,483 @@ function bundleSlice(url, [offset, length]) {
   return key;
 }
 
+// ------------------------------------------------------------------ traffic (Міста → Затори)
+/**
+ * Road traffic of the cities that have a traffic report (web/data/traffic.json, python -m urbanfp traffic):
+ * the average hourly profile of weekdays and weekends as a chart, period averages, and a map of the report's
+ * grid cells (web/data/<city>/traffic_tiles.json) coloured by the chosen metric; one city or two side by side.
+ */
+let traffic = null;
+async function loadTraffic() {
+  if (!traffic) {
+    try { traffic = await getJSON(`${DATA}/traffic.json`); } catch { traffic = { cities: {} }; }
+  }
+  return traffic;
+}
+const trafficOf = (id) => traffic?.cities?.[id] || null;
+
+// metric: index in a tile cell ([lat_min, lat_max, lon_min, lon_max, cong, speed, ff, tt]) and colour ramp
+const TRAFFIC_METRICS = [
+  { id: 'cong', i: 4, ramp: [[0, '#1a9850'], [20, '#a6d96a'], [40, '#fee08b'], [60, '#fdae61'], [80, '#f46d43'], [100, '#a50026']] },
+  { id: 'speed', i: 5, ramp: [[20, '#d73027'], [40, '#fdae61'], [60, '#a6d96a'], [80, '#1a9850']] },
+  { id: 'ff', i: 6, ramp: [[20, '#d73027'], [40, '#fdae61'], [60, '#a6d96a'], [80, '#1a9850']] },
+  { id: 'tt', i: 7, ramp: [[10, '#1a9850'], [20, '#a6d96a'], [30, '#fee08b'], [45, '#fdae61'], [60, '#f46d43'], [90, '#a50026']] },
+];
+const trafficMetric = (id = state.trafficMetric) => TRAFFIC_METRICS.find((m) => m.id === id) || TRAFFIC_METRICS[0];
+const TRAFFIC_DAYS = [['weekday', '#c2410c'], ['weekend', '#2563eb']];
+const fmtTraffic = (m, v) => (v == null ? '—'
+  : m === 'cong' ? `${num(v, 0)}%` : m === 'tt' ? `${num(v, Number.isInteger(v) ? 0 : 1)} ${t('set.min')}` : `${num(v, 0)} ${t('units.kmh')}`);
+const fmtHour = (h) => `${String(h).padStart(2, '0')}:00`;
+function fmtPeriod(p) {
+  if (!p) return '';
+  const [a, b] = p.map((d) => new Date(`${d}T12:00:00`));
+  const f = new Intl.DateTimeFormat(locale(), { day: 'numeric', month: 'long', year: 'numeric' });
+  return f.formatRange ? f.formatRange(a, b) : `${f.format(a)} – ${f.format(b)}`;
+}
+
+const trafficView = { panes: [null, null], tiles: {}, syncing: false, inited: false };
+const trafficIds = () => trafficCityList().map((c) => c.id);
+const trafficCityList = () => state.index.cities.filter((c) => trafficOf(c.id));
+const trafficDual = () => !!state.trafficCity2;
+
+function fillTrafficSelects() {
+  const options = (skip) => citiesByGroup(trafficCityList()).flatMap(({ group, cities }) => {
+    const opts = cities.filter((c) => c.id !== skip).map((c) => el('option', { value: c.id }, `${cityName(c)} (${cityOtherName(c)})`));
+    if (!opts.length) return [];
+    return label(group) ? [el('optgroup', { label: label(group) }, opts)] : opts;
+  });
+  const sel = $('#tCity');
+  sel.innerHTML = '';
+  sel.append(...options(null));
+  sel.value = state.trafficCity || '';
+  const sel2 = $('#tCity2');
+  sel2.innerHTML = '';
+  sel2.append(el('option', { value: '' }, t('city2.none')), ...options(state.trafficCity));
+  sel2.value = state.trafficCity2 || '';
+  sel2.disabled = trafficIds().length < 2;
+}
+
+function initTrafficView() {
+  if (trafficView.inited) return;
+  trafficView.inited = true;
+  try { if (['heat', 'cells'].includes(localStorage.getItem('trafficStyle'))) state.trafficStyle = localStorage.getItem('trafficStyle'); } catch { /* storage unavailable */ }
+  $('#tCity').addEventListener('change', (e) => {
+    state.trafficCity = e.target.value;
+    if (state.trafficCity2 === state.trafficCity) state.trafficCity2 = null;
+    renderTrafficView({ fit: true });
+  });
+  $('#tCity2').addEventListener('change', (e) => { state.trafficCity2 = e.target.value || null; renderTrafficView({ fit: true }); });
+  const op = $('#tOpacity');
+  op.value = state.trafficOpacity;
+  op.addEventListener('input', () => {
+    state.trafficOpacity = +op.value;
+    for (const p of trafficView.panes) if (p) applyTrafficStyle(p);
+  });
+}
+
+async function renderTrafficView({ fit = false } = {}) {
+  initTrafficView();
+  await loadTraffic();
+  const ids = trafficIds();
+  const box = $('#tChart');
+  if (!ids.length) {
+    box.innerHTML = '';
+    box.append(el('p', { class: 'hint' }, t('traffic.noData')));
+    return;
+  }
+  if (!ids.includes(state.trafficCity)) {
+    state.trafficCity = ids.includes(state.city) ? state.city : ids[0];
+    fit = true;
+  }
+  if (state.trafficCity2 && (!ids.includes(state.trafficCity2) || state.trafficCity2 === state.trafficCity)) state.trafficCity2 = null;
+  fillTrafficSelects();
+  writeHash();
+  const list = [state.trafficCity, state.trafficCity2].filter(Boolean);
+  const names = list.map((id) => cityName(cityById(id)));
+
+  // metric switch (chart, summary highlight and map colours)
+  const mt = $('#tMetric');
+  mt.innerHTML = '';
+  for (const m of TRAFFIC_METRICS) {
+    mt.append(el('button', {
+      type: 'button', class: state.trafficMetric === m.id ? 'active' : '', 'aria-pressed': state.trafficMetric === m.id,
+      title: t(`traffic.${m.id}.hint`),
+      onclick: () => { state.trafficMetric = m.id; renderTrafficView(); },
+    }, t(`traffic.${m.id}`)));
+  }
+  renderTrafficChart(list, names);
+  renderTrafficSummary(list, names);
+  const notes = list.map((id, i) => {
+    const d = trafficOf(id);
+    const tiles = d.tiles?.period && d.tiles.period.join() !== d.period.join() ? ` ${t('traffic.tilesPeriod', { period: fmtPeriod(d.tiles.period) })}` : '';
+    return `${list.length > 1 ? names[i] + ': ' : ''}${t('traffic.period', { period: fmtPeriod(d.period), hours: fmtInt(d.hours) })}${tiles}`;
+  });
+  const note = $('#tPeriod');
+  note.innerHTML = '';
+  for (const n of notes) note.append(el('div', {}, n));
+  renderTrafficLegend();
+  $('#tNote').textContent = t('traffic.note');
+  await withMapLoading('#tMapPanes', () => trafficView.panes[0]?.map, () => updateTrafficMaps(list, names, fit));
+}
+
+/** Average hourly profile of the chosen metric: weekdays and weekends, the second city dashed. */
+function renderTrafficChart(list, names) {
+  const box = $('#tChart');
+  box.innerHTML = '';
+  const m = state.trafficMetric;
+  const series = [];
+  list.forEach((id, ci) => {
+    for (const [day, color] of TRAFFIC_DAYS) {
+      series.push({ ci, day, color, name: names[ci], values: trafficOf(id).profile[day][m] });
+    }
+  });
+  const W = 360, H = 190, L = 36, R = 8, T = 10, B = 24;
+  const vals = series.flatMap((s) => s.values).filter((v) => v != null);
+  const step = niceStep(Math.max(...vals, m === 'cong' ? 10 : 1) / 4);
+  const yMax = Math.ceil(Math.max(...vals, 0) / step) * step || step;
+  const x = (h) => L + ((W - L - R) * h) / 23;
+  const y = (v) => T + (H - T - B) * (1 - v / yMax);
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  const s = (tag, attrs, text) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text != null) e.textContent = text;
+    svg.append(e);
+    return e;
+  };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('class', 'line-chart');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', `${t(`traffic.${m}`)}: ${t('traffic.chartTitle')}`);
+  for (let v = 0; v <= yMax + 1e-9; v += step) {
+    s('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' });
+    s('text', { x: L - 5, y: y(v) + 3.5, 'text-anchor': 'end', class: 'tick' }, m === 'cong' ? `${num(v, 0)}%` : num(v, 0));
+  }
+  for (let h = 0; h <= 21; h += 3) s('text', { x: x(h), y: H - 8, 'text-anchor': 'middle', class: 'tick' }, fmtHour(h));
+  for (const sr of series) {
+    const d = sr.values.map((v, h) => (v == null ? null : `${x(h).toFixed(1)},${y(v).toFixed(1)}`)).filter(Boolean).join(' ');
+    s('polyline', { points: d, fill: 'none', stroke: sr.color, 'stroke-width': 2, 'stroke-linejoin': 'round',
+      'stroke-dasharray': sr.ci ? '5 3' : 'none' });
+  }
+  const cursor = s('line', { x1: 0, x2: 0, y1: T, y2: H - B, class: 'cursor', visibility: 'hidden' });
+  const hit = s('rect', { x: L, y: T, width: W - L - R, height: H - T - B, fill: 'transparent' });
+  hit.addEventListener('mousemove', (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * W;
+    const h = Math.max(0, Math.min(23, Math.round(((px - L) / (W - L - R)) * 23)));
+    cursor.setAttribute('x1', x(h));
+    cursor.setAttribute('x2', x(h));
+    cursor.setAttribute('visibility', 'visible');
+    showTip(ev, `<b>${fmtHour(h)}–${fmtHour((h + 1) % 24)}</b> · ${t(`traffic.${m}`)}` + series.map((sr) =>
+      `<br><span class="tip-key" style="background:${sr.color}"></span>${list.length > 1 ? sr.name + ', ' : ''}${t(`traffic.${sr.day}`)}: ${fmtTraffic(m, sr.values[h])}`).join(''));
+  });
+  hit.addEventListener('mouseleave', () => { cursor.setAttribute('visibility', 'hidden'); hideTip(); });
+  const unit = m === 'cong' ? '' : m === 'tt' ? `, ${t('set.min')}` : `, ${t('units.kmh')}`;
+  box.append(el('div', { class: 'traffic-chart-title' }, `${t(`traffic.${m}`)}${unit} — ${t('traffic.chartTitle')}`), svg);
+  const legend = el('div', { class: 'traffic-chart-legend' },
+    ...TRAFFIC_DAYS.map(([day, color]) => el('span', {}, el('i', { style: `background:${color}` }), t(`traffic.${day}`))));
+  if (list.length > 1) {
+    legend.append(el('span', {}, el('i', { class: 'solid' }), names[0]), el('span', {}, el('i', { class: 'dashed' }), names[1]));
+  }
+  box.append(legend);
+}
+
+/** A "nice" axis step (1, 2, 2.5 or 5 × 10^n) not below `raw`. */
+function niceStep(raw) {
+  const p = 10 ** Math.floor(Math.log10(Math.max(raw, 1e-9)));
+  return [1, 2, 2.5, 5, 10].map((k) => k * p).find((v) => v >= raw);
+}
+
+/** Period averages as side rows (both cities side by side). */
+function renderTrafficSummary(list, names) {
+  const box = $('#tSummary');
+  box.innerHTML = '';
+  const data = list.map(trafficOf);
+  const dual = list.length > 1;
+  const COLOR = '#4a5a6a';
+  const row = (name, m, get, extra = {}) => {
+    const values = data.map(get);
+    return { name, values, max: Math.max(...values.filter((v) => v != null), 1), text: (v) => fmtTraffic(m, v),
+      total: m === state.trafficMetric && !extra.sub, ...extra };
+  };
+  const rows = [
+    row(t('traffic.congAll'), 'cong', (d) => d.mean.all.cong),
+    row(t('traffic.weekdays'), 'cong', (d) => d.mean.weekday.cong, { sub: true }),
+    row(t('traffic.weekends'), 'cong', (d) => d.mean.weekend.cong, { sub: true }),
+    row(t('traffic.peak'), 'cong', (d) => d.peak.cong, { sub: true, sec: (v, i) => fmtHour(data[i].peak.hour) }),
+    row(t('traffic.speedAll'), 'speed', (d) => d.mean.all.speed, { sec: (v, i) => `${t('traffic.inPeak')} ${fmtTraffic('speed', data[i].peak.speed)}` }),
+    row(t('traffic.ffAll'), 'ff', (d) => d.mean.all.ff),
+    row(t('traffic.ttAll'), 'tt', (d) => d.mean.all.tt, { sec: (v, i) => `${t('traffic.inPeak')} ${fmtTraffic('tt', data[i].profile.weekday.tt[data[i].peak.hour])}` }),
+  ];
+  for (const r of rows) r.color = r.total ? COLOR : '#a9b4bf';
+  box.append(el('div', { class: 'panel' }, el('div', { class: 'side-head' }, el('h3', {}, t('traffic.summary'))),
+    sideRows(rows, dual, names)));
+}
+
+/** Map legend: the colour scale of the chosen metric. */
+function renderTrafficLegend() {
+  const m = trafficMetric();
+  const box = $('#tLegend');
+  box.innerHTML = '';
+  const [lo, hi] = [m.ramp[0][0], m.ramp[m.ramp.length - 1][0]];
+  const grad = m.ramp.map(([v, c]) => `${c} ${(100 * (v - lo)) / (hi - lo)}%`).join(', ');
+  const style = el('div', { class: 'unit-toggle traffic-style', role: 'group' }, ['heat', 'cells'].map((s) => el('button', {
+    type: 'button', class: state.trafficStyle === s ? 'active' : '', 'aria-pressed': state.trafficStyle === s,
+    onclick: () => {
+      state.trafficStyle = s;
+      try { localStorage.setItem('trafficStyle', s); } catch { /* storage unavailable */ }
+      renderTrafficView();
+    },
+  }, t(`traffic.style.${s}`))));
+  box.append(
+    style,
+    el('div', { class: 'small' }, t('traffic.mapLegend', { metric: t(`traffic.${m.id}`).toLowerCase() })),
+    el('div', { class: 'ramp', style: `background:linear-gradient(to right, ${grad})` }),
+    el('div', { class: 'ramp-ticks' }, ...m.ramp.map(([v]) => el('span', { style: `left:${(100 * (v - lo)) / (hi - lo)}%` }, fmtTraffic(m.id, v)))),
+  );
+}
+
+/** Colour of value `v` on the ramp of metric `m` as [r, g, b] (linear between the ramp stops). */
+function rampRgb(m, v) {
+  const hex = (h) => [1, 3, 5].map((k) => parseInt(h.slice(k, k + 2), 16));
+  const r = m.ramp;
+  if (v <= r[0][0]) return hex(r[0][1]);
+  for (let k = 1; k < r.length; k++) {
+    if (v <= r[k][0]) {
+      const f = (v - r[k - 1][0]) / (r[k][0] - r[k - 1][0]);
+      const [a, b] = [hex(r[k - 1][1]), hex(r[k][1])];
+      return a.map((x, j) => Math.round(x + (b[j] - x) * f));
+    }
+  }
+  return hex(r[r.length - 1][1]);
+}
+
+/**
+ * Smooth "heat map" of the grid cells: every cell is one pixel of a small image coloured by its value, which is
+ * scaled up with smoothing and blurred (a wide soft glow under a sharper core), then placed on the map as an image
+ * source. Unlike MapLibre's heatmap layer (point density) the colours stay the cells' values.
+ */
+function trafficImage(tiles, metric) {
+  if (tiles.images[metric.id]) return tiles.images[metric.id];
+  const cells = tiles.cells;
+  const median = (a) => a.sort((x, y) => x - y)[a.length >> 1];
+  const dlat = median(cells.map((c) => c[1] - c[0]));
+  const dlon = median(cells.map((c) => c[3] - c[2]));
+  const PAD = 4;  // cells of margin, so the blur is not clipped
+  const lon0 = Math.min(...cells.map((c) => c[2])) - PAD * dlon;
+  const top = Math.max(...cells.map((c) => c[1])) + PAD * dlat;
+  const w = Math.round((Math.max(...cells.map((c) => c[3])) - lon0) / dlon) + PAD;
+  const h = Math.round((top - Math.min(...cells.map((c) => c[0]))) / dlat) + PAD;
+  const small = document.createElement('canvas');
+  small.width = w;
+  small.height = h;
+  const sctx = small.getContext('2d');
+  const img = sctx.createImageData(w, h);
+  for (const c of cells) {
+    const v = c[metric.i];
+    if (v == null) continue;
+    const x = Math.round((c[2] - lon0) / dlon), y = Math.round((top - c[1]) / dlat);
+    if (x < 0 || y < 0 || x >= w || y >= h) continue;
+    const [r, g, b] = rampRgb(metric, v);
+    img.data.set([r, g, b, 255], 4 * (y * w + x));
+  }
+  sctx.putImageData(img, 0, 0);
+  const S = 8;  // output pixels per cell
+  const big = document.createElement('canvas');
+  big.width = w * S;
+  big.height = h * S;
+  const ctx = big.getContext('2d');
+  ctx.imageSmoothingEnabled = true;
+  ctx.imageSmoothingQuality = 'high';
+  ctx.filter = `blur(${S * 0.55}px)`;
+  ctx.drawImage(small, 0, 0, w * S, h * S);
+  ctx.drawImage(small, 0, 0, w * S, h * S);
+  ctx.filter = `blur(${S * 0.2}px)`;
+  ctx.globalAlpha = 0.9;
+  ctx.drawImage(small, 0, 0, w * S, h * S);
+  const lon1 = lon0 + w * dlon, bottom = top - h * dlat;
+  tiles.images[metric.id] = {
+    url: big.toDataURL('image/png'),
+    coordinates: [[lon0, top], [lon1, top], [lon1, bottom], [lon0, bottom]],
+  };
+  return tiles.images[metric.id];
+}
+
+/** Heat map or cells: the cells layer stays for hovering (transparent in the heat map). */
+function applyTrafficStyle(p) {
+  const heat = state.trafficStyle === 'heat';
+  const { map } = p;
+  if (map.getLayer('tr-heat')) {
+    map.setLayoutProperty('tr-heat', 'visibility', heat ? 'visible' : 'none');
+    map.setPaintProperty('tr-heat', 'raster-opacity', state.trafficOpacity);
+  }
+  if (map.getLayer('tr-cells')) {
+    map.setPaintProperty('tr-cells', 'fill-color', trafficFillColor());
+    map.setPaintProperty('tr-cells', 'fill-outline-color', heat ? 'rgba(0,0,0,0)' : trafficFillColor());
+    map.setPaintProperty('tr-cells', 'fill-opacity', heat ? 0 : state.trafficOpacity);
+  }
+}
+
+/** (Re)draw the heat map image of pane `p` for the chosen metric. */
+function updateTrafficHeat(p) {
+  const tiles = p.tiles;
+  const { map } = p;
+  if (!tiles?.cells?.length) {
+    if (map.getLayer('tr-heat')) map.setLayoutProperty('tr-heat', 'visibility', 'none');
+    return;
+  }
+  if (state.trafficStyle !== 'heat' && !map.getSource('tr-heat')) return;  // drawn when first needed
+  const { url, coordinates } = trafficImage(tiles, trafficMetric());
+  const src = map.getSource('tr-heat');
+  if (src) src.updateImage({ url, coordinates });
+  else {
+    map.addSource('tr-heat', { type: 'image', url, coordinates });
+    map.addLayer({ id: 'tr-heat', type: 'raster', source: 'tr-heat',
+      paint: { 'raster-opacity': state.trafficOpacity, 'raster-resampling': 'linear', 'raster-fade-duration': 0 } }, 'tr-cells');
+  }
+}
+
+function trafficFillColor() {
+  const m = trafficMetric();
+  return ['case', ['==', ['get', m.id], null], '#9aa0a6', ['interpolate', ['linear'], ['get', m.id], ...m.ramp.flat()]];
+}
+
+function createTrafficPane(idx) {
+  const map = new maplibregl.Map({
+    container: `tMap${idx}`, style: BASE_STYLE(), center: [24.03, 49.84], zoom: 11,
+    attributionControl: { compact: true }, locale: { ...MAP_LOCALE[getLang()] },
+    pixelRatio: Math.min(window.devicePixelRatio || 1, 2), dragRotate: false, pitchWithRotate: false,
+  });
+  map.touchZoomRotate.disableRotation();
+  map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  map.addControl(new maplibregl.ScaleControl({ unit: 'metric' }), 'bottom-left');
+  const pane = { idx, map, cityId: null, hover: null };
+  pane.ready = new Promise((res) => map.once('load', () => {
+    const empty = { type: 'FeatureCollection', features: [] };
+    map.addSource('tr-cells', { type: 'geojson', data: empty, promoteId: 'i' });
+    map.addSource('tr-boundary', { type: 'geojson', data: empty });
+    // cells: drawn in the "cells" style (the outline keeps them visible below a pixel, two cities at a common
+    // scale), transparent but hoverable over the heat map
+    map.addLayer({ id: 'tr-cells', type: 'fill', source: 'tr-cells',
+      paint: { 'fill-color': trafficFillColor(), 'fill-outline-color': trafficFillColor(), 'fill-opacity': state.trafficOpacity } });
+    map.addLayer({ id: 'tr-hover', type: 'line', source: 'tr-cells',
+      paint: { 'line-color': '#111', 'line-width': ['case', ['boolean', ['feature-state', 'hover'], false], 2, 0] } });
+    map.addLayer({ id: 'tr-boundary', type: 'line', source: 'tr-boundary',
+      paint: { 'line-color': '#222', 'line-width': 1.6, 'line-opacity': 0.8 } });
+    res();
+  }));
+  const setHover = (id) => {
+    if (pane.hover != null) map.setFeatureState({ source: 'tr-cells', id: pane.hover }, { hover: false });
+    pane.hover = id;
+    if (id != null) map.setFeatureState({ source: 'tr-cells', id }, { hover: true });
+  };
+  map.on('mousemove', 'tr-cells', (e) => {
+    const f = e.features?.[0];
+    if (!f) return;
+    map.getCanvas().style.cursor = 'crosshair';
+    setHover(f.id);
+    showTip(e.originalEvent, trafficCellTip(pane.cityId, f.properties));
+  });
+  map.on('mouseleave', 'tr-cells', () => { map.getCanvas().style.cursor = ''; setHover(null); hideTip(); });
+  map.on('move', () => syncTrafficScale(pane));
+  trafficView.panes[idx] = pane;
+  return pane;
+}
+
+function trafficCellTip(cityId, p) {
+  const cur = state.trafficMetric;
+  const line = (m) => {
+    const txt = `${t(`traffic.${m}`)}: ${fmtTraffic(m, p[m])}`;
+    return m === cur ? `<b>${txt}</b>` : txt;
+  };
+  const w = Math.round((p.lon2 - p.lon1) * 111320 * cosd((p.lat1 + p.lat2) / 2));
+  const h = Math.round((p.lat2 - p.lat1) * 111320);
+  return `<b>${cityName(cityById(cityId))}</b><br>${['cong', 'speed', 'ff', 'tt'].map(line).join('<br>')}`
+    + `<br><span class="small">${num((p.lat1 + p.lat2) / 2, 4)}, ${num((p.lon1 + p.lon2) / 2, 4)} · ${t('traffic.cell', { w, h })}</span>`;
+}
+
+async function loadTrafficTiles(id) {
+  if (!trafficView.tiles[id]) {
+    trafficView.tiles[id] = getJSON(`${DATA}/${id}/traffic_tiles.json`).then((d) => ({
+      bounds: d.bounds, cells: d.cells, images: {},
+      fc: { type: 'FeatureCollection', features: d.cells.map((c, i) => ({
+        type: 'Feature', id: i,
+        geometry: { type: 'Polygon', coordinates: [[[c[2], c[0]], [c[3], c[0]], [c[3], c[1]], [c[2], c[1]], [c[2], c[0]]]] },
+        properties: { i, cong: c[4], speed: c[5], ff: c[6], tt: c[7], lat1: c[0], lat2: c[1], lon1: c[2], lon2: c[3] },
+      })) },
+    })).catch(() => null);
+  }
+  return trafficView.tiles[id];
+}
+
+async function updateTrafficMaps(list, names, fit) {
+  const dual = list.length > 1;
+  $('#view-traffic').classList.toggle('dual', dual);
+  $('#tPane1').hidden = !dual;
+  if (!trafficView.panes[0]) createTrafficPane(0);
+  if (dual && !trafficView.panes[1]) createTrafficPane(1);
+  if (!dual && trafficView.panes[1]) {
+    trafficView.panes[1].map.remove();
+    trafficView.panes[1] = null;
+  }
+  const active = trafficView.panes.filter(Boolean);
+  for (const p of active) p.map.resize();
+  let changed = false;
+  await Promise.all(active.map(async (p, i) => {
+    await p.ready;
+    const id = list[i];
+    if (p.cityId !== id) {
+      changed = true;
+      p.cityId = id;
+      const [tiles, boundary] = await Promise.all([loadTrafficTiles(id), getJSON(`${DATA}/${id}/boundary.geojson`).catch(() => null)]);
+      if (p.cityId !== id) return;  // superseded while loading
+      p.tiles = tiles;
+      p.bounds = tiles?.bounds || trafficOf(id).tiles?.bounds;
+      p.map.getSource('tr-cells').setData(tiles?.fc || { type: 'FeatureCollection', features: [] });
+      p.map.getSource('tr-boundary').setData(boundary || { type: 'FeatureCollection', features: [] });
+    }
+    updateTrafficHeat(p);
+    applyTrafficStyle(p);
+  }));
+  active.forEach((p, i) => {
+    const lab = $(`#tLabel${i}`);
+    lab.hidden = !dual;
+    lab.textContent = names[i] || '';
+  });
+  if (fit || changed) fitTrafficPanes();
+}
+
+/** Fit each pane to its city's cells at one common ground scale (as fitPanes on the map screen). */
+function fitTrafficPanes() {
+  const cams = trafficView.panes.filter((p) => p?.bounds).map((p) => {
+    const b = p.bounds;
+    const cam = p.map.cameraForBounds([[b[0], b[1]], [b[2], b[3]]], { padding: trafficDual() ? 30 : 24 });
+    if (!cam) return null;
+    const center = maplibregl.LngLat.convert(cam.center);
+    return { p, center, res: cosd(center.lat) / 2 ** cam.zoom };
+  }).filter(Boolean);
+  if (!cams.length) return;
+  const res = Math.max(...cams.map((c) => c.res));
+  trafficView.syncing = true;
+  for (const { p, center } of cams) p.map.jumpTo({ center, zoom: Math.log2(cosd(center.lat) / res) });
+  trafficView.syncing = false;
+}
+
+function syncTrafficScale(src) {
+  if (trafficView.syncing || !trafficDual()) return;
+  const dst = trafficView.panes[1 - src.idx];
+  if (!dst) return;
+  const zoom = equalScaleZoom(src.map.getZoom(), src.map.getCenter().lat, dst.map.getCenter().lat);
+  if (Math.abs(zoom - dst.map.getZoom()) < 1e-6) return;
+  trafficView.syncing = true;
+  dst.map.jumpTo({ zoom });
+  trafficView.syncing = false;
+}
+
 // ------------------------------------------------------------------ views
 /** Two-level menu: top-level sections and the screens (views) in each. */
-const SECTIONS = { cities: ['map', 'compare', 'finance'], regions: ['population', 'modeling'], about: ['about'] };
+const SECTIONS = { cities: ['map', 'compare', 'finance', 'traffic'], regions: ['population', 'modeling'], about: ['about'] };
 const VIEW_SECTION = { finance: 'compare' };  // views drawn into another view's section
 const sectionEl = (view) => `view-${VIEW_SECTION[view] || view}`;
 const sectionOf = (view) => Object.keys(SECTIONS).find((s) => SECTIONS[s].includes(view)) || 'cities';
@@ -2595,6 +3080,7 @@ function switchView(view) {
   if (view === 'about') renderAbout();
   if (view === 'population') renderPopulationView();
   if (view === 'modeling') renderModelingView();
+  if (view === 'traffic') renderTrafficView({ fit: true });
   hideTip();
   writeHash();
 }
@@ -2628,6 +3114,7 @@ function renderAll() {
   if (state.view === 'compare' || state.view === 'finance') renderCompare();
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
+  if (state.view === 'traffic') renderTrafficView();
 }
 
 // ------------------------------------------------------------------ territory modes
@@ -2828,6 +3315,7 @@ function changeLanguage(lang) {
   if (state.view === 'about') renderAbout();
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
+  if (state.view === 'traffic') renderTrafficView();
   hideTip();
 }
 
@@ -2869,6 +3357,9 @@ async function main() {
   if (h.regionCentres) state.regionCentres = h.regionCentres;
   if (['population', 'budgetInc', 'budgetExp'].includes(h.financeBreakdown)) state.financeBreakdown = h.financeBreakdown;
   if (h.budgetFocus) state.budgetFocus = h.budgetFocus;
+  state.trafficCity = h.trafficCity;
+  state.trafficCity2 = h.trafficCity2;
+  if (TRAFFIC_METRICS.some((m) => m.id === h.trafficMetric)) state.trafficMetric = h.trafficMetric;
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();
@@ -2881,7 +3372,7 @@ async function main() {
   pmProtocol = new pmtiles.Protocol();
   maplibregl.addProtocol('pmtiles', pmProtocol.tile);
   createPane(0, 'map');
-  window.app = { panes, state, popView, modelView }; // handy for debugging in the console
+  window.app = { panes, state, popView, modelView, trafficView }; // handy for debugging in the console
 
   $('#basemapToggle').addEventListener('change', (e) => {
     for (const p of activePanes()) p.map.setLayoutProperty('osm', 'visibility', e.target.checked ? 'visible' : 'none');
