@@ -2878,13 +2878,22 @@ async function renderTrafficCharts() {
 
   // period averages of the chosen metric (the rows of the side panel of the map screen)
   const blocks = {
-    cong: [['traffic.congAll', (d) => d.mean.all.cong], ['traffic.weekdays', (d) => d.mean.weekday.cong],
-      ['traffic.weekends', (d) => d.mean.weekend.cong], ['traffic.peak', (d) => d.peak.cong, (d) => fmtHour(d.peak.hour)]],
-    speed: [['traffic.speedAll', (d) => d.mean.all.speed], ['traffic.weekdays', (d) => d.mean.weekday.speed],
-      ['traffic.weekends', (d) => d.mean.weekend.speed], ['traffic.peakSpeed', (d) => d.peak.speed, (d) => fmtHour(d.peak.hour)]],
-    ff: [['traffic.ffAll', (d) => d.mean.all.ff], ['traffic.weekdays', (d) => d.mean.weekday.ff], ['traffic.weekends', (d) => d.mean.weekend.ff]],
-    tt: [['traffic.ttAll', (d) => d.mean.all.tt], ['traffic.weekdays', (d) => d.mean.weekday.tt],
-      ['traffic.weekends', (d) => d.mean.weekend.tt], ['traffic.peakTt', (d) => d.profile.weekday.tt[d.peak.hour], (d) => fmtHour(d.peak.hour)]],
+    cong: [['traffic.congAll', (d) => d.mean.all.cong],
+      ['traffic.weekdays', (d) => d.mean.weekday.cong], ['traffic.weekends', (d) => d.mean.weekend.cong],
+      ['traffic.day', (d) => d.mean.day?.cong], ['traffic.dayWd', (d) => d.mean.dayWd?.cong], ['traffic.dayWe', (d) => d.mean.dayWe?.cong],
+      ['traffic.peak', (d) => d.peak.cong, (d) => fmtHour(d.peak.hour)], ['traffic.peakWe', (d) => d.peakWe?.cong, (d) => fmtHour(d.peakWe?.hour)]],
+    speed: [['traffic.speedAll', (d) => d.mean.all.speed],
+      ['traffic.weekdays', (d) => d.mean.weekday.speed], ['traffic.weekends', (d) => d.mean.weekend.speed],
+      ['traffic.day', (d) => d.mean.day?.speed], ['traffic.dayWd', (d) => d.mean.dayWd?.speed], ['traffic.dayWe', (d) => d.mean.dayWe?.speed],
+      ['traffic.peakSpeed', (d) => d.peak.speed, (d) => fmtHour(d.peak.hour)], ['traffic.peakSpeedWe', (d) => d.peakWe?.speed, (d) => fmtHour(d.peakWe?.hour)]],
+    ff: [['traffic.ffAll', (d) => d.mean.all.ff],
+      ['traffic.weekdays', (d) => d.mean.weekday.ff], ['traffic.weekends', (d) => d.mean.weekend.ff],
+      ['traffic.day', (d) => d.mean.day?.ff], ['traffic.dayWd', (d) => d.mean.dayWd?.ff], ['traffic.dayWe', (d) => d.mean.dayWe?.ff]],
+    tt: [['traffic.ttAll', (d) => d.mean.all.tt],
+      ['traffic.weekdays', (d) => d.mean.weekday.tt], ['traffic.weekends', (d) => d.mean.weekend.tt],
+      ['traffic.day', (d) => d.mean.day?.tt], ['traffic.dayWd', (d) => d.mean.dayWd?.tt], ['traffic.dayWe', (d) => d.mean.dayWe?.tt],
+      ['traffic.peakTt', (d) => d.profile.weekday.tt[d.peak.hour], (d) => fmtHour(d.peak.hour)],
+      ['traffic.peakTtWe', (d) => d.peakWe?.tt, (d) => fmtHour(d.peakWe?.hour)]],
   }[m];
   const metric = trafficMetric(m);
   for (const [key, get, sec] of blocks) {
@@ -2892,7 +2901,7 @@ async function renderTrafficCharts() {
       .sort((a, b) => (b.v ?? -1) - (a.v ?? -1));
     const max = Math.max(...rows.map((r) => r.v ?? 0), 1e-9);
     const card = el('div', { class: 'tc-card' }, el('div', { class: 'traffic-chart-title' },
-      `${['traffic.weekdays', 'traffic.weekends', 'traffic.peak'].includes(key) ? `${t(`traffic.${m}`)}, ` : ''}${t(key)}`));
+      `${['traffic.weekdays', 'traffic.weekends', 'traffic.peak', 'traffic.peakWe', 'traffic.day', 'traffic.dayWd', 'traffic.dayWe'].includes(key) ? `${t(`traffic.${m}`)}, ` : ''}${t(key)}`));
     for (const r of rows) {
       const name = cityName(r.c);
       const [cr, cg, cb] = rampRgb(metric, r.v ?? 0);
@@ -3006,7 +3015,11 @@ function renderTrafficSummary(list, names) {
     row(t('traffic.congAll'), 'cong', (d) => d.mean.all.cong),
     row(t('traffic.weekdays'), 'cong', (d) => d.mean.weekday.cong, { sub: true }),
     row(t('traffic.weekends'), 'cong', (d) => d.mean.weekend.cong, { sub: true }),
+    row(t('traffic.day'), 'cong', (d) => d.mean.day?.cong, { sub: true }),
+    row(t('traffic.dayWd'), 'cong', (d) => d.mean.dayWd?.cong, { sub: true }),
+    row(t('traffic.dayWe'), 'cong', (d) => d.mean.dayWe?.cong, { sub: true }),
     row(t('traffic.peak'), 'cong', (d) => d.peak.cong, { sub: true, sec: (v, i) => fmtHour(data[i].peak.hour) }),
+    row(t('traffic.peakWe'), 'cong', (d) => d.peakWe?.cong, { sub: true, sec: (v, i) => (data[i].peakWe ? fmtHour(data[i].peakWe.hour) : '') }),
     row(t('traffic.speedAll'), 'speed', (d) => d.mean.all.speed, { sec: (v, i) => `${t('traffic.inPeak')} ${fmtTraffic('speed', data[i].peak.speed)}` }),
     row(t('traffic.ffAll'), 'ff', (d) => d.mean.all.ff),
     row(t('traffic.ttAll'), 'tt', (d) => d.mean.all.tt, { sec: (v, i) => `${t('traffic.inPeak')} ${fmtTraffic('tt', data[i].profile.weekday.tt[data[i].peak.hour])}` }),

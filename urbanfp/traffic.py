@@ -17,8 +17,8 @@ city is processed its CSV files are deleted (unless keep=True), and the cities a
 whose reports are gone are kept as they are, so new reports can be added one city at a time.
 
 Output:
-* web/data/traffic.json: per city the report period, averages (all days, weekdays, weekends), the average hourly
-  profile of weekdays and weekends and the weekday peak hour;
+* web/data/traffic.json: per city the report period, averages (all days, weekdays, weekends, and 8:00-19:00 of
+  all days, weekdays and weekends), the average hourly profile of weekdays and weekends and the peak hours of weekdays and weekends;
 * web/data/<city id>/traffic_tiles.json: the cells as [lat_min, lat_max, lon_min, lon_max, congestion %, speed,
   free flow speed, travel time per 10 km or null].
 """
@@ -47,6 +47,7 @@ HOURLY_COLS = {
 TILE_COLS = ["congestion_level_pct", "speed_kmh", "free_flow_speed_kmh", "travel_time_per_10km_min"]
 TT_NO_VALUE = 255
 METRICS = ["cong", "speed", "ff", "tt"]
+DAY_HOURS = range(8, 19)  # 8:00-19:00, the active part of the day (hours starting 8:00 ... 18:00)
 
 
 def _means(df: pd.DataFrame) -> dict:
@@ -66,14 +67,21 @@ def _hourly(path: Path) -> dict:
         df = df.groupby("Time", as_index=False)[METRICS].mean()
     df = df.sort_values("Time")
     wd = df.Time.dt.dayofweek < 5
-    wdp = _profile(df[wd])
-    peak = max(range(24), key=lambda h: wdp["cong"][h] if wdp["cong"][h] is not None else -1)
+    day = df.Time.dt.hour.isin(DAY_HOURS)
+    wdp, wep = _profile(df[wd]), _profile(df[~wd])
+
+    def peak(p: dict) -> dict:  # the hour of the highest average congestion
+        h = max(range(24), key=lambda h: p["cong"][h] if p["cong"][h] is not None else -1)
+        return {"hour": h, "cong": p["cong"][h], "speed": p["speed"][h], "tt": p["tt"][h]}
+
     return {
         "period": [df.Time.min().strftime("%Y-%m-%d"), df.Time.max().strftime("%Y-%m-%d")],
         "hours": int(len(df)),
-        "mean": {"all": _means(df), "weekday": _means(df[wd]), "weekend": _means(df[~wd])},
-        "profile": {"weekday": wdp, "weekend": _profile(df[~wd])},
-        "peak": {"hour": peak, "cong": wdp["cong"][peak], "speed": wdp["speed"][peak]},
+        "mean": {"all": _means(df), "weekday": _means(df[wd]), "weekend": _means(df[~wd]),
+                 "day": _means(df[day]), "dayWd": _means(df[day & wd]), "dayWe": _means(df[day & ~wd])},
+        "profile": {"weekday": wdp, "weekend": wep},
+        "peak": peak(wdp),
+        "peakWe": peak(wep),
     }
 
 

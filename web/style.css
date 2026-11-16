@@ -388,6 +388,8 @@ details.panel > summary h3 { font-size: 14px; }
 .traffic-legend .ramp-ticks { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin: 0 14px; }
 .traffic-legend .ramp-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .traffic-sidebar .compare-note { margin: 14px 0 0; }
+#tSummary .legend-row .name { white-space: normal; }  /* "вихідні 8:00–19:00" wraps instead of being cut */
+.traffic-compare .compare-head { position: sticky; top: -16px; z-index: 5; background: var(--bg); padding: 12px 0 8px; margin-top: -12px; border-bottom: 1px solid var(--border); }
 .traffic-compare #tcPeriod { margin: 6px 0 10px; }
 .tc-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
 .tc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
