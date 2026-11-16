@@ -93,7 +93,7 @@ python -m urbanfp serve                # переглянути вебзасто
 ```bash
 python -m urbanfp demography           # пише web/data/demography.json для всіх міст і років
 python -m urbanfp agglomeration        # час доїзду від міст до всіх н.п. України (розділ «Агломерації»)
-python -m urbanfp traffic              # звіти про трафік з data/traffic/<місто>/ → web/data/traffic.json (вкладка «Затори»; сирі CSV видаляються)
+python -m urbanfp traffic              # звіти про трафік з data/traffic/<місто>/ → web/data/traffic.json (вкладки «Мапа заторів» і «Графіки заторів»; сирі CSV видаляються)
 ```
 
 Кожен етап можна запустити окремо: `download`, `extract`, `classify`, `overlay`, `stats`, `export`.

@@ -388,6 +388,29 @@ details.panel > summary h3 { font-size: 14px; }
 .traffic-legend .ramp-ticks { position: relative; height: 14px; font-size: 11px; color: var(--muted); margin: 0 14px; }
 .traffic-legend .ramp-ticks span { position: absolute; transform: translateX(-50%); white-space: nowrap; }
 .traffic-sidebar .compare-note { margin: 14px 0 0; }
+.traffic-compare #tcPeriod { margin: 6px 0 10px; }
+.tc-card { border: 1px solid var(--border); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
+.tc-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 4px; }
+.tc-head .unit-toggle { margin: 0; }
+.tc-head .unit-toggle button { padding: 3px 10px; font-size: 13px; }
+.tc-lines .tc-line { transition: opacity .15s; }
+.tc-lines.has-hl .tc-line { opacity: .15; }
+.tc-lines.has-hl .tc-line.hl { opacity: 1; stroke-width: 3; }
+.tc-legend { margin-top: 6px; }
+.tc-legend-item { cursor: default; color: var(--text); }
+.tc-legend-item i { width: 18px; }
+.tc-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 12px 0; }
+.tc-grid .tc-card .traffic-chart-title { margin-bottom: 8px; }
+.tc-row { grid-template-columns: 110px 1fr 110px; gap: 8px; margin: 4px 0; font-size: 13px; }
+.tc-row .city { font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tc-track { height: 14px; background: var(--bg); border-radius: 3px; overflow: hidden; }
+.tc-bar { height: 100%; border-radius: 3px; }
+.tc-row .total b { color: var(--text); font-weight: 600; }
+@media (max-width: 900px) {
+  .tc-grid { grid-template-columns: 1fr; }
+  .tc-row { grid-template-columns: 80px 1fr 96px; }
+  .tc-row .total { grid-column: auto; }
+}
 .tip-key { display: inline-block; width: 10px; height: 3px; margin-right: 5px; vertical-align: middle; }
 #view-traffic.dual .map-pane + .map-pane { border-left: 2px solid var(--text); }
 @media (max-width: 760px) {

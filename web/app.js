@@ -48,6 +48,8 @@ const state = {
   trafficMetric: 'cong',  // traffic screen: cong | speed | ff | tt
   trafficOpacity: 0.75,   // traffic screen: opacity of the grid cells
   trafficStyle: 'heat',   // traffic screen map: heat (smoothed image of the cells) | cells
+  trafficDay: 'weekday',  // traffic charts screen: hourly profile of weekdays | weekends
+  trafficCities: null,    // traffic charts screen: chosen city ids (null = all with data)
 };
 const TERRITORIES = ['city', 'hromada', 'greater'];
 
@@ -243,7 +245,7 @@ function readHash() {
     aboutPage: p.get('p'),
     regionCentres: p.get('rc') != null ? p.get('rc').split(',').filter(Boolean) : null,
     cities: p.get('cities') ? p.get('cities').split(',') : null,
-    trafficCity: p.get('tc'), trafficCity2: p.get('tc2'), trafficMetric: p.get('m'),
+    trafficCity: p.get('tc'), trafficCity2: p.get('tc2'), trafficMetric: p.get('m'), trafficDay: p.get('day'),
   };
 }
 function writeHash() {
@@ -277,6 +279,11 @@ function writeHash() {
     if (state.trafficCity) p.set('tc', state.trafficCity);
     if (state.trafficCity2) p.set('tc2', state.trafficCity2);
     if (state.trafficMetric !== 'cong') p.set('m', state.trafficMetric);
+  }
+  if (state.view === 'trafficCharts') {
+    if (state.trafficMetric !== 'cong') p.set('m', state.trafficMetric);
+    if (state.trafficDay !== 'weekday') p.set('day', state.trafficDay);
+    if (state.trafficCities) p.set('cities', (traffic ? trafficChosenIds() : state.trafficCities).join(','));
   }
   if (state.view === 'about' && state.aboutPage && state.aboutPage !== ABOUT_PAGES[0]) p.set('p', state.aboutPage);
   history.replaceState(null, '', '#' + p.toString());
@@ -2762,6 +2769,221 @@ function renderTrafficChart(list, names) {
   box.append(legend);
 }
 
+// ------------------------------------------------------------------ traffic charts (Міста → Графіки заторів)
+// line colours of the cities (beyond them the colours repeat dashed)
+const CITY_LINE_COLORS = ['#1f77b4', '#d62728', '#2ca02c', '#ff7f0e', '#9467bd', '#8c564b', '#e377c2', '#17becf', '#bcbd22', '#7f7f7f'];
+const trafficUnit = (m) => (m === 'cong' ? '' : m === 'tt' ? `, ${t('set.min')}` : `, ${t('units.kmh')}`);
+
+/** Cities of the traffic charts screen: the chosen ones that have data, in index order. */
+const trafficChosenIds = () => trafficIds().filter((id) => !state.trafficCities || state.trafficCities.includes(id));
+
+function setTrafficCities(ids) {
+  const all = trafficIds();
+  state.trafficCities = all.every((id) => ids.includes(id)) ? null : all.filter((id) => ids.includes(id));
+  try { localStorage.setItem('trafficCities', JSON.stringify(state.trafficCities)); } catch { /* storage unavailable */ }
+  writeHash();
+  renderTrafficCharts();
+}
+
+/** City picker of the traffic charts screen (search, all / none, whole groups), like the land structure one. */
+function renderTrafficFilter() {
+  const all = trafficCityList();
+  const ids = trafficChosenIds();
+  $('#tcFilterBtn').textContent = t('cf.button', { n: ids.length, total: all.length }) + ' ▾';
+  const q = $('#tcFilterSearch').value.trim().toLowerCase();
+  const list = $('#tcFilterList');
+  list.innerHTML = '';
+  const matches = all.filter((c) => !q || c.name.toLowerCase().includes(q) || (c.name_local || '').toLowerCase().includes(q));
+  for (const { group, cities } of citiesByGroup(matches)) {
+    if (label(group)) {
+      const allOn = cities.every((c) => ids.includes(c.id));
+      list.append(el('button', {
+        type: 'button', class: 'cf-group', title: t(allOn ? 'cf.groupNone' : 'cf.groupAll'),
+        onclick: () => {
+          const cur = new Set(ids);
+          for (const c of cities) allOn ? cur.delete(c.id) : cur.add(c.id);
+          setTrafficCities([...cur]);
+        },
+      }, label(group), el('span', { class: 'small' }, `${cities.filter((c) => ids.includes(c.id)).length}/${cities.length}`)));
+    }
+    for (const c of cities) {
+      const box = el('input', { type: 'checkbox', value: c.id });
+      box.checked = ids.includes(c.id);
+      box.addEventListener('change', () => {
+        const cur = new Set(trafficChosenIds());
+        box.checked ? cur.add(c.id) : cur.delete(c.id);
+        setTrafficCities([...cur]);
+      });
+      list.append(el('label', { class: 'cf-item' }, box, el('span', {}, cityName(c)),
+        el('span', { class: 'small' }, fmtTraffic('cong', trafficOf(c.id).mean.all.cong))));
+    }
+  }
+  if (!matches.length) list.append(el('div', { class: 'small', style: 'padding:6px' }, t('cf.noMatch')));
+}
+
+function initTrafficFilter() {
+  if (trafficView.filterInited) return;
+  trafficView.filterInited = true;
+  if (!state.trafficCities) {
+    try {
+      const saved = JSON.parse(localStorage.getItem('trafficCities') || 'null');
+      if (Array.isArray(saved)) state.trafficCities = saved;
+    } catch { /* storage unavailable */ }
+  }
+  const btn = $('#tcFilterBtn'), panel = $('#tcFilterPanel');
+  const setOpen = (open) => {
+    panel.hidden = !open;
+    btn.setAttribute('aria-expanded', open);
+    if (open) { renderTrafficFilter(); $('#tcFilterSearch').focus(); }
+  };
+  btn.addEventListener('click', (e) => { e.stopPropagation(); setOpen(panel.hidden); });
+  panel.addEventListener('click', (e) => e.stopPropagation());
+  document.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setOpen(false); });
+  $('#tcFilterSearch').addEventListener('input', renderTrafficFilter);
+  $('#tcFilterAll').addEventListener('click', () => setTrafficCities(trafficIds()));
+  $('#tcFilterNone').addEventListener('click', () => setTrafficCities([]));
+}
+
+/** Cities with traffic reports: the hourly profile of the chosen metric and the period averages as bars. */
+async function renderTrafficCharts() {
+  await loadTraffic();
+  initTrafficFilter();
+  if (!['weekday', 'weekend'].includes(state.trafficDay)) state.trafficDay = 'weekday';
+  const m = trafficMetric().id;
+  const chosen = trafficChosenIds();
+  const cities = trafficCityList().filter((c) => chosen.includes(c.id));
+  renderTrafficFilter();
+  const mt = $('#tcMetric');
+  mt.innerHTML = '';
+  for (const x of TRAFFIC_METRICS) {
+    mt.append(el('button', {
+      type: 'button', class: m === x.id ? 'active' : '', 'aria-pressed': m === x.id, title: t(`traffic.${x.id}.hint`),
+      onclick: () => { state.trafficMetric = x.id; writeHash(); renderTrafficCharts(); },
+    }, t(`traffic.${x.id}`)));
+  }
+  const hourly = $('#tcHourly');
+  const bars = $('#tcBars');
+  hourly.innerHTML = '';
+  bars.innerHTML = '';
+  if (!cities.length) {
+    hourly.append(el('p', { class: 'hint' }, t(trafficIds().length ? 'cmp.noCities' : 'traffic.noData')));
+    return;
+  }
+  const periods = [...new Set(cities.map((c) => fmtPeriod(trafficOf(c.id).period)))];
+  $('#tcPeriod').textContent = t('traffic.periods', { periods: periods.join('; ') });
+  $('#tcNote').textContent = t('traffic.cmpNote');
+  const colors = Object.fromEntries(trafficIds().map((id, i) => [id, i]));  // stable while cities are toggled
+  renderTrafficHourlyAll(cities, colors, m);
+
+  // period averages of the chosen metric (the rows of the side panel of the map screen)
+  const blocks = {
+    cong: [['traffic.congAll', (d) => d.mean.all.cong], ['traffic.weekdays', (d) => d.mean.weekday.cong],
+      ['traffic.weekends', (d) => d.mean.weekend.cong], ['traffic.peak', (d) => d.peak.cong, (d) => fmtHour(d.peak.hour)]],
+    speed: [['traffic.speedAll', (d) => d.mean.all.speed], ['traffic.weekdays', (d) => d.mean.weekday.speed],
+      ['traffic.weekends', (d) => d.mean.weekend.speed], ['traffic.peakSpeed', (d) => d.peak.speed, (d) => fmtHour(d.peak.hour)]],
+    ff: [['traffic.ffAll', (d) => d.mean.all.ff], ['traffic.weekdays', (d) => d.mean.weekday.ff], ['traffic.weekends', (d) => d.mean.weekend.ff]],
+    tt: [['traffic.ttAll', (d) => d.mean.all.tt], ['traffic.weekdays', (d) => d.mean.weekday.tt],
+      ['traffic.weekends', (d) => d.mean.weekend.tt], ['traffic.peakTt', (d) => d.profile.weekday.tt[d.peak.hour], (d) => fmtHour(d.peak.hour)]],
+  }[m];
+  const metric = trafficMetric(m);
+  for (const [key, get, sec] of blocks) {
+    const rows = cities.map((c) => ({ c, d: trafficOf(c.id) })).map((r) => ({ ...r, v: get(r.d) }))
+      .sort((a, b) => (b.v ?? -1) - (a.v ?? -1));
+    const max = Math.max(...rows.map((r) => r.v ?? 0), 1e-9);
+    const card = el('div', { class: 'tc-card' }, el('div', { class: 'traffic-chart-title' },
+      `${['traffic.weekdays', 'traffic.weekends', 'traffic.peak'].includes(key) ? `${t(`traffic.${m}`)}, ` : ''}${t(key)}`));
+    for (const r of rows) {
+      const name = cityName(r.c);
+      const [cr, cg, cb] = rampRgb(metric, r.v ?? 0);
+      card.append(el('div', { class: 'chart-row tc-row' },
+        el('button', {
+          type: 'button', class: 'city link', title: t('traffic.openMap', { city: name }),
+          onclick: () => { state.trafficCity = r.c.id; if (state.trafficCity2 === r.c.id) state.trafficCity2 = null; switchView('traffic'); },
+        }, name),
+        el('div', { class: 'tc-track' }, el('div', { class: 'tc-bar', style: `width:${(100 * (r.v ?? 0)) / max}%;background:rgb(${cr},${cg},${cb})` })),
+        el('div', { class: 'total' }, el('b', {}, fmtTraffic(m, r.v)), sec ? ` · ${sec(r.d)}` : '')));
+    }
+    bars.append(card);
+  }
+}
+
+/** Hourly profile of metric `m` (weekdays or weekends) of every city as one line chart. */
+function renderTrafficHourlyAll(cities, colors, m) {
+  const box = $('#tcHourly');
+  const day = state.trafficDay;
+  const series = cities.map((c) => {
+    const i = colors[c.id];
+    return { id: c.id, name: cityName(c), color: CITY_LINE_COLORS[i % CITY_LINE_COLORS.length],
+      dash: i >= CITY_LINE_COLORS.length ? '6 3' : 'none', values: trafficOf(c.id).profile[day][m] };
+  });
+  const W = 760, H = 260, L = 40, R = 10, T = 10, B = 24;
+  const vals = series.flatMap((s) => s.values).filter((v) => v != null);
+  const step = niceStep(Math.max(...vals, m === 'cong' ? 10 : 1) / 5);
+  const yMax = Math.ceil(Math.max(...vals, 0) / step) * step || step;
+  const x = (h) => L + ((W - L - R) * h) / 23;
+  const y = (v) => T + (H - T - B) * (1 - v / yMax);
+  const NS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(NS, 'svg');
+  const s = (tag, attrs, text) => {
+    const e = document.createElementNS(NS, tag);
+    for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    if (text != null) e.textContent = text;
+    svg.append(e);
+    return e;
+  };
+  svg.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  svg.setAttribute('class', 'line-chart tc-lines');
+  svg.setAttribute('role', 'img');
+  svg.setAttribute('aria-label', `${t(`traffic.${m}`)}: ${t('traffic.chartTitle')}`);
+  for (let v = 0; v <= yMax + 1e-9; v += step) {
+    s('line', { x1: L, x2: W - R, y1: y(v), y2: y(v), class: 'grid' });
+    s('text', { x: L - 5, y: y(v) + 3.5, 'text-anchor': 'end', class: 'tick' }, m === 'cong' ? `${num(v, 0)}%` : num(v, 0));
+  }
+  for (let h = 0; h <= 23; h += 2) s('text', { x: x(h), y: H - 8, 'text-anchor': 'middle', class: 'tick' }, fmtHour(h));
+  const lines = {};
+  for (const sr of series) {
+    const d = sr.values.map((v, h) => (v == null ? null : `${x(h).toFixed(1)},${y(v).toFixed(1)}`)).filter(Boolean).join(' ');
+    lines[sr.id] = s('polyline', { points: d, fill: 'none', stroke: sr.color, 'stroke-width': 2, 'stroke-linejoin': 'round',
+      'stroke-dasharray': sr.dash, class: 'tc-line' });
+  }
+  const highlight = (id) => {
+    svg.classList.toggle('has-hl', !!id);
+    for (const [k, ln] of Object.entries(lines)) ln.classList.toggle('hl', k === id);
+    if (id) lines[id].parentNode.append(lines[id]);  // on top
+  };
+  const cursor = s('line', { x1: 0, x2: 0, y1: T, y2: H - B, class: 'cursor', visibility: 'hidden' });
+  const hit = s('rect', { x: L, y: T, width: W - L - R, height: H - T - B, fill: 'transparent' });
+  hit.addEventListener('mousemove', (ev) => {
+    const r = svg.getBoundingClientRect();
+    const px = ((ev.clientX - r.left) / r.width) * W;
+    const h = Math.max(0, Math.min(23, Math.round(((px - L) / (W - L - R)) * 23)));
+    cursor.setAttribute('x1', x(h));
+    cursor.setAttribute('x2', x(h));
+    cursor.setAttribute('visibility', 'visible');
+    const sorted = [...series].sort((a, b) => (b.values[h] ?? -1) - (a.values[h] ?? -1));
+    showTip(ev, `<b>${fmtHour(h)}–${fmtHour((h + 1) % 24)}</b> · ${t(`traffic.${m}`)}, ${t(`traffic.${day}`)}` + sorted.map((sr) =>
+      `<br><span class="tip-key" style="background:${sr.color}"></span>${sr.name}: ${fmtTraffic(m, sr.values[h])}`).join(''));
+  });
+  hit.addEventListener('mouseleave', () => { cursor.setAttribute('visibility', 'hidden'); hideTip(); });
+
+  const dayToggle = el('div', { class: 'unit-toggle tc-day', role: 'group' }, TRAFFIC_DAYS.map(([d]) => el('button', {
+    type: 'button', class: day === d ? 'active' : '', 'aria-pressed': day === d,
+    onclick: () => { state.trafficDay = d; writeHash(); renderTrafficCharts(); },
+  }, t(`traffic.${d}`))));
+  const legend = el('div', { class: 'traffic-chart-legend tc-legend' }, ...series.map((sr) => {
+    const item = el('span', { class: 'tc-legend-item' },
+      el('i', { style: sr.dash === 'none' ? `background:${sr.color}`
+        : `background:repeating-linear-gradient(90deg, ${sr.color} 0 5px, transparent 5px 8px)` }), sr.name);
+    item.addEventListener('mouseenter', () => highlight(sr.id));
+    item.addEventListener('mouseleave', () => highlight(null));
+    return item;
+  }));
+  box.append(el('div', { class: 'tc-head' },
+    el('div', { class: 'traffic-chart-title' }, t('traffic.hourlyAll', { metric: t(`traffic.${m}`), unit: trafficUnit(m) })), dayToggle),
+  svg, legend);
+}
+
 /** A "nice" axis step (1, 2, 2.5 or 5 × 10^n) not below `raw`. */
 function niceStep(raw) {
   const p = 10 ** Math.floor(Math.log10(Math.max(raw, 1e-9)));
@@ -3056,7 +3278,7 @@ function syncTrafficScale(src) {
 
 // ------------------------------------------------------------------ views
 /** Two-level menu: top-level sections and the screens (views) in each. */
-const SECTIONS = { cities: ['map', 'compare', 'finance', 'traffic'], regions: ['population', 'modeling'], about: ['about'] };
+const SECTIONS = { cities: ['map', 'compare', 'finance', 'traffic', 'trafficCharts'], regions: ['population', 'modeling'], about: ['about'] };
 const VIEW_SECTION = { finance: 'compare' };  // views drawn into another view's section
 const sectionEl = (view) => `view-${VIEW_SECTION[view] || view}`;
 const sectionOf = (view) => Object.keys(SECTIONS).find((s) => SECTIONS[s].includes(view)) || 'cities';
@@ -3081,6 +3303,7 @@ function switchView(view) {
   if (view === 'population') renderPopulationView();
   if (view === 'modeling') renderModelingView();
   if (view === 'traffic') renderTrafficView({ fit: true });
+  if (view === 'trafficCharts') renderTrafficCharts();
   hideTip();
   writeHash();
 }
@@ -3115,6 +3338,7 @@ function renderAll() {
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
   if (state.view === 'traffic') renderTrafficView();
+  if (state.view === 'trafficCharts') renderTrafficCharts();
 }
 
 // ------------------------------------------------------------------ territory modes
@@ -3186,7 +3410,7 @@ function sideRows(rows, dual, heads) {
       el('span', { class: `k${i}`, style: `width:${v == null ? 0 : (100 * Math.max(v, 0)) / Math.max(r.max, 1e-9)}%;--c:${r.color}` }))));
     const row = el('div', { class: 'legend-row' + (r.total ? ' total' : '') },
       el('span', { class: 'swatch static', style: `background:${r.color}` }),
-      el('div', { class: 'label' }, el('div', { class: 'name' },
+      el('div', { class: 'label' }, el('div', { class: 'name', title: r.name },
         r.onToggle ? el('button', { class: 'expander', 'aria-expanded': !!r.open, onclick: r.onToggle }, r.open ? '▾' : '▸') : null, r.name), bars),
       ...r.values.map((v, i) => el('div', { class: 'value' }, v == null ? '—' : r.text(v, i),
         v != null && r.sec ? el('span', { class: 'sec' }, r.sec(v, i)) : null)));
@@ -3316,6 +3540,7 @@ function changeLanguage(lang) {
   if (state.view === 'population') renderPopulationView();
   if (state.view === 'modeling') renderModelingView();
   if (state.view === 'traffic') renderTrafficView();
+  if (state.view === 'trafficCharts') renderTrafficCharts();
   hideTip();
 }
 
@@ -3335,7 +3560,7 @@ async function main() {
   const known = (id) => state.index.cities.some((c) => c.id === id);
   state.city = known(h.city) ? h.city : defaultCity;
   const city2 = known(h.city2) ? h.city2 : null;
-  loadCompareCities(h.cities);
+  loadCompareCities(h.view === 'trafficCharts' ? null : h.cities);  // there `cities` are the traffic charts' ones
   let saved = null;
   try { saved = localStorage.getItem('territory'); } catch { /* storage unavailable */ }
   state.territory = TERRITORIES.includes(h.territory) ? h.territory : TERRITORIES.includes(saved) ? saved : 'city';
@@ -3360,6 +3585,8 @@ async function main() {
   state.trafficCity = h.trafficCity;
   state.trafficCity2 = h.trafficCity2;
   if (TRAFFIC_METRICS.some((m) => m.id === h.trafficMetric)) state.trafficMetric = h.trafficMetric;
+  if (['weekday', 'weekend'].includes(h.trafficDay)) state.trafficDay = h.trafficDay;
+  if (h.view === 'trafficCharts' && h.cities) state.trafficCities = h.cities;
   renderTerritoryToggles();
   fillCitySelects();
   initCityFilter();

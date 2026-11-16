@@ -38,6 +38,8 @@ from urbanfp.config import DATA_DIR, Paths, load_cities
 log = logging.getLogger(__name__)
 
 SOURCE_DIR = DATA_DIR / "traffic"
+# cities whose traffic is not shown: frontline cities, where the traffic may be military movements
+EXCLUDED = {"kherson"}
 HOURLY_COLS = {
     "Speed [kmh]": "speed", "Free flow speed [kmh]": "ff",
     "Congestion level [%]": "cong", "Travel time per 10 km [min]": "tt",
@@ -119,8 +121,16 @@ def build_traffic(src: Path = SOURCE_DIR, keep: bool = False) -> Path:
     known = {c.id for c in load_cities()}
     dest = Paths.web_data() / "traffic.json"
     out = json.loads(dest.read_text(encoding="utf-8"))["cities"] if dest.exists() else {}
+    for cid in EXCLUDED:
+        out.pop(cid, None)
     done = []
     for folder in sorted(p for p in src.iterdir() if p.is_dir()) if src.exists() else []:
+        if folder.name in EXCLUDED:
+            log.warning("%s: excluded (frontline city), reports deleted", folder)
+            if not keep:
+                for p in folder.glob("*.csv"):
+                    p.unlink()
+            continue
         if folder.name not in known:
             log.warning("%s: not a configured city id, skipped", folder)
             continue

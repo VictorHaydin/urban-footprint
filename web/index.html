@@ -46,7 +46,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="subtab active" data-view="map" role="tab" data-i18n="tab.map">Мапа</button>
       <button class="subtab" data-view="compare" role="tab" data-i18n="tab.compare">Структура територій</button>
       <button class="subtab" data-view="finance" role="tab" data-i18n="tab.finance">Бюджети й населення</button>
-      <button class="subtab" data-view="traffic" role="tab" data-i18n="tab.traffic">Затори</button>
+      <button class="subtab" data-view="traffic" role="tab" data-i18n="tab.traffic">Мапа заторів</button>
+      <button class="subtab" data-view="trafficCharts" role="tab" data-i18n="tab.trafficCharts">Графіки заторів</button>
     </div>
     <div class="subtab-group" data-section="regions" role="tablist" hidden>
       <button class="subtab" data-view="population" role="tab" data-i18n="tab.population">Агломерації</button>
@@ -125,6 +126,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <summary data-i18n="cmp.table">Таблиця даних</summary>
           <div id="compareTable" class="table-wrap"></div>
         </details>
+      </div>
+    </section>
+
+    <!-- TRAFFIC CHARTS VIEW: hourly profiles and period averages of all cities with traffic reports -->
+    <section id="view-trafficCharts" class="view">
+      <div class="compare traffic-compare">
+        <div class="compare-head">
+          <h2 data-i18n="traffic.cmpTitle">Затори в містах</h2>
+          <div class="unit-toggle" id="tcMetric" role="group"></div>
+          <div class="city-filter" id="tcFilter">
+            <button type="button" class="cf-button" id="tcFilterBtn" aria-haspopup="true" aria-expanded="false"></button>
+            <div class="cf-panel" id="tcFilterPanel" hidden>
+              <input type="search" id="tcFilterSearch" data-i18n-placeholder="cf.search" autocomplete="off">
+              <div class="cf-actions">
+                <button type="button" id="tcFilterAll" data-i18n="cf.all">Усі</button>
+                <button type="button" id="tcFilterNone" data-i18n="cf.none">Жодного</button>
+              </div>
+              <div class="cf-list" id="tcFilterList"></div>
+            </div>
+          </div>
+        </div>
+        <div id="tcPeriod" class="hint"></div>
+        <div id="tcHourly" class="tc-card"></div>
+        <div id="tcBars" class="tc-grid"></div>
+        <p class="compare-note" id="tcNote"></p>
       </div>
     </section>
 
