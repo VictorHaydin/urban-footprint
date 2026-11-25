@@ -348,7 +348,8 @@ Centres are all 101 cities of over 50,000 people in the 2001 census. A city need
 to be a centre: a city configured but not yet processed further (`map_only` in `agglomeration.json`) appears on the
 Агломерації page only, named from `config/cities.yaml` and linked to its census / Derzhstat row by `katottg` or by name.
 
-Region centres may also be towns of 10,000+ in the 2001 census that are not configured cities (330):
+Region centres may also be towns of 10,000+ in the 2001 census that are not configured cities, plus the settlements
+listed in `EXTRA_TOWNS` (Berezivka, Odesa oblast, a raion centre of 9,481; 329 in all):
 `build_town_reach` (run after `agglomeration`, or `agglomeration --towns-only`) writes `web/data/towns.json` and one
 file per town, `web/data/reach/<settlement code>.bin` (uint16 tenths of a minute per settlement of
 agglomeration.json, 0xFFFF beyond 6 h); the page loads only those of the chosen towns. Drive times start from the

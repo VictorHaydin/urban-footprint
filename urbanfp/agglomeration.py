@@ -354,6 +354,10 @@ def build_agglomeration() -> dict:
 # --------------------------------------------------------------------------- towns as region centres
 
 TOWN_MIN_POP = 10_000   # 2001 census: settlements this large may be chosen as region centres
+# settlements below TOWN_MIN_POP that may still be chosen as region centres (settlement code: why)
+EXTRA_TOWNS = {
+    "UA51020030010083756": "Berezivka, Odesa oblast: raion centre, 9,481 in 2001 (asked for by users)",
+}
 UNREACHED = 0xFFFF
 
 
@@ -430,7 +434,7 @@ def build_admin_lines() -> Path:
 
 
 def build_town_reach(min_pop: int = TOWN_MIN_POP) -> None:
-    """Drive times from every settlement of at least `min_pop` (2001 census) that is not a configured city to
+    """Drive times from every settlement of at least `min_pop` (2001 census) or in EXTRA_TOWNS that is not a configured city to
     every settlement, for the region modelling page: web/data/towns.json (the towns, by settlement index of
     agglomeration.json) and web/data/reach/<settlement code>.bin, one little-endian uint16 per settlement (tenths
     of a minute, 0xFFFF beyond MAX_MIN or unreached). A town has no boundary: times are from its own point (joined
@@ -441,7 +445,8 @@ def build_town_reach(min_pop: int = TOWN_MIN_POP) -> None:
     n = len(S["code"])
     cities = {c["settlement"] for c in data["centres"] if c["settlement"] is not None}
     p01 = S["pop"].get("2001") or []
-    towns = [i for i, v in enumerate(p01) if v and v >= min_pop and i not in cities]
+    towns = [i for i, v in enumerate(p01)
+             if ((v and v >= min_pop) or S["code"][i] in EXTRA_TOWNS) and i not in cities]
     lon, lat = np.asarray(S["lon"]), np.asarray(S["lat"])
     vlon, vlat, g = road_graph(load_cities()[0].source_region)
     _, comp = connected_components(g, directed=False)
@@ -461,11 +466,11 @@ def build_town_reach(min_pop: int = TOWN_MIN_POP) -> None:
         ts[i] = 0.0
         tenths = np.where(reachable & np.isfinite(ts) & (ts <= MAX_MIN * 60), np.round(ts / 6), UNREACHED)
         tenths.astype("<u2").tofile(out_dir / f"{S['code'][i]}.bin")
-        index.append({"id": S["code"][i], "settlement": i, "name": S["name"][i], "pop2001": int(p01[i])})
+        index.append({"id": S["code"][i], "settlement": i, "name": S["name"][i], "pop2001": int(p01[i] or 0)})
         if (k + 1) % 20 == 0 or k + 1 == len(towns):
             log.info("town drive times: %d/%d (%.0fs)", k + 1, len(towns), time.time() - t0)
     (Paths.web_data() / "towns.json").write_text(json.dumps(
-        {"schema_version": 1, "min_pop_2001": min_pop, "settlements": n, "max_min": MAX_MIN, "towns": index},
+        {"schema_version": 1, "min_pop_2001": min_pop, "settlements": n, "max_min": MAX_MIN, "extra": sorted(EXTRA_TOWNS), "towns": index},
         ensure_ascii=False, separators=(",", ":")), encoding="utf-8")
     log.info("web/data/towns.json: %d towns of %d+ (2001), reach files %.1f MB, %.0fs", len(index), min_pop,
              sum(f.stat().st_size for f in out_dir.glob("*.bin")) / 1e6, time.time() - t0)
